@@ -21,9 +21,8 @@ import lombok.NoArgsConstructor;
 public class IpAddress {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "IPAddress_id_seq")
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-
     private String networkAddress;
     private String hostAddress;
     private String status;

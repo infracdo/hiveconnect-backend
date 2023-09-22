@@ -11,26 +11,37 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autoprov.autoprov.domain.IpAddress;
 import com.autoprov.autoprov.repositories.IpAddressRepo;
+import com.autoprov.autoprov.services.IpAddService;
 
 @RestController
 public class IpAddController {
+
     private IpAddressRepo ipAddRepo;
 
     @Autowired
-    public void IpAddressRepositoryImpl(IpAddressRepo ipAddRepo) {
+    public void IpAddressRepoImpl(IpAddressRepo ipAddRepo) {
         this.ipAddRepo = ipAddRepo;
     }
 
+    // private IpAddService ipAddService;
+
+    // public IpAddController(IpAddService ipAddService) {
+    // this.ipAddService = ipAddService;
+    // }
+
     @Async("asyncExecutor")
-    @PostMapping("addNetworkAddress")
+    @PostMapping("/addNetworkAddress")
     public CompletableFuture<String> addNetworkAddress(@RequestBody Map<String, String> params) {
-        ipAddRepo.save(IpAddress.builder().networkAddress(params.get("NetworkAddress"))
+        IpAddress ipAdd = IpAddress.builder()
+                .networkAddress(params.get("NetworkAddress"))
                 .hostAddress("0.0.0." + Integer.parseInt("21"))
                 .status("Available")
-                .clientId(null)
+                .clientId("123")
                 .vlanId(5)
-                .build());
-        return CompletableFuture.completedFuture("Network Address added");
+                .build();
+        ipAddRepo.save(ipAdd);
+
+        return CompletableFuture.completedFuture("Network added");
     }
 
 }
