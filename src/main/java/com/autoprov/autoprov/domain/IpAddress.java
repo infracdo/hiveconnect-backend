@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity // labels an entity that can be used for JPA
 @Table(name = "ipaddresses")
-public class IPListing {
+public class IpAddress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "IPAddress_id_seq")
@@ -28,5 +28,6 @@ public class IPListing {
     private String hostAddress;
     private String status;
     private String clientId;
+    private Integer vlanId;
 
 }
