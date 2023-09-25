@@ -30,8 +30,8 @@ public class IpAddController {
     // }
 
     @Async("asyncExecutor")
-    @PostMapping("/addNetworkAddress")
-    public CompletableFuture<String> addNetworkAddress(@RequestBody Map<String, String> params) {
+    @PostMapping("/addOneNetworkAddress")
+    public CompletableFuture<String> addOneNetworkAddress(@RequestBody Map<String, String> params) {
         IpAddress ipAdd = IpAddress.builder()
                 .networkAddress(params.get("NetworkAddress"))
                 .hostAddress("0.0.0." + Integer.parseInt("21"))
@@ -42,6 +42,12 @@ public class IpAddController {
         ipAddRepo.save(ipAdd);
 
         return CompletableFuture.completedFuture("Network added");
+    }
+
+    @Async("asyncExecutor")
+    @PostMapping("/addNetworkAddress")
+    public CompletableFuture<String> addNetworkAddress(@RequestBody Map<String, String> params) {
+
     }
 
 }
