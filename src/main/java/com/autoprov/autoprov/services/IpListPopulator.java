@@ -22,28 +22,33 @@ public class IpListPopulator {
         Integer host = 0;
         Boolean assignable = null;
         String notes = null;
+        String status = null;
         while (host <= 255) {
 
             switch (host) {
                 case 0:
                     notes = "Network Address";
+                    status = "Not Assignable";
                     assignable = false;
                     break;
                 case 1:
                     notes = "Internet Gateway";
+                    status = "Not Assignable";
                     assignable = false;
                 case 255:
                     notes = "Broadcast Address";
+                    status = "Not Assignable";
                     assignable = false;
                     break;
                 default:
                     notes = "Ready to assign";
+                    status = "Available";
                     assignable = true;
             }
 
             IpAddress ipAdd = IpAddress.builder()
                     .ipAddress(NetworkAddress.substring(0, (NetworkAddress.lastIndexOf(".") + 1)) + host.toString())
-                    .status("Available")
+                    .status(status)
                     .clientId(" ")
                     .vlanId(0)
                     .assignable(assignable)
