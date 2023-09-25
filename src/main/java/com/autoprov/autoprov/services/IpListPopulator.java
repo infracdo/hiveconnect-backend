@@ -20,13 +20,34 @@ public class IpListPopulator {
 
     public static String populateIpByNetworkAddress(String NetworkAddress) {
         Integer host = 0;
-        while (host <= 256) {
+        Boolean assignable = null;
+        String notes = null;
+        while (host <= 255) {
+
+            switch (host) {
+                case 0:
+                    notes = "Network Address";
+                    assignable = false;
+                    break;
+                case 1:
+                    notes = "Internet Gateway";
+                    assignable = false;
+                case 255:
+                    notes = "Broadcast Address";
+                    assignable = false;
+                    break;
+                default:
+                    notes = "Ready to assign";
+                    assignable = true;
+            }
+
             IpAddress ipAdd = IpAddress.builder()
-                    .networkAddress(NetworkAddress)
-                    .hostAddress("0.0.0." + host.toString())
+                    .ipAddress(NetworkAddress.substring(0, (NetworkAddress.lastIndexOf(".") + 1)) + host.toString())
                     .status("Available")
                     .clientId(" ")
                     .vlanId(0)
+                    .assignable(assignable)
+                    .notes(notes)
                     .build();
             ipAddRepo.save(ipAdd);
             host++;

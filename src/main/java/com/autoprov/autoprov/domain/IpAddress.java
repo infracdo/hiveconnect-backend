@@ -23,8 +23,7 @@ public class IpAddress {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private String networkAddress;
-    private String hostAddress;
+    private String ipAddress;
     private String status;
     private String clientId;
     private Integer vlanId;

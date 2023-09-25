@@ -31,8 +31,7 @@ public class IpAddController {
     @PostMapping("/addOneNetworkAddress")
     public CompletableFuture<String> addOneNetworkAddress(@RequestBody Map<String, String> params) {
         IpAddress ipAdd = IpAddress.builder()
-                .networkAddress(params.get("NetworkAddress"))
-                .hostAddress("0.0.0." + Integer.parseInt("21"))
+                .ipAddress(params.get("NetworkAddress"))
                 .status("Available")
                 .clientId("123")
                 .vlanId(5)
