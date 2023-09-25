@@ -28,5 +28,7 @@ public class IpAddress {
     private String status;
     private String clientId;
     private Integer vlanId;
+    private Boolean assignable;
+    private String notes;
 
 }
