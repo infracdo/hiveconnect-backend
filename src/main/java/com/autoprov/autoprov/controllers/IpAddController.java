@@ -3,6 +3,7 @@ package com.autoprov.autoprov.controllers;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import org.hibernate.query.results.complete.CompleteFetchBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autoprov.autoprov.domain.IpAddress;
 import com.autoprov.autoprov.repositories.IpAddressRepo;
-import com.autoprov.autoprov.services.IpAddService;
+import com.autoprov.autoprov.services.IpListPopulator;
 
 @RestController
 public class IpAddController {
@@ -19,15 +20,12 @@ public class IpAddController {
     private IpAddressRepo ipAddRepo;
 
     @Autowired
+    IpListPopulator ipListPopulator;
+
+    @Autowired
     public void IpAddressRepoImpl(IpAddressRepo ipAddRepo) {
         this.ipAddRepo = ipAddRepo;
     }
-
-    // private IpAddService ipAddService;
-
-    // public IpAddController(IpAddService ipAddService) {
-    // this.ipAddService = ipAddService;
-    // }
 
     @Async("asyncExecutor")
     @PostMapping("/addOneNetworkAddress")
@@ -47,7 +45,9 @@ public class IpAddController {
     @Async("asyncExecutor")
     @PostMapping("/addNetworkAddress")
     public CompletableFuture<String> addNetworkAddress(@RequestBody Map<String, String> params) {
+        String response = " ";
+        response = IpListPopulator.populateIpByNetworkAddress(params.get("NetworkAddress"));
 
+        return CompletableFuture.completedFuture(response);
     }
-
 }
