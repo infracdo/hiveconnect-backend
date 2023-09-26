@@ -24,7 +24,7 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private Integer client_owner_id;
-    private String account_no;
+    private String account_No; // related to subscriber "clients" table
     private String ip_assigned;
     private String date_assigned;
 

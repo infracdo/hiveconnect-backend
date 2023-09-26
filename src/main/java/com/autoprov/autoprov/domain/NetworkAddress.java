@@ -17,17 +17,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Entity // labels an entity that can be used for JPA
-@Table(name = "ipaddresses")
-public class IpAddress {
+@Table(name = "networkaddresses")
+public class NetworkAddress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private String ipAddress;
-    private String status;
+    private String networkAddress;
     private String account_No; // related to subscriber "clients" table
+    private String status;
+    private String type;
+    private String site;
     private Integer vlanId;
-    private Boolean assignable;
     private String notes;
 
 }

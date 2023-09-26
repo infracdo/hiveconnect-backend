@@ -6,58 +6,88 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.autoprov.autoprov.domain.IpAddress;
+import com.autoprov.autoprov.domain.NetworkAddress;
 import com.autoprov.autoprov.repositories.IpAddressRepository;
+import com.autoprov.autoprov.repositories.NetworkAddressRepository;
 
 @Service
 public class IpListService {
 
     private static IpAddressRepository ipAddRepo;
+    private static NetworkAddressRepository networkAddressRepo;
 
     @Autowired
     public void IpAddressRepoImpl(IpAddressRepository ipAddRepo) {
         IpListService.ipAddRepo = ipAddRepo;
     }
 
+    @Autowired
+    public void NetworkAddressRepositoryImpl(NetworkAddressRepository networkAddressRepo) {
+        IpListService.networkAddressRepo = networkAddressRepo;
+    }
+
     // Functions and Services
-    public static String populateIpByNetworkAddress(String NetworkAddress) {
+    public static String populateIpByNetworkAddress(String networkAddress) {
         Integer host = 0;
-        Boolean assignable = null;
-        String notes = null;
-        String status = null;
         while (host <= 255) {
 
-            switch (host) {
-                case 0:
-                    notes = "Network Address";
-                    status = "Not Assignable";
-                    assignable = false;
-                    break;
-                case 1:
-                    notes = "Internet Gateway";
-                    status = "Not Assignable";
-                    assignable = false;
-                case 255:
-                    notes = "Broadcast Address";
-                    status = "Not Assignable";
-                    assignable = false;
-                    break;
-                default:
-                    notes = "Ready to assign";
-                    status = "Available";
-                    assignable = true;
-            }
-
             IpAddress ipAdd = IpAddress.builder()
-                    .ipAddress(NetworkAddress.substring(0, (NetworkAddress.lastIndexOf(".") + 1)) + host.toString())
-                    .status(status)
-                    .clientId(" ")
+                    .ipAddress(networkAddress.substring(0, (networkAddress.lastIndexOf(".") + 1)) + host.toString())
+                    .status(defaultRemarks(host)[0])
+                    .account_No(" ")
                     .vlanId(0)
-                    .assignable(assignable)
-                    .notes(notes)
+                    .assignable(Boolean.valueOf(defaultRemarks(host)[1]))
+                    .notes(defaultRemarks(host)[2])
                     .build();
             ipAddRepo.save(ipAdd);
             host++;
         }
         return "successful";
+    }
+
+    public static String addNetworkAddress(String networkAddress, String account_No, Integer vlanId, String site,
+            String type, String status, String notes) {
+        NetworkAddress networkAdd = NetworkAddress.builder()
+                .networkAddress(networkAddress)
+                .account_No(account_No)
+                .type(type)
+                .site(site)
+                .status(status)
+                .vlanId(vlanId)
+                .notes(notes)
+                .build();
+        networkAddressRepo.save(networkAdd);
+
+        if (type.equals("Residence") || type.equals("RES")) {
+            populateIpByNetworkAddress(networkAddress);
+        }
+
+        return null;
+    }
+
+    public static String[] defaultRemarks(Integer host) {
+        String[] remarks = new String[3]; // [status, assignable, notes]
+
+        switch (host) {
+            case 0:
+                remarks[0] = "Not Assignable";
+                remarks[1] = "false";
+                remarks[2] = "Network Address";
+                break;
+            case 1:
+                remarks[0] = "Not Assignable";
+                remarks[1] = "false";
+                remarks[2] = "Internet Gateway";
+            case 255:
+                remarks[0] = "Not Assignable";
+                remarks[1] = "false";
+                remarks[2] = "Broadcast Address";
+                break;
+            default:
+                remarks[0] = "Ready to Assign";
+                remarks[1] = "true";
+                remarks[2] = "Available";
+        }
+        return remarks;
     }
 }

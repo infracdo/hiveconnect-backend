@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.autoprov.autoprov.services.IpListService;
 
 @RestController
-public class IpAddController {
+public class IpManagementController {
 
     // private IpAddressRepository ipAddRepo;
 
@@ -39,10 +39,18 @@ public class IpAddController {
     // // }
 
     @Async("asyncExecutor")
-    @PostMapping("/addNetworkAddress")
-    public CompletableFuture<String> addNetworkAddress(@RequestBody Map<String, String> params) {
+    @PostMapping("/populateSubnetIPs")
+    public CompletableFuture<String> populateSubnetIPs(@RequestBody Map<String, String> params) {
         String response = IpListService.populateIpByNetworkAddress(params.get("NetworkAddress"));
 
         return CompletableFuture.completedFuture(response);
     }
+
+    @Async("asyncExecutor")
+    @PostMapping("/addNetworkAddress")
+    public CompletableFuture<String> addNetworkAddress(@RequestBody Map<String, String> params) {
+        String response = " ";
+        return CompletableFuture.completedFuture(response);
+    }
+
 }
