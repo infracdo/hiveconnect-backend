@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 
 import com.autoprov.autoprov.domain.IpAddress;
 
-public interface IpAddressRepo extends CrudRepository<IpAddress, Long> {
+public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
 
 }

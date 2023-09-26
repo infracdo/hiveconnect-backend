@@ -6,18 +6,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.autoprov.autoprov.domain.IpAddress;
-import com.autoprov.autoprov.repositories.IpAddressRepo;
+import com.autoprov.autoprov.repositories.IpAddressRepository;
 
 @Service
-public class IpListPopulator {
+public class IpListService {
 
-    private static IpAddressRepo ipAddRepo;
+    private static IpAddressRepository ipAddRepo;
 
     @Autowired
-    public void IpAddressRepoImpl(IpAddressRepo ipAddRepo) {
-        IpListPopulator.ipAddRepo = ipAddRepo;
+    public void IpAddressRepoImpl(IpAddressRepository ipAddRepo) {
+        IpListService.ipAddRepo = ipAddRepo;
     }
 
+    // Functions and Services
     public static String populateIpByNetworkAddress(String NetworkAddress) {
         Integer host = 0;
         Boolean assignable = null;
