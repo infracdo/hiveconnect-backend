@@ -70,24 +70,24 @@ public class IpListService {
 
         switch (host) {
             case 0:
-                remarks[0] = "Not Assignable";
+                remarks[0] = "Not Available";
                 remarks[1] = "false";
                 remarks[2] = "Network Address";
                 break;
             case 1:
-                remarks[0] = "Not Assignable";
+                remarks[0] = "Not Available";
                 remarks[1] = "false";
                 remarks[2] = "Internet Gateway";
                 break;
             case 255:
-                remarks[0] = "Not Assignable";
+                remarks[0] = "Not Available";
                 remarks[1] = "false";
                 remarks[2] = "Broadcast Address";
                 break;
             default:
-                remarks[0] = "Ready to Assign";
+                remarks[0] = "Available";
                 remarks[1] = "true";
-                remarks[2] = "Available";
+                remarks[2] = "Ready to Assign";
         }
         return remarks;
     }

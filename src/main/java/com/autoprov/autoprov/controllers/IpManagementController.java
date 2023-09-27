@@ -29,21 +29,6 @@ public class IpManagementController {
     @Autowired
     private NetworkAddressRepository networkdAddRepo;
 
-    // // @Async("asyncExecutor")
-    // // @PostMapping("/addOneNetworkAddress")
-    // // public CompletableFuture<String> addOneNetworkAddress(@RequestBody
-    // Map<String, String> params) {
-    // // IpAddress ipAdd = IpAddress.builder()
-    // // .ipAddress(params.get("NetworkAddress"))
-    // // .status("Available")
-    // // .clientId("123")
-    // // .vlanId(5)
-    // // .build();
-    // // ipAddRepo.save(ipAdd);
-
-    // // return CompletableFuture.completedFuture("Network added");
-    // // }
-
     @Async("asyncExecutor")
     @PostMapping("/populateSubnetIPs")
     public CompletableFuture<String> populateSubnetIPs(@RequestBody Map<String, String> params) {

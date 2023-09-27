@@ -8,6 +8,6 @@ import com.autoprov.autoprov.domain.IpAddress;
 
 public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
 
-    @Query(value = "SELECT * from IpAddresses where status = \"Ready to Assign\"", nativeQuery = true)
+    @Query(value = "SELECT * from IpAddresses where status = \"Available\"", nativeQuery = true)
     List<IpAddress> findAllAvailableIp();
 }
