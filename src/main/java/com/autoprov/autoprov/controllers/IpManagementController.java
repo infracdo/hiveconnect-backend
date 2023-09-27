@@ -16,13 +16,18 @@ import com.autoprov.autoprov.domain.Client;
 import com.autoprov.autoprov.services.IpListService;
 
 import com.autoprov.autoprov.domain.IpAddress;
+import com.autoprov.autoprov.domain.NetworkAddress;
 import com.autoprov.autoprov.repositories.IpAddressRepository;
+import com.autoprov.autoprov.repositories.NetworkAddressRepository;
 
 @RestController
 public class IpManagementController {
 
     @Autowired
     private IpAddressRepository ipAddRepo;
+
+    @Autowired
+    private NetworkAddressRepository networkdAddRepo;
 
     // // @Async("asyncExecutor")
     // // @PostMapping("/addOneNetworkAddress")
@@ -58,9 +63,19 @@ public class IpManagementController {
     }
 
     @Async("asyncExecutor")
+    @GetMapping("/getNetworkAddresses")
+    public CompletableFuture<List<NetworkAddress>> getNetworkAddresses() {
+        List<NetworkAddress> NetworkAddress = new ArrayList<>();
+        networkdAddRepo.findAll().forEach(NetworkAddress::add);
+
+        return CompletableFuture.completedFuture(NetworkAddress);
+    }
+
+    @Async("asyncExecutor")
     @GetMapping("/getAvailableIpAddress")
     public CompletableFuture<List<IpAddress>> getAvailableIpAddress() {
         List<IpAddress> IpAddress = new ArrayList<>();
+        // AddServiceImplementationHere
 
         return CompletableFuture.completedFuture(IpAddress);
     }
