@@ -75,8 +75,7 @@ public class IpManagementController {
     @GetMapping("/getAvailableIpAddress")
     public CompletableFuture<List<IpAddress>> getAvailableIpAddress() {
         List<IpAddress> IpAddress = new ArrayList<>();
-        // AddServiceImplementationHere
-
+        ipAddRepo.findAllAvailableIp().forEach(IpAddress::add);
         return CompletableFuture.completedFuture(IpAddress);
     }
 
