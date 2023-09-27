@@ -1,5 +1,7 @@
 package com.autoprov.autoprov.domain;
 
+import java.sql.Date;
+
 import org.springframework.stereotype.Indexed;
 
 import jakarta.persistence.Entity;
@@ -26,6 +28,6 @@ public class Client {
     private Integer client_owner_id;
     private String account_No; // related to subscriber "clients" table
     private String ip_assigned;
-    private String date_assigned;
+    private Date date_assigned;
 
 }

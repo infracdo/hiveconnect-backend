@@ -27,7 +27,7 @@ public class IpListService {
     }
 
     // Functions and Services
-    public static String populateIpByNetworkAddress(String networkAddress) {
+    public static String populateIpByNetworkAddress(String networkAddress, Integer vlanId) {
         Integer host = 0;
         while (host <= 255) {
 
@@ -35,7 +35,7 @@ public class IpListService {
                     .ipAddress(networkAddress.substring(0, (networkAddress.lastIndexOf(".") + 1)) + host.toString())
                     .status(defaultRemarks(host)[0])
                     .account_No(" ")
-                    .vlanId(0)
+                    .vlanId(vlanId)
                     .assignable(Boolean.valueOf(defaultRemarks(host)[1]))
                     .notes(defaultRemarks(host)[2])
                     .build();
@@ -58,11 +58,11 @@ public class IpListService {
                 .build();
         networkAddressRepo.save(networkAdd);
 
-        if (type.equals("Residence") || type.equals("RES")) {
-            populateIpByNetworkAddress(networkAddress);
+        if (type.equals("Residential") || type.equals("RES")) {
+            populateIpByNetworkAddress(networkAddress, vlanId);
         }
 
-        return null;
+        return "Successful";
     }
 
     public static String[] defaultRemarks(Integer host) {
@@ -78,6 +78,7 @@ public class IpListService {
                 remarks[0] = "Not Assignable";
                 remarks[1] = "false";
                 remarks[2] = "Internet Gateway";
+                break;
             case 255:
                 remarks[0] = "Not Assignable";
                 remarks[1] = "false";

@@ -41,7 +41,8 @@ public class IpManagementController {
     @Async("asyncExecutor")
     @PostMapping("/populateSubnetIPs")
     public CompletableFuture<String> populateSubnetIPs(@RequestBody Map<String, String> params) {
-        String response = IpListService.populateIpByNetworkAddress(params.get("NetworkAddress"));
+        String response = IpListService.populateIpByNetworkAddress(params.get("NetworkAddress"),
+                Integer.parseInt(params.get("VlanID")));
 
         return CompletableFuture.completedFuture(response);
     }
@@ -49,7 +50,9 @@ public class IpManagementController {
     @Async("asyncExecutor")
     @PostMapping("/addNetworkAddress")
     public CompletableFuture<String> addNetworkAddress(@RequestBody Map<String, String> params) {
-        String response = " ";
+        String response = IpListService.addNetworkAddress(params.get("NetworkAddress"), params.get("AccountNumber"),
+                Integer.parseInt(params.get("VlanID")), params.get("Site"), params.get("Type"), params.get("Status"),
+                params.get("Notes"));
         return CompletableFuture.completedFuture(response);
     }
 
