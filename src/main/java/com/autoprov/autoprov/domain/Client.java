@@ -39,13 +39,13 @@ public class Client {
     @Column(name = "package_type_id")
     private String package_type_id;
 
-    public void assignIp(String ip) {
-        this.ip_assigned = ip;
-    }
+    // public void assignIp(String ip) {
+    // this.ip_assigned = ip;
+    // }
 
-    public void setOnuSerialNo(String serialNo) {
-        this.onu_serial_no = serialNo;
-    }
+    // public void setOnuSerialNo(String serialNo) {
+    // this.onu_serial_no = serialNo;
+    // }
 
     // @Column(name = "date_assigned")
     // private Date date_assigned;

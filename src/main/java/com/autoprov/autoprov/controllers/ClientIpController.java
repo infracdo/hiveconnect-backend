@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.autoprov.autoprov.services.ClientIpService;
 import com.autoprov.autoprov.services.IpListService;
 
 import com.autoprov.autoprov.domain.Client;
@@ -33,6 +35,14 @@ public class ClientIpController {
     @PostMapping("/associateIpToClient")
     public CompletableFuture<String> associateIpToClient(@RequestBody Map<String, String> params) {
         return null;
+    }
+
+    @Async("asyncExecutor")
+    @PostMapping("/addNewClient")
+    public CompletableFuture<String> addNewClient(@RequestBody Map<String, String> params) {
+        String response = ClientIpService.addNewClient(params.get("AccountID"), params.get("Package ID"));
+
+        return CompletableFuture.completedFuture(response);
     }
 
     @Async("asyncExecutor")

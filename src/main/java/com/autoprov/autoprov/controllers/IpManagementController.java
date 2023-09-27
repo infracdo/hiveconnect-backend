@@ -1,27 +1,28 @@
 package com.autoprov.autoprov.controllers;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.autoprov.autoprov.domain.Client;
 import com.autoprov.autoprov.services.IpListService;
+
+import com.autoprov.autoprov.domain.IpAddress;
+import com.autoprov.autoprov.repositories.IpAddressRepository;
 
 @RestController
 public class IpManagementController {
 
-    // private IpAddressRepository ipAddRepo;
-
-    // @Autowired
-    // IpListService ipListPopulator;
-
-    // @Autowired
-    // public void IpAddressRepoImpl(IpAddressRepository ipAddRepo) {
-    // this.ipAddRepo = ipAddRepo;
-    // }
+    @Autowired
+    private IpAddressRepository ipAddRepo;
 
     // // @Async("asyncExecutor")
     // // @PostMapping("/addOneNetworkAddress")
@@ -54,6 +55,14 @@ public class IpManagementController {
                 Integer.parseInt(params.get("VlanID")), params.get("Site"), params.get("Type"), params.get("Status"),
                 params.get("Notes"));
         return CompletableFuture.completedFuture(response);
+    }
+
+    @Async("asyncExecutor")
+    @GetMapping("/getAvailableIpAddress")
+    public CompletableFuture<List<IpAddress>> getAvailableIpAddress() {
+        List<IpAddress> IpAddress = new ArrayList<>();
+
+        return CompletableFuture.completedFuture(IpAddress);
     }
 
 }

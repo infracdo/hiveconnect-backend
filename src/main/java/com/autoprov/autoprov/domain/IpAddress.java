@@ -1,5 +1,9 @@
 package com.autoprov.autoprov.domain;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Indexed;
 
 import jakarta.persistence.Entity;
