@@ -2,6 +2,7 @@ package com.autoprov.autoprov.domain;
 
 import org.springframework.stereotype.Indexed;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,7 +24,10 @@ public class NetworkAddress {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    @Column(name = "network_address", unique = true)
     private String networkAddress;
+
     private String account_No; // related to subscriber "clients" table
     private String status;
     private String type;

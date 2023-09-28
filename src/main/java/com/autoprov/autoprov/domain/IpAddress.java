@@ -29,7 +29,7 @@ public class IpAddress {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "ip_address")
+    @Column(name = "ip_address", unique = true)
     private String ipAddress;
 
     private String status;
