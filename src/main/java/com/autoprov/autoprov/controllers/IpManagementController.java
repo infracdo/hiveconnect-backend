@@ -3,9 +3,12 @@ package com.autoprov.autoprov.controllers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -87,6 +90,59 @@ public class IpManagementController {
         System.out.println(networkAddress);
         ipAddRepo.findAllUnderNetworkAddress(networkAddress).forEach(NetworkAddress::add);
         return CompletableFuture.completedFuture(NetworkAddress);
+    }
+
+    @Async("asyncExecutor")
+    @PostMapping("/updateNetworkAddress/{networkAddress}")
+    public CompletableFuture<ResponseEntity<NetworkAddress>> updateNetworkAddress(
+            @PathVariable("networkAddress") String networkAddress,
+            @RequestBody Map<String, String> params) {
+        Optional<NetworkAddress> optionalNetworkAddress = networkdAddRepo.findByNetworkAddress(networkAddress);
+
+        if (optionalNetworkAddress.isPresent()) {
+            // Modify the fields of the entity object
+            NetworkAddress networkAdd = optionalNetworkAddress.get();
+
+            networkAdd.setAccount_No(params.get("AccountNumber"));
+            networkAdd.setNotes(params.get("Notes"));
+            networkAdd.setSite(params.get("Site"));
+            networkAdd.setType(params.get("Type"));
+            networkAdd.setVlanId(Integer.parseInt(params.get("VlanID")));
+            networkAdd.setStatus(params.get("Status"));
+
+            // Save the entity
+            return CompletableFuture
+                    .completedFuture(new ResponseEntity<>(networkdAddRepo.save(networkAdd), HttpStatus.OK));
+
+        }
+
+        return CompletableFuture.completedFuture(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+
+    }
+
+    @Async("asyncExecutor")
+    @PostMapping("/updateIpAddress/{ipAddress}")
+    public CompletableFuture<ResponseEntity<IpAddress>> updateIpAddress(@PathVariable("ipAddress") String ipAddress,
+            @RequestBody Map<String, String> params) {
+        Optional<IpAddress> optionalIpAddress = ipAddRepo.findByipAddress(ipAddress);
+
+        if (optionalIpAddress.isPresent()) {
+            // Modify the fields of the entity object
+            IpAddress ipAdd = optionalIpAddress.get();
+            if (ipAdd.getAssignable() == false)
+                return CompletableFuture.completedFuture(new ResponseEntity<>(HttpStatus.FORBIDDEN));
+            ipAdd.setAccount_No(params.get("AccountNumber"));
+            ipAdd.setNotes(params.get("Notes"));
+            ipAdd.setStatus(params.get("Status"));
+
+            // Save the entity
+            return CompletableFuture
+                    .completedFuture(new ResponseEntity<>(ipAddRepo.save(ipAdd), HttpStatus.OK));
+
+        }
+
+        return CompletableFuture.completedFuture(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+
     }
 
 }

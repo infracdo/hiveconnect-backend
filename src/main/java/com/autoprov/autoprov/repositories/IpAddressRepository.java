@@ -1,6 +1,7 @@
 package com.autoprov.autoprov.repositories;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -13,4 +14,6 @@ public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
 
     @Query(value = "SELECT * from ipaddresses where ip_address LIKE ?1%", nativeQuery = true)
     List<IpAddress> findAllUnderNetworkAddress(String networkAddress);
+
+    Optional<IpAddress> findByipAddress(String ipAddress);
 }
