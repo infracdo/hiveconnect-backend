@@ -20,6 +20,7 @@ import com.autoprov.autoprov.domain.IpAddress;
 import com.autoprov.autoprov.domain.NetworkAddress;
 import com.autoprov.autoprov.repositories.IpAddressRepository;
 import com.autoprov.autoprov.repositories.NetworkAddressRepository;
+
 @CrossOrigin(origins = "*")
 @RestController
 public class IpManagementController {
@@ -62,6 +63,16 @@ public class IpManagementController {
     public CompletableFuture<List<IpAddress>> getAvailableIpAddress() {
         List<IpAddress> IpAddress = new ArrayList<>();
         ipAddRepo.findAllAvailableIp().forEach(IpAddress::add);
+        return CompletableFuture.completedFuture(IpAddress);
+    }
+
+    @Async("asyncExecutor")
+    @GetMapping("/getIpAddressesOfNetworkAddress")
+    public CompletableFuture<List<IpAddress>> getIpAddressesOfNetworkAddress(@RequestBody Map<String, String> params) {
+        List<IpAddress> IpAddress = new ArrayList<>();
+        String networkAddress = params.get("NetworkAddress");
+        networkAddress = networkAddress.substring(0, (networkAddress.lastIndexOf(".")));
+        ipAddRepo.findAllUnderNetworkAddress(networkAddress).forEach(IpAddress::add);
         return CompletableFuture.completedFuture(IpAddress);
     }
 
