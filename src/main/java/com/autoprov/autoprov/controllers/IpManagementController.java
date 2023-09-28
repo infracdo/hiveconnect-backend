@@ -7,6 +7,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,7 +20,7 @@ import com.autoprov.autoprov.domain.IpAddress;
 import com.autoprov.autoprov.domain.NetworkAddress;
 import com.autoprov.autoprov.repositories.IpAddressRepository;
 import com.autoprov.autoprov.repositories.NetworkAddressRepository;
-
+@CrossOrigin(origins = "*")
 @RestController
 public class IpManagementController {
 
