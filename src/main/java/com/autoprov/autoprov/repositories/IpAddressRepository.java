@@ -8,9 +8,9 @@ import com.autoprov.autoprov.domain.IpAddress;
 
 public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
 
-    @Query(value = "SELECT * from IpAddresses where status = \"Available\"", nativeQuery = true)
+    @Query(value = "SELECT * from ipaddresses where status = \"Available\"", nativeQuery = true)
     List<IpAddress> findAllAvailableIp();
 
-    @Query(value = "SELECT * from IpAddresses where ip_address LIKE ?1%", nativeQuery = true)
+    @Query(value = "SELECT * from ipaddresses where ip_address LIKE ?1%", nativeQuery = true)
     List<IpAddress> findAllUnderNetworkAddress(String networkAddress);
 }
