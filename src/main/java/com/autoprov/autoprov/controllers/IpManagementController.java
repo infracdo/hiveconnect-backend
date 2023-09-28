@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -93,7 +94,7 @@ public class IpManagementController {
     }
 
     @Async("asyncExecutor")
-    @PostMapping("/updateNetworkAddress/{networkAddress}")
+    @PatchMapping("/updateNetworkAddress/{networkAddress}")
     public CompletableFuture<ResponseEntity<NetworkAddress>> updateNetworkAddress(
             @PathVariable("networkAddress") String networkAddress,
             @RequestBody Map<String, String> params) {
@@ -121,7 +122,7 @@ public class IpManagementController {
     }
 
     @Async("asyncExecutor")
-    @PostMapping("/updateIpAddress/{ipAddress}")
+    @PatchMapping("/updateIpAddress/{ipAddress}")
     public CompletableFuture<ResponseEntity<IpAddress>> updateIpAddress(@PathVariable("ipAddress") String ipAddress,
             @RequestBody Map<String, String> params) {
         Optional<IpAddress> optionalIpAddress = ipAddRepo.findByipAddress(ipAddress);
