@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -69,11 +70,23 @@ public class IpManagementController {
     @Async("asyncExecutor")
     @GetMapping("/getIpAddressesOfNetworkAddress")
     public CompletableFuture<List<IpAddress>> getIpAddressesOfNetworkAddress(@RequestBody Map<String, String> params) {
-        List<IpAddress> IpAddress = new ArrayList<>();
+        List<IpAddress> NetworkAddress = new ArrayList<>();
         String networkAddress = params.get("NetworkAddress");
         networkAddress = networkAddress.substring(0, (networkAddress.lastIndexOf(".")));
-        ipAddRepo.findAllUnderNetworkAddress(networkAddress).forEach(IpAddress::add);
-        return CompletableFuture.completedFuture(IpAddress);
+        System.out.println(networkAddress);
+        ipAddRepo.findAllUnderNetworkAddress(networkAddress).forEach(NetworkAddress::add);
+        return CompletableFuture.completedFuture(NetworkAddress);
+    }
+
+    @Async("asyncExecutor")
+    @GetMapping("/getIpAddressesOfNetworkAddress/{networkAdd}")
+    public CompletableFuture<List<IpAddress>> getIpAddressesOfNetworkAddressPath(
+            @PathVariable("networkAdd") String networkAddress) {
+        List<IpAddress> NetworkAddress = new ArrayList<>();
+        networkAddress = networkAddress.substring(0, (networkAddress.lastIndexOf(".")));
+        System.out.println(networkAddress);
+        ipAddRepo.findAllUnderNetworkAddress(networkAddress).forEach(NetworkAddress::add);
+        return CompletableFuture.completedFuture(NetworkAddress);
     }
 
 }
