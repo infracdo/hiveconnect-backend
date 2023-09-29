@@ -7,12 +7,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jcraft.jsch.*;
@@ -26,8 +28,7 @@ public class AutoProvisionController {
 
     @Async("asyncExecutor")
     @PostMapping("/runPlaybook")
-    public CompletableFuture<String> runPlaybook(String device_name, String account_no, String onu_serial_number,
-            String mac_address, String olt_ip, String status, String onu_private_ip, String olt_interface)
+    public CompletableFuture<String> runPlaybook(@RequestBody Map<String, String> params)
             throws JSchException, IOException, InterruptedException {
 
         try {
@@ -63,14 +64,14 @@ public class AutoProvisionController {
 
             StringBuilder command = new StringBuilder();
             command.append("ansible-playbook ");
-            command.append("-e \"device_name=" + device_name + "\" ");
-            command.append("-e \"serial_number=" + onu_serial_number + "\" ");
-            command.append("-e \"mac_address=" + mac_address + "\" ");
-            command.append("-e \"olt_ip=" + olt_ip + "\" ");
-            command.append("-e \"account_number=" + account_no + "\" ");
-            command.append("-e \"status=" + status + "\" ");
-            command.append("-e \"onu_private_ip=" + onu_private_ip + "\" ");
-            command.append("-e \"olt_interface=" + olt_interface + "\" ");
+            command.append("-e \"device_name=" + params.get("device_name") + "\" ");
+            command.append("-e \"serial_number=" + params.get("serial_number") + "\" ");
+            command.append("-e \"mac_address=" + params.get("mac_address") + "\" ");
+            command.append("-e \"olt_ip=" + params.get("olt_ip") + "\" ");
+            command.append("-e \"account_number=" + params.get("account_no") + "\" ");
+            command.append("-e \"status=" + params.get("status") + "\" ");
+            command.append("-e \"onu_private_ip=" + params.get("onu_private_ip") + "\" ");
+            command.append("-e \"olt_interface=" + params.get("olt_interface") + "\" ");
             command.append("/home/ubuntu/ansible/playbooks/onboard_newly_activated_subscribers.yml -vvv");
 
             sendCommand(session, command.toString());
