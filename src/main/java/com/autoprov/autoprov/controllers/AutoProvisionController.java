@@ -34,7 +34,7 @@ public class AutoProvisionController {
 
         try {
             // SSH connection parameters
-            String host = "172.91.10.108";
+            String host = "172.91.10.112";
             String user = "ubuntu";
             String password = "ap0ll0";
 
