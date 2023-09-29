@@ -53,6 +53,7 @@ public class ClientIpController {
         List<Client> Client = new ArrayList<>();
         clientRepo.findAll().forEach(Client::add);
 
+        System.out.println("getClients invoked");
         return CompletableFuture.completedFuture(Client);
     }
 
@@ -60,6 +61,7 @@ public class ClientIpController {
     @GetMapping("/getClientById/{id}")
     public CompletableFuture<Optional<Client>> getClientById(@PathVariable("id") Long id) {
 
+        System.out.println("getClients {" + id.toString() + "} invoked");
         return CompletableFuture.completedFuture(clientRepo.findById(id));
     }
 
@@ -77,6 +79,7 @@ public class ClientIpController {
             client.setOnu_serial_no(params.get("Serial Number"));
 
             // Save the entity
+            System.out.println("updateClient {" + id.toString() + "} invoked");
             return CompletableFuture
                     .completedFuture(new ResponseEntity<>(clientRepo.save(client), HttpStatus.OK));
 
