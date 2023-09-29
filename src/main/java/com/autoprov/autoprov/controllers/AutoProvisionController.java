@@ -37,7 +37,7 @@ public class AutoProvisionController {
             jsch.setKnownHosts("~/.ssh/known_hosts");
 
             Session session = jsch.getSession("ubuntu", "172.91.10.112", 22);
-            session.setPassword("ap0ll0ap0ll0");
+            session.setPassword("ap0ll0");
             session.connect(0);
 
             Channel channel = session.openChannel("shell");
