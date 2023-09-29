@@ -55,6 +55,7 @@ public class AutoProvisionController {
             JSch jsch = new JSch();
             Session session = jsch.getSession(user, host, 22);
             session.setPassword(password);
+            session.setConfig("StrictHostKeyChecking", "no");
             session.connect();
 
             // Execute command
