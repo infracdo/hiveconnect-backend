@@ -26,7 +26,6 @@ public class AutoProvisionController {
 
     PrintWriter toChannel;
 
-    @Async("asyncExecutor")
     @PostMapping("/runPlaybook")
     public CompletableFuture<String> runPlaybook(@RequestBody Map<String, String> params)
             throws JSchException, IOException, InterruptedException {
@@ -74,7 +73,7 @@ public class AutoProvisionController {
             command.append("-e \"olt_interface=" + params.get("olt_interface") + "\" ");
             command.append("/home/ubuntu/ansible/playbooks/onboard_newly_activated_subscribers.yml -vvv");
 
-            sendCommand(session, command.toString());
+            CompletableFuture.runAsync(() -> sendCommand(session, command.toString()));
 
             return CompletableFuture.completedFuture("Successful");
 
