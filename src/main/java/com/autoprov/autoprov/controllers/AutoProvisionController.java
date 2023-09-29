@@ -35,7 +35,7 @@ public class AutoProvisionController {
 
             jsch.setKnownHosts("~/.ssh/known_hosts");
 
-            Session session = jsch.getSession("ubuntu", "192.168.250.35", 22);
+            Session session = jsch.getSession("ubuntu", "172.91.10.112", 22);
             session.setPassword("ap0ll0ap0ll0");
             session.connect(0);
 
@@ -52,14 +52,14 @@ public class AutoProvisionController {
             Thread.sleep(1000);
 
             // Playbook fields
-            device_name = "mario";
-            onu_serial_number = "111AAA";
-            mac_address = "1c:18:4a:f9:16:b1";
-            olt_ip = "172.16.0.3";
-            account_no = "00111";
-            status = "Activated";
-            onu_private_ip = "172.16.0.53";
-            olt_interface = "0/1:3";
+            // device_name = "mary_bw1";
+            // onu_serial_number = "111AAA";
+            // mac_address = "1c:18:4a:f9:16:b1";
+            // olt_ip = "172.16.0.2";
+            // account_no = "00111";
+            // status = "Activated";
+            // onu_private_ip = "172.16.0.52";
+            // olt_interface = "0/1:3";
 
             StringBuilder command = new StringBuilder();
             command.append("ansible-playbook ");

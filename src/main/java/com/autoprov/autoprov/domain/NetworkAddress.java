@@ -30,6 +30,8 @@ public class NetworkAddress {
 
     private String account_No; // related to subscriber "clients" table
     private String status;
+
+    @Column(name = "network_type")
     private String type;
     private String site;
     private Integer vlanId;
