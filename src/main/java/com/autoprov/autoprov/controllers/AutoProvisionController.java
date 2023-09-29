@@ -58,7 +58,7 @@ public class AutoProvisionController {
             session.connect();
 
             // Execute command
-            ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
+            ChannelExec channelExec = (ChannelExec) session.openChannel("shell");
             channelExec.setCommand(command.toString());
 
             // Get command output
