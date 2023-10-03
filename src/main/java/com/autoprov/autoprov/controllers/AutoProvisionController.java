@@ -115,6 +115,7 @@ public class AutoProvisionController {
 
             // Execute command
             ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
+            System.out.println("Executing command: " + command.toString());
             channelExec.setCommand(command.toString());
 
             // Get command output
