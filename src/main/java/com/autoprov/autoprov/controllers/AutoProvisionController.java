@@ -99,7 +99,7 @@ public class AutoProvisionController {
 
             // Command to execute
             StringBuilder command = new StringBuilder();
-            command.append("ansible-playbook/home/ubuntu/ansible/playbooks/set_bandwidth.yml ");
+            command.append("ansible-playbook /home/ubuntu/ansible/playbooks/set_bandwidth.yml ");
             command.append("-e \"host=" + params.get("host") + "\" ");
             command.append("-e \"olt_interface=" + params.get("olt_interface") + "\" ");
             command.append("-e \"downstream=" + params.get("downstream") + "\" ");
