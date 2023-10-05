@@ -9,6 +9,8 @@ import org.springframework.data.repository.CrudRepository;
 
 import com.autoprov.autoprov.domain.Client;
 
+import jakarta.transaction.Transactional;
+
 public interface ClientRepository extends CrudRepository<Client, Long> {
 
     List<Client> findAll();
@@ -17,7 +19,7 @@ public interface ClientRepository extends CrudRepository<Client, Long> {
     @Query("update Client u set u.ip_assigned = ?1, u.onu_serial_no = ?2 where u.id = ?3")
     void updateClientById(String ip_assigned, String onu_serial_no, Integer id);
 
-    @Query("select Client u where u.onu_serial_no =?1")
+    @Query(value = "SELECT * from clients where onu_serial_number LIKE ?1%", nativeQuery = true)
     Optional<Client> findClientBySerialNumber(String serial_number);
 
 }
