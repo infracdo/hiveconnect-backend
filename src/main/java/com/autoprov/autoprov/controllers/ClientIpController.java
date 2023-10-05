@@ -66,6 +66,15 @@ public class ClientIpController {
     }
 
     @Async("asyncExecutor")
+    @GetMapping("/getClientBySerialNumber/{serial_number}")
+    public CompletableFuture<Optional<Client>> getClientBySerialNumber(
+            @PathVariable("serial_number") String serial_number) {
+
+        System.out.println("getClients {" + serial_number + "} invoked");
+        return CompletableFuture.completedFuture(clientRepo.findClientBySerialNumber(serial_number));
+    }
+
+    @Async("asyncExecutor")
     @PatchMapping("/updateClient/{id}")
     public CompletableFuture<ResponseEntity<Client>> updateClient(@PathVariable("id") Long id,
             @RequestBody Map<String, String> params) {

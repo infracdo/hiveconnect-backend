@@ -1,6 +1,7 @@
 package com.autoprov.autoprov.repositories;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,5 +16,8 @@ public interface ClientRepository extends CrudRepository<Client, Long> {
     @Modifying
     @Query("update Client u set u.ip_assigned = ?1, u.onu_serial_no = ?2 where u.id = ?3")
     void updateClientById(String ip_assigned, String onu_serial_no, Integer id);
+
+    @Query("select Client u where u.onu_serial_no =?1")
+    Optional<Client> findClientBySerialNumber(String serial_number);
 
 }
