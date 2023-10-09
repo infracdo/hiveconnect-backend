@@ -16,4 +16,8 @@ public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
     List<IpAddress> findAllUnderNetworkAddress(String networkAddress);
 
     Optional<IpAddress> findByipAddress(String ipAddress);
+
+    @Query(value = "SELECT * from ipaddresses where status =\"Available\" LIMIT 1", nativeQuery = true)
+    List<IpAddress> getOneAvailableIpAddress();
+
 }

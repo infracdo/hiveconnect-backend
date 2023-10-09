@@ -72,6 +72,12 @@ public class IpManagementController {
     }
 
     @Async("asyncExecutor")
+    @GetMapping("/getOneAvailableIpAddress")
+    public CompletableFuture<List<IpAddress>> getOneAvailableIpAddress() {
+        return CompletableFuture.completedFuture(ipAddRepo.getOneAvailableIpAddress());
+    }
+
+    @Async("asyncExecutor")
     @GetMapping("/getIpAddressesOfNetworkAddress")
     public CompletableFuture<List<IpAddress>> getIpAddressesOfNetworkAddress(@RequestBody Map<String, String> params) {
         List<IpAddress> NetworkAddress = new ArrayList<>();

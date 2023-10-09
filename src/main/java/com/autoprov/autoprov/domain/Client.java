@@ -36,6 +36,12 @@ public class Client {
     @Column(name = "onu_serial_no")
     private String onu_serial_no;
 
+    @Column(name = "olt_ip")
+    private String olt_ip;
+
+    @Column(name = "onu_mac_address")
+    private String onu_mac_address;
+
     @Column(name = "package_type_id")
     private String package_type_id;
 
