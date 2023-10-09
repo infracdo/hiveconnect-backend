@@ -138,7 +138,7 @@ public class IpManagementController {
             IpAddress ipAdd = optionalIpAddress.get();
             if (ipAdd.getAssignable() == false)
                 return CompletableFuture.completedFuture(new ResponseEntity<>(HttpStatus.FORBIDDEN));
-            ipAdd.setAccount_No(params.get("AccountNumber"));
+            ipAdd.setAccountNo(params.get("AccountNumber"));
             ipAdd.setNotes(params.get("Notes"));
             ipAdd.setStatus(params.get("Status"));
 
