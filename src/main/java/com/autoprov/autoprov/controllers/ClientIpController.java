@@ -34,12 +34,6 @@ public class ClientIpController {
     private ClientRepository clientRepo;
 
     @Async("asyncExecutor")
-    @PostMapping("/associateIpToClient")
-    public CompletableFuture<String> associateIpToClient(@RequestBody Map<String, String> params) {
-        return null;
-    }
-
-    @Async("asyncExecutor")
     @PostMapping("/addNewClient")
     public CompletableFuture<String> addNewClient(@RequestBody Map<String, String> params) {
         String response = ClientIpService.addNewClient(
@@ -50,6 +44,7 @@ public class ClientIpController {
                 params.get("ONUMacAddress"),
                 params.get("OltIP"));
 
+        clientRepo.updateClientByOnuSerialNum(params.get("ONUSerialNum"), params.get("IPAssigned"));
         return CompletableFuture.completedFuture(response);
     }
 
