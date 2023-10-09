@@ -33,7 +33,10 @@ public class IpAddress {
     private String ipAddress;
 
     private String status;
-    private String account_No; // related to subscriber "clients" table
+
+    @Column(name = "account_no", unique = true)
+    private String accountNo; // related to subscriber "clients" table
+
     private Integer vlanId;
     private Boolean assignable;
     private String notes;

@@ -17,7 +17,7 @@ public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
     List<IpAddress> findAllUnderNetworkAddress(String networkAddress);
 
     @Modifying
-    @Query("update IpAddress u set u.account_No = ?1 where u.ip_address = ?2")
+    @Query("update IpAddress u set u.accountNo = ?1 where u.ipAddress = ?2")
     void associateIpAddressToAccountNumber(String accountNo, String ipAddress);
 
     Optional<IpAddress> findByipAddress(String ipAddress);
