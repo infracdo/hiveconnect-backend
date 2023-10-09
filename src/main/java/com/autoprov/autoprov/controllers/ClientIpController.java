@@ -42,8 +42,13 @@ public class ClientIpController {
     @Async("asyncExecutor")
     @PostMapping("/addNewClient")
     public CompletableFuture<String> addNewClient(@RequestBody Map<String, String> params) {
-        String response = ClientIpService.addNewClient(params.get("AccountID"), params.get("PackageType"),
-                params.get("ONUSerialNum"), params.get("ONUMacAddress"), params.get("OltIP"));
+        String response = ClientIpService.addNewClient(
+                params.get("AccountID"),
+                params.get("IPAssigned"),
+                params.get("PackageType"),
+                params.get("ONUSerialNum"),
+                params.get("ONUMacAddress"),
+                params.get("OltIP"));
 
         return CompletableFuture.completedFuture(response);
     }
