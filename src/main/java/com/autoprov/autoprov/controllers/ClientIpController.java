@@ -25,6 +25,7 @@ import com.autoprov.autoprov.services.IpListService;
 import com.autoprov.autoprov.domain.Client;
 
 import com.autoprov.autoprov.repositories.ClientRepository;
+import com.autoprov.autoprov.repositories.IpAddressRepository;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -32,6 +33,9 @@ public class ClientIpController {
 
     @Autowired
     private ClientRepository clientRepo;
+
+    @Autowired
+    private IpAddressRepository ipAddRepo;
 
     @Async("asyncExecutor")
     @PostMapping("/addNewClient")
@@ -44,7 +48,7 @@ public class ClientIpController {
                 params.get("ONUMacAddress"),
                 params.get("OltIP"));
 
-        clientRepo.updateClientByOnuSerialNum(params.get("ONUSerialNum"), params.get("IPAssigned"));
+        ipAddRepo.associateIpAddressToAccountNumber(params.get("ONUSerialNum"), params.get("IPAssigned"));
         return CompletableFuture.completedFuture(response);
     }
 
