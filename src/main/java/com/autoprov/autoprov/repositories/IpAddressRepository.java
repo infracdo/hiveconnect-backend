@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import com.autoprov.autoprov.domain.IpAddress;
 
+import jakarta.transaction.Transactional;
+
 public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
 
     @Query(value = "SELECT * from ipaddresses where status = \"Available\"", nativeQuery = true)
@@ -17,6 +19,7 @@ public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
     List<IpAddress> findAllUnderNetworkAddress(String networkAddress);
 
     @Modifying
+    @Transactional
     @Query("update IpAddress u set u.accountNo = ?1 where u.ipAddress = ?2")
     void associateIpAddressToAccountNumber(String accountNo, String ipAddress);
 
