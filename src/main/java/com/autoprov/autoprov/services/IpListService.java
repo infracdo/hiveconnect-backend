@@ -34,7 +34,7 @@ public class IpListService {
             IpAddress ipAdd = IpAddress.builder()
                     .ipAddress(networkAddress.substring(0, (networkAddress.lastIndexOf(".") + 1)) + host.toString())
                     .status(defaultRemarks(host)[0])
-                    .account_No(" ")
+                    .accountNo(" ")
                     .vlanId(vlanId)
                     .assignable(Boolean.valueOf(defaultRemarks(host)[1]))
                     .notes(defaultRemarks(host)[2])
