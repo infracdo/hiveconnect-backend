@@ -42,13 +42,15 @@ public class ClientIpController {
     @Async("asyncExecutor")
     @PostMapping("/addNewClient")
     public CompletableFuture<String> addNewClient(@RequestBody Map<String, String> params) {
-        String response = ClientIpService.addNewClient(params.get("AccountID"), params.get("Package ID"));
+        String response = ClientIpService.addNewClient(params.get("AccountID"), params.get("PackageType"),
+                params.get("ONUSerialNum"), params.get("ONUMacAddress"), params.get("OltIP"));
 
         return CompletableFuture.completedFuture(response);
     }
 
     @Async("asyncExecutor")
     @GetMapping("/getClients")
+
     public CompletableFuture<List<Client>> getClients() {
         List<Client> Client = new ArrayList<>();
         clientRepo.findAll().forEach(Client::add);
