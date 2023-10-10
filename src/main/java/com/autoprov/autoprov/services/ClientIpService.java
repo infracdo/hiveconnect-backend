@@ -46,4 +46,24 @@ public class ClientIpService {
         return "Successful";
     }
 
+    public String deleteAllClient() {
+        try {
+            clientRepo.deleteAll();
+            return "Deleted All Client!";
+        } catch(Exception e ){
+            e.printStackTrace();
+        }
+        return "Failed in Deleting";
+    }
+
+    public String deleteClientById(Long id) {
+        try {
+            clientRepo.deleteById(id);
+            return "Successfully Deleted Client /w Id: " + id + "!";
+        } catch (Exception e) {
+             e.printStackTrace();
+        }
+         return "Failed in Deleting!";
+    }
+
 }

@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +38,9 @@ public class ClientIpController {
 
     @Autowired
     private IpAddressRepository ipAddRepo;
+
+    @Autowired
+    private ClientIpService clientIpService;
 
     @Async("asyncExecutor")
     @PostMapping("/addNewClient")
@@ -111,5 +115,21 @@ public class ClientIpController {
         return CompletableFuture.completedFuture(new ResponseEntity<>(HttpStatus.NOT_FOUND));
 
     }
+
+    @Async("asyncExecutor")
+    @DeleteMapping("/deleteAllClient")
+    public String deleteAllClient() {
+        clientIpService.deleteAllClient();
+        return "Delete All Clients";
+    }
+
+    @Async("asyncExecutor")
+    @DeleteMapping("/deleteClient/{id}")
+    public String deleteClient(@PathVariable Long id) {
+        clientIpService.deleteClientById(id);
+        return "Deleted Client /w Id: " + id;
+    }
+
+
 
 }
