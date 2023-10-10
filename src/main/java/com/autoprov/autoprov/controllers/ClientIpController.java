@@ -97,6 +97,7 @@ public class ClientIpController {
             Client client = optionalClient.get();
             client.setIp_assigned(params.get("IPAddress"));
             client.setOnu_serial_no(params.get("SerialNumber"));
+            client.setOlt_ip(params.get("OLT"));
 
             // Save the entity
             System.out.println("updateClient {" + id.toString() + "} invoked");
