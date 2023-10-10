@@ -72,7 +72,7 @@ public class AutoProvisionController {
         StringBuilder jsonBody = new StringBuilder();
 
         jsonBody.append("{");
-        jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
+        jsonBody.append("\"SerialNumber\":\"" + serialNumber + "\",");
         jsonBody.append("\"IPAddress\":\"" + ipAddress + "\",");
         jsonBody.append("\"VlanId\":\"" + vlanId + "\"");
         jsonBody.append("}");
@@ -106,7 +106,8 @@ public class AutoProvisionController {
                 "\\naccount_number: null " +
                 "\\nstatus: Activated " +
                 "\\nonu_private_ip: 172.16.0.21 " +
-                "\\nolt_interface: 1/3\"\n"
+                "\\ndownstream: 25000" +
+                "\\nupstream: 30000"
                 +
                 "}";
 
