@@ -88,8 +88,11 @@ public class ClientIpController {
             @RequestBody Map<String, String> params) {
         // Retrieve the entity object
         Optional<Client> optionalClient = clientRepo.findById(id);
+        Optional<IpAddress> optionalIpAddress = ipAddRepo.findByipAddress(params.get("IPAddress"));
 
-        if (optionalClient.isPresent()) {
+        if (optionalClient.isPresent() && optionalIpAddress.isPresent()
+                && (!optionalIpAddress.get().getStatus().equals("Assigned")
+                        || !optionalIpAddress.get().getStatus().equals("Reserved"))) {
             // Modify the fields of the entity object
             Client client = optionalClient.get();
             client.setIp_assigned(params.get("IPAddress"));
@@ -98,16 +101,9 @@ public class ClientIpController {
             // Save the entity
             System.out.println("updateClient {" + id.toString() + "} invoked");
 
-            if (ipAddRepo.findByipAddress(params.get("IPAddress")) == null) {
-                return CompletableFuture
-                        .completedFuture(new ResponseEntity<>(HttpStatus.FORBIDDEN));
-            }
-
-            else {
-                ipAddRepo.associateIpAddressToAccountNumber(client.getAccount_No(), params.get("IPAddress"));
-                return CompletableFuture
-                        .completedFuture(new ResponseEntity<>(clientRepo.save(client), HttpStatus.OK));
-            }
+            ipAddRepo.associateIpAddressToAccountNumber(client.getAccount_No(), params.get("IPAddress"));
+            return CompletableFuture
+                    .completedFuture(new ResponseEntity<>(clientRepo.save(client), HttpStatus.OK));
 
         }
 
