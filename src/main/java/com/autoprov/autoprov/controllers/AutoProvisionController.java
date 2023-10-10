@@ -110,6 +110,7 @@ public class AutoProvisionController {
                 "\\nupstream: 30000"
                 +
                 "}";
+        System.out.println(requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
