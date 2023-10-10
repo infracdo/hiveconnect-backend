@@ -53,7 +53,7 @@ public class AutoProvisionController {
         pushToACS(serialNumber, ipAddress, vlanId);
 
         // Ansible Process
-        executeAnsible(serialNumber, macAddress, oltIp);
+        executeAnsible(serialNumber, macAddress, deviceName, oltIp);
 
         return "Provision Complete";
 
@@ -87,7 +87,7 @@ public class AutoProvisionController {
         return null;
     }
 
-    public String executeAnsible(String serialNumber, String macAddress, String oltIp) {
+    public String executeAnsible(String serialNumber, String macAddress, String deviceName, String oltIp) {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/launch/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
@@ -101,6 +101,7 @@ public class AutoProvisionController {
                 "\"ask_variables_on_launch\": \"true\",\n" +
                 "\"extra_vars\": \"---" +
                 "\\nserial_number: " + serialNumber +
+                "\\ndevice_name: " + deviceName +
                 "\\nmac_address: " + macAddress +
                 "\\nolt_ip: " + oltIp +
                 "\\naccount_number: null " +
