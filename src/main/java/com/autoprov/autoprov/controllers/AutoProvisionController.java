@@ -48,7 +48,8 @@ public class AutoProvisionController {
         jsonBody.append("{");
         jsonBody.append("\"SerialNumber\":\"" + params.get("SerialNumber") + "\",");
         jsonBody.append("\"OLT\":\"" + params.get("OLT") + "\",");
-        jsonBody.append("\"DeviceName\":\"" + params.get("DeviceName") + "\",");
+        jsonBody.append("\"DeviceName\":\"" + params.get("DeviceName") + "\"");
+        jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
         // Create an HttpEntity with headers and the JSON request body
