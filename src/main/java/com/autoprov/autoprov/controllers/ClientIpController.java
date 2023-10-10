@@ -23,6 +23,7 @@ import com.autoprov.autoprov.services.ClientIpService;
 import com.autoprov.autoprov.services.IpListService;
 
 import com.autoprov.autoprov.domain.Client;
+import com.autoprov.autoprov.domain.IpAddress;
 
 import com.autoprov.autoprov.repositories.ClientRepository;
 import com.autoprov.autoprov.repositories.IpAddressRepository;
@@ -91,13 +92,22 @@ public class ClientIpController {
         if (optionalClient.isPresent()) {
             // Modify the fields of the entity object
             Client client = optionalClient.get();
-            client.setIp_assigned(params.get("IP Address"));
-            client.setOnu_serial_no(params.get("Serial Number"));
+            client.setIp_assigned(params.get("IPAddress"));
+            client.setOnu_serial_no(params.get("SerialNumber"));
 
             // Save the entity
             System.out.println("updateClient {" + id.toString() + "} invoked");
-            return CompletableFuture
-                    .completedFuture(new ResponseEntity<>(clientRepo.save(client), HttpStatus.OK));
+
+            if (ipAddRepo.findByipAddress(params.get("IPAddress")) == null) {
+                return CompletableFuture
+                        .completedFuture(new ResponseEntity<>(HttpStatus.FORBIDDEN));
+            }
+
+            else {
+                ipAddRepo.associateIpAddressToAccountNumber(client.getAccount_No(), params.get("IPAddress"));
+                return CompletableFuture
+                        .completedFuture(new ResponseEntity<>(clientRepo.save(client), HttpStatus.OK));
+            }
 
         }
 
