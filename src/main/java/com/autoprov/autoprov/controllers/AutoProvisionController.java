@@ -120,7 +120,7 @@ public class AutoProvisionController {
 
         System.out.println("HiveConnect: Ansible executed");
 
-        if (response.getStatusCode() == HttpStatus.OK) {
+        if (response.getStatusCode() == HttpStatus.CREATED) {
             System.out.println("Request successful. Response: " + response.getBody());
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
