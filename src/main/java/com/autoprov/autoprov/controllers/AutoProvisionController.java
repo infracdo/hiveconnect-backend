@@ -22,12 +22,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.autoprov.autoprov.repositories.IpAddressRepository;
 import com.jcraft.jsch.*;
 
 @CrossOrigin(origins = "*")
 @RestController
 public class AutoProvisionController {
     // Insert playbook invokes here
+    @Autowired
+    private IpAddressRepository ipAddRepo;
 
     @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
@@ -47,8 +50,7 @@ public class AutoProvisionController {
 
         jsonBody.append("{");
         jsonBody.append("\"SerialNumber\":\"" + params.get("SerialNumber") + "\",");
-        jsonBody.append("\"OLT\":\"" + params.get("OLT") + "\",");
-        jsonBody.append("\"DeviceName\":\"" + params.get("DeviceName") + "\"");
+        jsonBody.append("\"IPAddress\":\"" + ipAddRepo.getOneAvailableIpAddress().get(0).getIpAddress() + "\",");
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
