@@ -34,7 +34,6 @@ public class AutoProvisionController {
     // Insert playbook invokes here
     @Autowired
     private IpAddressRepository ipAddRepo;
-    private RestTemplate restTemplate;
 
     @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
@@ -79,6 +78,7 @@ public class AutoProvisionController {
 
         String jsonRequestBody = jsonBody.toString();
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
 
         System.out.println("HiveConnect: ACS Push executed");
