@@ -107,7 +107,7 @@ public class AutoProvisionController {
                 "\\nstatus: Activated " +
                 "\\nonu_private_ip: 172.16.0.21 " +
                 "\\ndownstream: 25000" +
-                "\\nupstream: 30000"
+                "\\nupstream: 30000\""
                 +
                 "}";
         System.out.println(requestBody);
