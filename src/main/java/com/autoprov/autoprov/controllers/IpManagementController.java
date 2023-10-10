@@ -115,7 +115,6 @@ public class IpManagementController {
             networkAdd.setSite(params.get("Site"));
             networkAdd.setType(params.get("Type"));
             networkAdd.setVlanId(Integer.parseInt(params.get("VlanID")));
-            networkAdd.setStatus(params.get("Status"));
 
             // Save the entity
             return CompletableFuture

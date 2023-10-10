@@ -52,7 +52,6 @@ public class IpListService {
                 .account_No(account_No)
                 .type(type)
                 .site(site)
-                .status(status)
                 .vlanId(vlanId)
                 .notes(notes)
                 .build();

@@ -42,13 +42,14 @@ public class ClientIpController {
     public CompletableFuture<String> addNewClient(@RequestBody Map<String, String> params) {
         String response = ClientIpService.addNewClient(
                 params.get("AccountID"),
-                params.get("IPAssigned"),
+                params.get("ClientName"),
                 params.get("PackageType"),
                 params.get("ONUSerialNum"),
                 params.get("ONUMacAddress"),
                 params.get("OltIP"));
 
-        ipAddRepo.associateIpAddressToAccountNumber(params.get("ONUSerialNum"), params.get("IPAssigned"));
+        // ipAddRepo.associateIpAddressToAccountNumber(params.get("ONUSerialNum"),
+        // params.get("IPAssigned"));
         return CompletableFuture.completedFuture(response);
     }
 

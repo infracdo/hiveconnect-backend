@@ -30,6 +30,9 @@ public class Client {
     @Column(name = "account_No")
     private String account_No; // related to subscriber "clients" table
 
+    @Column(name = "client_name")
+    private String client_name;
+
     @Column(name = "ip_assigned")
     private String ip_assigned;
 

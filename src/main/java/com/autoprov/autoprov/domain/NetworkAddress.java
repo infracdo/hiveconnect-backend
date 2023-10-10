@@ -29,7 +29,6 @@ public class NetworkAddress {
     private String networkAddress;
 
     private String account_No; // related to subscriber "clients" table
-    private String status;
 
     @Column(name = "network_type")
     private String type;
