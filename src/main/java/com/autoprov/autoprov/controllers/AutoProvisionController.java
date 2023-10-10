@@ -50,7 +50,7 @@ public class AutoProvisionController {
 
         jsonBody.append("{");
         jsonBody.append("\"SerialNumber\":\"" + params.get("SerialNumber") + "\",");
-        jsonBody.append("\"IPAddress\":\"" + ipAddRepo.getOneAvailableIpAddress().get(0).getIpAddress() + "\",");
+        jsonBody.append("\"IPAddress\":\"" + ipAddRepo.getOneAvailableIpAddress().get(0).getIpAddress() + "\"");
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
