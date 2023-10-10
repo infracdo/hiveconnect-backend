@@ -63,7 +63,6 @@ public class AutoProvisionController {
     public String pushToACS(String serialNumber, String ipAddress, Integer vlanId) {
         // Define the API URL
         String apiUrl = "http://172.91.0.136:7547/executeAutoConfig";
-        System.out.println("HiveConnect: Provision executed");
 
         // Create headers with Content-Type set to application/json
         HttpHeaders headers = new HttpHeaders();
@@ -79,19 +78,17 @@ public class AutoProvisionController {
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
-        // Create an HttpEntity with headers and the JSON request body
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-
-        // Make the API request and receive the response
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
 
-        // Process the response as needed
+        System.out.println("HiveConnect: ACS Push executed");
         System.out.println("Response: " + jsonResponse);
 
         return null;
     }
 
     public String executeAnsible(String serialNumber, String macAddress, String oltIp) {
+
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/launch/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
 
@@ -118,6 +115,8 @@ public class AutoProvisionController {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.exchange(ansibleApiUrl, HttpMethod.POST, requestEntity,
                 String.class);
+
+        System.out.println("HiveConnect: Ansible executed");
 
         if (response.getStatusCode() == HttpStatus.OK) {
             System.out.println("Request successful. Response: " + response.getBody());
