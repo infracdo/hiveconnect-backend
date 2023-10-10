@@ -14,7 +14,10 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,15 +34,36 @@ public class AutoProvisionController {
     // Insert playbook invokes here
     @Autowired
     private IpAddressRepository ipAddRepo;
+    private RestTemplate restTemplate;
 
     @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
     public String executeProvision(@RequestBody Map<String, String> params) {
 
-        RestTemplate restTemplate = new RestTemplate();
+        System.out.println("HiveService: Provision executed");
+        // Extract RequestBody Values
 
+        String serialNumber = params.get("SerialNumber");
+        String macAddress = params.get("MacAddress");
+        String oltIp = params.get("OLT");
+        String deviceName = params.get("DeviceName");
+
+        // ACS Processes
+        String ipAddress = ipAddRepo.getOneAvailableIpAddress().get(0).getIpAddress();
+        Integer vlanId = ipAddRepo.getOneAvailableIpAddress().get(0).getVlanId();
+        pushToACS(serialNumber, ipAddress, vlanId);
+
+        // Ansible Process
+        executeAnsible(serialNumber, macAddress, oltIp);
+
+        return "Provision Complete";
+
+    }
+
+    public String pushToACS(String serialNumber, String ipAddress, Integer vlanId) {
         // Define the API URL
         String apiUrl = "http://172.91.0.136:7547/executeAutoConfig";
+        System.out.println("HiveConnect: Provision executed");
 
         // Create headers with Content-Type set to application/json
         HttpHeaders headers = new HttpHeaders();
@@ -49,8 +73,9 @@ public class AutoProvisionController {
         StringBuilder jsonBody = new StringBuilder();
 
         jsonBody.append("{");
-        jsonBody.append("\"SerialNumber\":\"" + params.get("SerialNumber") + "\",");
-        jsonBody.append("\"IPAddress\":\"" + ipAddRepo.getOneAvailableIpAddress().get(0).getIpAddress() + "\"");
+        jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
+        jsonBody.append("\"IPAddress\":\"" + ipAddress + "\",");
+        jsonBody.append("\"VlanId\":\"" + vlanId + "\"");
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
@@ -64,7 +89,42 @@ public class AutoProvisionController {
         System.out.println("Response: " + jsonResponse);
 
         return null;
+    }
 
+    public String executeAnsible(String serialNumber, String macAddress, String oltIp) {
+        String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/launch/";
+        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String requestBody = "{\n" +
+                "\"job_template\": \"9\",\n" +
+                "\"ask_variables_on_launch\": \"true\",\n" +
+                "\"extra_vars\": \"---" +
+                "\\nserial_number: " + serialNumber +
+                "\\nmac_address: " + macAddress +
+                "\\nolt_ip: " + oltIp +
+                "\\naccount_number: null " +
+                "\\nstatus: Activated " +
+                "\\nonu_private_ip: 172.16.0.21 " +
+                "\\nolt_interface: 1/3\"\n"
+                +
+                "}";
+
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(ansibleApiUrl, HttpMethod.POST, requestEntity,
+                String.class);
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            System.out.println("Request successful. Response: " + response.getBody());
+        } else {
+            System.out.println("Request failed. Response: " + response.getStatusCode());
+        }
+        return requestBody;
     }
 
     @Async("asyncExecutor")
