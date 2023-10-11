@@ -46,7 +46,7 @@ public class AutoProvisionController {
         // Prepare RequestBody Values
         String accountNo = params.get("accountNo");
         String clientName = params.get("clientName");
-        String deviceName = params.get("deviceName");
+        String deviceName = clientName + "_bw1";
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
         String ipAddress = params.get("ipAddress");
