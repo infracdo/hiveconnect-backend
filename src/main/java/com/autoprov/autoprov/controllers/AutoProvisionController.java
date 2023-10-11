@@ -43,6 +43,7 @@ public class AutoProvisionController {
 
         // Prepare RequestBody Values
         String accountNo = params.get("accountNo");
+        String clientName = params.get("clientName");
         String deviceName = params.get("deviceName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
@@ -53,7 +54,7 @@ public class AutoProvisionController {
         // ACS Processes
         String ipAddress = ipAddRepo.getOneAvailableIpAddress().get(0).getIpAddress();
         Integer vlanId = ipAddRepo.getOneAvailableIpAddress().get(0).getVlanId();
-        pushToACS(serialNumber, ipAddress, vlanId);
+        pushToACS(clientName, serialNumber, ipAddress, vlanId);
 
         // Ansible Process
         executeAnsible(accountNo, serialNumber, macAddress, deviceName, onuPrivateIp, oltIp);
@@ -62,7 +63,7 @@ public class AutoProvisionController {
 
     }
 
-    public String pushToACS(String serialNumber, String ipAddress, Integer vlanId) {
+    public String pushToACS(String clientName, String serialNumber, String ipAddress, Integer vlanId) {
         // Define the API URL
         String apiUrl = "http://172.91.0.136:7547/executeAutoConfig";
 
@@ -74,12 +75,14 @@ public class AutoProvisionController {
         StringBuilder jsonBody = new StringBuilder();
 
         jsonBody.append("{");
-        jsonBody.append("\"SerialNumber\":\"" + serialNumber + "\",");
-        jsonBody.append("\"IPAddress\":\"" + ipAddress + "\",");
-        jsonBody.append("\"VlanId\":\"" + vlanId + "\"");
+        jsonBody.append("\"clientName\":\"" + clientName + "\",");
+        jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
+        jsonBody.append("\"ipAddress\":\"" + ipAddress + "\",");
+        jsonBody.append("\"vlanId\":\"" + vlanId + "\"");
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
+        System.out.println(jsonRequestBody);
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
