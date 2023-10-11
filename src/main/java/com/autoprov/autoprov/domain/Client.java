@@ -33,16 +33,16 @@ public class Client {
     @Column(name = "client_name")
     private String client_name;
 
-    @Column(name = "ip_assigned")
+    @Column(name = "ip_assigned", unique = true)
     private String ip_assigned;
 
-    @Column(name = "onu_serial_no")
+    @Column(name = "onu_serial_no", unique = true)
     private String onu_serial_no;
 
     @Column(name = "olt_ip")
     private String olt_ip;
 
-    @Column(name = "onu_mac_address")
+    @Column(name = "onu_mac_address", unique = true)
     private String onu_mac_address;
 
     @Column(name = "package_type_id")
