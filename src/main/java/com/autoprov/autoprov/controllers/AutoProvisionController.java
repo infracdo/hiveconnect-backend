@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.autoprov.autoprov.domain.IpAddress;
 import com.autoprov.autoprov.repositories.IpAddressRepository;
 import com.jcraft.jsch.*;
 
@@ -47,17 +49,17 @@ public class AutoProvisionController {
         String deviceName = params.get("deviceName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
-        String onuPrivateIp = params.get("ipAddress");
+        String ipAddress = params.get("ipAddress");
         String oltIp = params.get("olt");
         String packageType = params.get("packageType");
 
         // ACS Processes
-        String ipAddress = ipAddRepo.getOneAvailableIpAddress().get(0).getIpAddress();
-        Integer vlanId = ipAddRepo.getOneAvailableIpAddress().get(0).getVlanId();
+        Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
+        Integer vlanId = ipAddressData.get().getVlanId();
         pushToACS(clientName, serialNumber, ipAddress, vlanId);
 
         // Ansible Process
-        executeAnsible(accountNo, serialNumber, macAddress, deviceName, onuPrivateIp, oltIp);
+        executeAnsible(accountNo, serialNumber, macAddress, deviceName, ipAddress, oltIp);
 
         return "Provision Complete";
 
