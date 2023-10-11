@@ -92,22 +92,21 @@ public class ClientIpController {
             @RequestBody Map<String, String> params) {
         // Retrieve the entity object
         Optional<Client> optionalClient = clientRepo.findById(id);
-        Optional<IpAddress> optionalIpAddress = ipAddRepo.findByipAddress(params.get("IPAddress"));
+        Optional<IpAddress> optionalIpAddress = ipAddRepo.findByipAddress(params.get("ipAddress"));
 
         if (optionalClient.isPresent() && optionalIpAddress.isPresent()
                 && (!optionalIpAddress.get().getStatus().equals("Assigned")
                         || !optionalIpAddress.get().getStatus().equals("Reserved"))) {
             // Modify the fields of the entity object
             Client client = optionalClient.get();
-            client.setIp_assigned(params.get("IPAddress"));
-            client.setOnu_serial_no(params.get("SerialNumber"));
-            client.setOlt_ip(params.get("OLT"));
-            client.setOnu_mac_address(params.get("MacAddress"));
+            client.setIp_assigned(params.get("ipAddress"));
+            client.setOnu_serial_no(params.get("serialNumber"));
+            client.setOlt_ip(params.get("olt"));
+            client.setOnu_mac_address(params.get("macAddress"));
 
             // Save the entity
             System.out.println("updateClient {" + id.toString() + "} invoked");
 
-            ipAddRepo.associateIpAddressToAccountNumber(client.getAccount_No(), params.get("IPAddress"));
             return CompletableFuture
                     .completedFuture(new ResponseEntity<>(clientRepo.save(client), HttpStatus.OK));
 
