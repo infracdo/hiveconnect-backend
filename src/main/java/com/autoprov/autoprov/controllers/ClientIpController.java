@@ -102,6 +102,7 @@ public class ClientIpController {
             client.setIp_assigned(params.get("IPAddress"));
             client.setOnu_serial_no(params.get("SerialNumber"));
             client.setOlt_ip(params.get("OLT"));
+            client.setOnu_mac_address(params.get("MacAddress"));
 
             // Save the entity
             System.out.println("updateClient {" + id.toString() + "} invoked");
@@ -129,7 +130,5 @@ public class ClientIpController {
         clientIpService.deleteClientById(id);
         return "Deleted Client /w Id: " + id;
     }
-
-
 
 }
