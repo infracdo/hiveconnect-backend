@@ -107,7 +107,7 @@ public class ClientIpController {
             // Save the entity
             System.out.println("updateClient {" + id.toString() + "} invoked");
 
-            ipAddRepo.reserveIpAddressToAccountNumber(client.getAccountNo(), params.get("ipAddress"));
+            ipAddRepo.reserveIpAddressToAccountNumber(client.getAccountNumber(), params.get("ipAddress"));
             return CompletableFuture
                     .completedFuture(new ResponseEntity<>(clientRepo.save(client), HttpStatus.OK));
 

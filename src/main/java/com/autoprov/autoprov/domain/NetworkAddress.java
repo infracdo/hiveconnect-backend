@@ -25,10 +25,10 @@ public class NetworkAddress {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "network_address", unique = true)
+    @Column(name = "networkAddress", unique = true)
     private String networkAddress;
 
-    private String accountNo; // related to subscriber "clients" table
+    private String accountNumber; // related to subscriber "clients" table
 
     @Column(name = "network_type")
     private String type;

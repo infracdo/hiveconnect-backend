@@ -110,7 +110,7 @@ public class IpManagementController {
             // Modify the fields of the entity object
             NetworkAddress networkAdd = optionalNetworkAddress.get();
 
-            networkAdd.setAccount_No(params.get("AccountNumber"));
+            networkAdd.setAccountNumber(params.get("AccountNumber"));
             networkAdd.setNotes(params.get("Notes"));
             networkAdd.setSite(params.get("Site"));
             networkAdd.setType(params.get("Type"));
@@ -137,7 +137,7 @@ public class IpManagementController {
             IpAddress ipAdd = optionalIpAddress.get();
             if (ipAdd.getAssignable() == false)
                 return CompletableFuture.completedFuture(new ResponseEntity<>(HttpStatus.FORBIDDEN));
-            ipAdd.setAccountNo(params.get("AccountNumber"));
+            ipAdd.setAccountNumber(params.get("AccountNumber"));
             ipAdd.setNotes(params.get("Notes"));
             ipAdd.setStatus(params.get("Status"));
 

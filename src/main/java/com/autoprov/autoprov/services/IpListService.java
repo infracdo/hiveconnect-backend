@@ -34,7 +34,7 @@ public class IpListService {
             IpAddress ipAdd = IpAddress.builder()
                     .ipAddress(networkAddress.substring(0, (networkAddress.lastIndexOf(".") + 1)) + host.toString())
                     .status(defaultRemarks(host)[0])
-                    .accountNo(" ")
+                    .accountNumber(" ")
                     .vlanId(vlanId)
                     .assignable(Boolean.valueOf(defaultRemarks(host)[1]))
                     .notes(defaultRemarks(host)[2])
@@ -45,11 +45,11 @@ public class IpListService {
         return "successful";
     }
 
-    public static String addNetworkAddress(String networkAddress, String account_No, Integer vlanId, String site,
+    public static String addNetworkAddress(String networkAddress, String accountNumber, Integer vlanId, String site,
             String type, String status, String notes) {
         NetworkAddress networkAdd = NetworkAddress.builder()
                 .networkAddress(networkAddress)
-                .account_No(account_No)
+                .accountNumber(accountNumber)
                 .type(type)
                 .site(site)
                 .vlanId(vlanId)

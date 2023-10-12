@@ -28,7 +28,7 @@ public class Client {
     private Long id;
 
     @Column(name = "accountNumber")
-    private String accountNo; // related to subscriber "clients" table
+    private String accountNumber; // related to subscriber "clients" table
 
     @Column(name = "clientName")
     private String clientName;

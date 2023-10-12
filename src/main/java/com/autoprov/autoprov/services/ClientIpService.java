@@ -30,11 +30,11 @@ public class ClientIpService {
 
     }
 
-    public static String addNewClient(String accountNo, String clientName, String packageTypeId,
+    public static String addNewClient(String accountNumber, String clientName, String packageTypeId,
             String onuSerialNumber,
             String onuMacAddress, String oltIp) {
         Client newClient = Client.builder()
-                .accountNo(accountNo)
+                .accountNumber(accountNumber)
                 .clientName(clientName)
                 .onuSerialNumber(onuSerialNumber)
                 .onuMacAddress(onuMacAddress)

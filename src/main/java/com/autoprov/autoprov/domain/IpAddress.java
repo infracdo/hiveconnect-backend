@@ -35,7 +35,7 @@ public class IpAddress {
     private String status;
 
     @Column(name = "accountNumber", unique = true)
-    private String accountNo; // related to subscriber "clients" table
+    private String accountNumber; // related to subscriber "clients" table
 
     private Integer vlanId;
     private Boolean assignable;
