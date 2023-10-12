@@ -15,7 +15,7 @@ public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
     @Query(value = "SELECT * from ipaddresses where status = \"Available\"", nativeQuery = true)
     List<IpAddress> findAllAvailableIp();
 
-    @Query(value = "SELECT * from ipaddresses where ipAddress LIKE ?1%", nativeQuery = true)
+    @Query(value = "SELECT * from ipaddresses where ip_address LIKE ?1%", nativeQuery = true)
     List<IpAddress> findAllUnderNetworkAddress(String networkAddress);
 
     @Modifying
