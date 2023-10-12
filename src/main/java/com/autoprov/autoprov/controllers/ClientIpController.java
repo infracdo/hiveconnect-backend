@@ -99,15 +99,15 @@ public class ClientIpController {
                         || !optionalIpAddress.get().getStatus().equals("Reserved"))) {
             // Modify the fields of the entity object
             Client client = optionalClient.get();
-            client.setIp_assigned(params.get("ipAddress"));
-            client.setOnu_serial_no(params.get("serialNumber"));
-            client.setOlt_ip(params.get("olt"));
-            client.setOnu_mac_address(params.get("macAddress"));
+            client.setIpAssigned(params.get("ipAddress"));
+            client.setOnuSerialNumber(params.get("serialNumber"));
+            client.setOltIp(params.get("olt"));
+            client.setOnuMacAddress(params.get("macAddress"));
 
             // Save the entity
             System.out.println("updateClient {" + id.toString() + "} invoked");
 
-            ipAddRepo.reserveIpAddressToAccountNumber(client.getAccount_No(), params.get("ipAddress"));
+            ipAddRepo.reserveIpAddressToAccountNumber(client.getAccountNo(), params.get("ipAddress"));
             return CompletableFuture
                     .completedFuture(new ResponseEntity<>(clientRepo.save(client), HttpStatus.OK));
 

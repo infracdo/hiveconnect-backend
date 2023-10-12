@@ -30,16 +30,16 @@ public class ClientIpService {
 
     }
 
-    public static String addNewClient(String account_No, String client_name, String package_type_id,
-            String onu_serial_no,
-            String onu_mac_address, String olt_ip) {
+    public static String addNewClient(String accountNo, String clientName, String packageTypeId,
+            String onuSerialNumber,
+            String onuMacAddress, String oltIp) {
         Client newClient = Client.builder()
-                .account_No(account_No)
-                .client_name(client_name)
-                .onu_serial_no(onu_serial_no)
-                .onu_mac_address(onu_mac_address)
-                .olt_ip(olt_ip)
-                .package_type_id(package_type_id)
+                .accountNo(accountNo)
+                .clientName(clientName)
+                .onuSerialNumber(onuSerialNumber)
+                .onuMacAddress(onuMacAddress)
+                .oltIp(oltIp)
+                .packageTypeId(packageTypeId)
                 .build();
         clientRepo.save(newClient);
 
@@ -50,7 +50,7 @@ public class ClientIpService {
         try {
             clientRepo.deleteAll();
             return "Deleted All Client!";
-        } catch(Exception e ){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return "Failed in Deleting";
@@ -61,9 +61,9 @@ public class ClientIpService {
             clientRepo.deleteById(id);
             return "Successfully Deleted Client /w Id: " + id + "!";
         } catch (Exception e) {
-             e.printStackTrace();
+            e.printStackTrace();
         }
-         return "Failed in Deleting!";
+        return "Failed in Deleting!";
     }
 
 }

@@ -28,25 +28,28 @@ public class Client {
     private Long id;
 
     @Column(name = "account_No")
-    private String account_No; // related to subscriber "clients" table
+    private String accountNo; // related to subscriber "clients" table
 
     @Column(name = "client_name")
-    private String client_name;
+    private String clientName;
 
     @Column(name = "ip_assigned", unique = true)
-    private String ip_assigned;
+    private String ipAssigned;
 
     @Column(name = "onu_serial_no", unique = true)
-    private String onu_serial_no;
+    private String onuSerialNumber;
 
     @Column(name = "olt_ip")
-    private String olt_ip;
+    private String oltIp;
 
     @Column(name = "onu_mac_address", unique = true)
-    private String onu_mac_address;
+    private String onuMacAddress;
+
+    @Column(name = "device_name", unique = true)
+    private String onuDeviceName;
 
     @Column(name = "package_type_id")
-    private String package_type_id;
+    private String packageTypeId;
 
     // public void assignIp(String ip) {
     // this.ip_assigned = ip;
