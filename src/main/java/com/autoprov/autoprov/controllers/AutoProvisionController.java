@@ -122,8 +122,8 @@ public class AutoProvisionController {
                 "\\naccount_number: null " +
                 "\\nstatus: Activated " +
                 "\\nonu_private_ip: " + onu_private_ip +
-                "\\ndownstream: 25000" +
-                "\\nupstream: 30000\""
+                "\\ndownstream: 11000" +
+                "\\nupstream: 11000\""
                 +
                 "}";
         System.out.println(requestBody);
