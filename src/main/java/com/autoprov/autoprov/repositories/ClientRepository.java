@@ -23,7 +23,7 @@ public interface ClientRepository extends CrudRepository<Client, Long> {
     @Query("update Client u set u.ipAssigned = ?1 where u.onuSerialNumber = ?2")
     void updateClientByOnuSerialNum(String ipAssigned, String onuSerialNumber);
 
-    @Query(value = "SELECT * from clients where onuSerialNumber LIKE ?1%", nativeQuery = true)
+    @Query(value = "SELECT * from clients where onu_serial_no LIKE ?1%", nativeQuery = true)
     Optional<Client> findClientBySerialNumber(String onuSerialNumber);
 
 }

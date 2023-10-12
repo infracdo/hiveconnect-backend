@@ -27,28 +27,28 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "account_No")
+    @Column(name = "accountNumber")
     private String accountNo; // related to subscriber "clients" table
 
-    @Column(name = "client_name")
+    @Column(name = "clientName")
     private String clientName;
 
-    @Column(name = "ip_assigned", unique = true)
+    @Column(name = "ipAssigned", unique = true)
     private String ipAssigned;
 
-    @Column(name = "onu_serial_no", unique = true)
+    @Column(name = "onuSerialNumber", unique = true)
     private String onuSerialNumber;
 
-    @Column(name = "olt_ip")
+    @Column(name = "oltIp")
     private String oltIp;
 
-    @Column(name = "onu_mac_address", unique = true)
+    @Column(name = "onuMacAddress", unique = true)
     private String onuMacAddress;
 
-    @Column(name = "device_name", unique = true)
+    @Column(name = "deviceName", unique = true)
     private String onuDeviceName;
 
-    @Column(name = "package_type_id")
+    @Column(name = "packageTypeId")
     private String packageTypeId;
 
     // public void assignIp(String ip) {

@@ -28,7 +28,7 @@ public class NetworkAddress {
     @Column(name = "network_address", unique = true)
     private String networkAddress;
 
-    private String account_No; // related to subscriber "clients" table
+    private String accountNo; // related to subscriber "clients" table
 
     @Column(name = "network_type")
     private String type;

@@ -29,12 +29,12 @@ public class IpAddress {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "ip_address", unique = true)
+    @Column(name = "ipAddress", unique = true)
     private String ipAddress;
 
     private String status;
 
-    @Column(name = "account_no", unique = true)
+    @Column(name = "accountNumber", unique = true)
     private String accountNo; // related to subscriber "clients" table
 
     private Integer vlanId;
