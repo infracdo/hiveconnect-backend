@@ -26,7 +26,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.autoprov.autoprov.domain.Client;
 import com.autoprov.autoprov.domain.IpAddress;
+import com.autoprov.autoprov.repositories.ClientRepository;
 import com.autoprov.autoprov.repositories.IpAddressRepository;
 import com.jcraft.jsch.*;
 
@@ -36,6 +38,9 @@ public class AutoProvisionController {
     // Insert playbook invokes here
     @Autowired
     private IpAddressRepository ipAddRepo;
+
+    @Autowired
+    private ClientRepository clientRepo;
 
     @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
@@ -133,7 +138,17 @@ public class AutoProvisionController {
 
         if (response.getStatusCode() == HttpStatus.CREATED) {
             System.out.println("Request successful. Response: " + response.getBody());
+
+            // update ipAddress table
             ipAddRepo.associateIpAddressToAccountNumber(accountNo, onu_private_ip);
+
+            Optional<Client> optionalClient = clientRepo.findClientBySerialNumber(serialNumber);
+            if (optionalClient.isPresent()) {
+                Client client = optionalClient.get();
+                client.setOnuDeviceName(deviceName);
+                clientRepo.save(client);
+            }
+
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
         }
