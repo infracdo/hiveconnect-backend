@@ -20,7 +20,7 @@ public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
 
     @Modifying
     @Transactional
-    @Query("update IpAddress u set u.accountNumber = ?1, u.status = \'Assigned\' where u.ipAddress = ?2")
+    @Query("update IpAddress u set u.accountNumber = ?1, u.status = \'Assigned\' , u.notes = \'Assigned to client\' where u.ipAddress = ?2")
     void associateIpAddressToAccountNumber(String accountNumber, String ipAddress);
 
     @Modifying
