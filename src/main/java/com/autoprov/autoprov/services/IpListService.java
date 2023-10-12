@@ -56,10 +56,10 @@ public class IpListService {
                 .notes(notes)
                 .build();
         networkAddressRepo.save(networkAdd);
-
-        if (type.equals("Residential") || type.equals("RES")) {
-            populateIpByNetworkAddress(networkAddress, vlanId);
-        }
+        populateIpByNetworkAddress(networkAddress, vlanId);
+        // if (type.equals("Residential") || type.equals("RES")) {
+        // populateIpByNetworkAddress(networkAddress, vlanId);
+        // }
 
         return "Successful";
     }
