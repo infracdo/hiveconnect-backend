@@ -18,10 +18,10 @@ public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
     @Query(value = "SELECT * from ipaddresses where ip_address LIKE ?1%", nativeQuery = true)
     List<IpAddress> findAllUnderNetworkAddress(String networkAddress);
 
-    @Query(value = "SELECT ip_address from ipaddresses where ip_address LIKE ?1% AND notes LIKE %OLT IP%", nativeQuery = true)
+    @Query(value = "SELECT ip_address from ipaddresses where ip_address LIKE ?1% AND notes LIKE '%OLT IP%'", nativeQuery = true)
     String getOltIpOfIpAddress(String networkAddress);
 
-    @Query(value = "SELECT ip_address from ipaddresses where ip_address LIKE ?1% AND notes LIKE %Internet Gateway%", nativeQuery = true)
+    @Query(value = "SELECT ip_address from ipaddresses where ip_address LIKE ?1% AND notes LIKE '%Internet Gateway%'", nativeQuery = true)
     String getGatewayOfIpAddress(String networkAddress);
 
     @Modifying
