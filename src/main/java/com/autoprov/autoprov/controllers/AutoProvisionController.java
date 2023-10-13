@@ -57,12 +57,13 @@ public class AutoProvisionController {
         String macAddress = params.get("macAddress");
         String ipAddress = params.get("ipAddress");
         String oltIp = params.get("olt");
+        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0, (ipAddress.lastIndexOf("."))));
         String packageType = params.get("packageType");
 
         // ACS Processes
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         Integer vlanId = ipAddressData.get().getVlanId();
-        pushToACS(clientName, serialNumber, ipAddress, vlanId);
+        pushToACS(clientName, serialNumber, defaultGateway, ipAddress, vlanId);
 
         // Ansible Process
         executeAnsible(accountNo, serialNumber, macAddress, deviceName, ipAddress, oltIp);
@@ -71,7 +72,8 @@ public class AutoProvisionController {
 
     }
 
-    public String pushToACS(String clientName, String serialNumber, String ipAddress, Integer vlanId) {
+    public String pushToACS(String clientName, String serialNumber, String defaultGateway, String ipAddress,
+            Integer vlanId) {
         // Define the API URL
         String apiUrl = "http://172.91.0.136:7547/executeAutoConfig";
 
@@ -85,6 +87,7 @@ public class AutoProvisionController {
         jsonBody.append("{");
         jsonBody.append("\"clientName\":\"" + clientName + "\",");
         jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
+        jsonBody.append("\"defaultGateway\":\"" + defaultGateway + "\",");
         jsonBody.append("\"ipAddress\":\"" + ipAddress + "\",");
         jsonBody.append("\"vlanId\":\"" + vlanId + "\"");
         jsonBody.append("}");
