@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Entity // labels an entity that can be used for JPA
-@Table(name = "networkaddresses")
+@Table(name = "packageTypes")
 
 public class PackageType {
 
