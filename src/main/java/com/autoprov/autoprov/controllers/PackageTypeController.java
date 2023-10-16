@@ -18,13 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.autoprov.autoprov.domain.Client;
-import com.autoprov.autoprov.services.IpListService;
-
-import com.autoprov.autoprov.domain.IpAddress;
-import com.autoprov.autoprov.domain.NetworkAddress;
-import com.autoprov.autoprov.repositories.IpAddressRepository;
-import com.autoprov.autoprov.repositories.NetworkAddressRepository;
 import com.autoprov.autoprov.repositories.PackageRepository;
 
 @CrossOrigin(origins = "*")
@@ -32,6 +25,7 @@ import com.autoprov.autoprov.repositories.PackageRepository;
 
 public class PackageTypeController {
 
+    @Autowired
     private PackageRepository packageRepo;
 
     @Async("asyncExecutor")
