@@ -24,11 +24,11 @@ public class OltController {
     private OltRepository oltRepo;
 
     @Async("asyncExecutor")
-    @GetMapping("/checkPackageBandwidth/{oltSite}")
-    public CompletableFuture<Optional<Olt>> findByPackageTypeId(
+    @GetMapping("/checkOltIpBySiteName/{oltSite}")
+    public CompletableFuture<Optional<Olt>> findByOltSite(
             @PathVariable("oltSite") String oltSite) {
 
-        return CompletableFuture.completedFuture(oltRepo.findByOlt_site(oltSite));
+        return CompletableFuture.completedFuture(oltRepo.findByolt_site(oltSite));
     }
 
 }
