@@ -84,8 +84,10 @@ public class OltController {
                                                                                               // actual JSON
                 // key
                 // Handle the response
-                System.out.println("Value of the node: " + nodeValue);
-                return nodeValue;
+                int onuIndex = nodeValue.indexOf("interface onu", 0);
+                String onuInterface = nodeValue.substring(onuIndex, onuIndex + 20);
+                System.out.println("Value of the node: " + onuInterface);
+                return onuInterface;
             } catch (Exception e) {
                 // Handle the exception
                 e.printStackTrace();
