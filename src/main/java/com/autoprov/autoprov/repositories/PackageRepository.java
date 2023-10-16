@@ -8,5 +8,5 @@ import com.autoprov.autoprov.domain.PackageType;
 
 public interface PackageRepository extends CrudRepository<PackageType, Long> {
 
-    Optional<Package> findByPackageTypeId(String packageTypeId);
+    Optional<Package> findBypackageTypeId(String packageTypeId);
 }
