@@ -11,4 +11,7 @@ public interface OltRepository extends CrudRepository<Olt, Long> {
 
     @Query(value = "SELECT * from olt where olt_site=?1", nativeQuery = true)
     Optional<Olt> findByOlt_site(String olt_site);
+
+    @Query(value = "SELECT * from olt where olt_ip=?1", nativeQuery = true)
+    Optional<Olt> findByOlt_ip(String olt_ip);
 }

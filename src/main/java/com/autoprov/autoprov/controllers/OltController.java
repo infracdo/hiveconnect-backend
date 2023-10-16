@@ -31,4 +31,12 @@ public class OltController {
         return CompletableFuture.completedFuture(oltRepo.findByOlt_site(oltSite));
     }
 
+    @Async("asyncExecutor")
+    @GetMapping("/checkOltSiteByIp/{oltIp}")
+    public CompletableFuture<Optional<Olt>> findByOltIp(
+            @PathVariable("oltIp") String oltIp) {
+
+        return CompletableFuture.completedFuture(oltRepo.findByOlt_ip(oltIp));
+    }
+
 }
