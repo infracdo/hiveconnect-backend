@@ -25,7 +25,7 @@ public class PackageType {
     private Long id;
 
     @Column(name = "package_type_id", unique = true)
-    private String olt_site;
+    private String packageTypeId;
 
     @Column(name = "upstream")
     private String upstream;
