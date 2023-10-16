@@ -10,23 +10,25 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.autoprov.autoprov.repositories.OltRepository;
 import com.autoprov.autoprov.repositories.PackageRepository;
+import com.autoprov.autoprov.domain.Olt;
 import com.autoprov.autoprov.domain.PackageType;
 
 @CrossOrigin(origins = "*")
 @RestController
 
-public class PackageTypeController {
+public class OltController {
 
     @Autowired
-    private PackageRepository packageRepo;
+    private OltRepository oltRepo;
 
     @Async("asyncExecutor")
-    @GetMapping("/checkPackageBandwidth/{packageTypeId}")
-    public CompletableFuture<Optional<PackageType>> findByPackageTypeId(
-            @PathVariable("packageTypeId") String package_type_id) {
+    @GetMapping("/checkPackageBandwidth/{oltSite}")
+    public CompletableFuture<Optional<Olt>> findByPackageTypeId(
+            @PathVariable("oltSite") String oltSite) {
 
-        return CompletableFuture.completedFuture(packageRepo.findBypackageTypeId(package_type_id));
+        return CompletableFuture.completedFuture(oltRepo.findByOlt_site(oltSite));
     }
 
 }
