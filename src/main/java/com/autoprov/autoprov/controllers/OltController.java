@@ -73,14 +73,16 @@ public class OltController {
         // Process the response
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             String responseBody = responseEntity.getBody();
+            System.out.println(responseBody);
 
             try {
                 // Use ObjectMapper to extract a specific node
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode jsonNode = objectMapper.readTree(responseBody);
 
-                String nodeValue = jsonNode.path("results.comments").asText(); // Replace "key" with your actual JSON
-                                                                               // key
+                String nodeValue = jsonNode.path("results").get(0).path("comments").asText(); // Replace "key" with your
+                                                                                              // actual JSON
+                // key
                 // Handle the response
                 System.out.println("Value of the node: " + nodeValue);
                 return nodeValue;
