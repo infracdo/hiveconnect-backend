@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autoprov.autoprov.repositories.PackageRepository;
+import com.autoprov.autoprov.domain.PackageType;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -30,7 +31,7 @@ public class PackageTypeController {
 
     @Async("asyncExecutor")
     @GetMapping("/checkPackageBandwidth/{packageTypeId}")
-    public CompletableFuture<Optional<Package>> findByPackageTypeId(
+    public CompletableFuture<Optional<PackageType>> findByPackageTypeId(
             @PathVariable("packageTypeId") String package_type_id) {
 
         return CompletableFuture.completedFuture(packageRepo.findBypackageTypeId(package_type_id));
