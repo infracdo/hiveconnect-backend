@@ -79,7 +79,8 @@ public class OltController {
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode jsonNode = objectMapper.readTree(responseBody);
 
-                String nodeValue = jsonNode.path("comments").asText(); // Replace "key" with your actual JSON key
+                String nodeValue = jsonNode.path("results.comments").asText(); // Replace "key" with your actual JSON
+                                                                               // key
                 // Handle the response
                 System.out.println("Value of the node: " + nodeValue);
                 return nodeValue;
