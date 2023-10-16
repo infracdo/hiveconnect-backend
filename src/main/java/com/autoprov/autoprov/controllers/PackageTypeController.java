@@ -35,7 +35,7 @@ public class PackageTypeController {
     private PackageRepository packageRepo;
 
     @Async("asyncExecutor")
-    @PostMapping("/checkPackageBandwidth/{packageTypeId}")
+    @GetMapping("/checkPackageBandwidth/{packageTypeId}")
     public CompletableFuture<Optional<Package>> findByPackageTypeId(
             @PathVariable("packageTypeId") String package_type_id) {
 
