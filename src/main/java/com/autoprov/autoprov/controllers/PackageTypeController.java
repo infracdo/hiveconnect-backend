@@ -33,9 +33,7 @@ public class PackageTypeController {
     public CompletableFuture<Optional<Package>> findByPackageTypeId(
             @PathVariable("packageTypeId") String package_type_id) {
 
-        Optional<Package> packageType = packageRepo.findBypackageTypeId(package_type_id);
-
-        return CompletableFuture.completedFuture(packageType);
+        return CompletableFuture.completedFuture(packageRepo.findBypackageTypeId(package_type_id));
     }
 
 }
