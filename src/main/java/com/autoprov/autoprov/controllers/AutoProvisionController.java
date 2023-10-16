@@ -66,7 +66,7 @@ public class AutoProvisionController {
         pushToACS(clientName, serialNumber, defaultGateway, ipAddress, vlanId);
 
         // Ansible Process
-        executeAnsible(accountNo, serialNumber, macAddress, deviceName, ipAddress, oltIp);
+        executeAnsible(accountNo, serialNumber, macAddress, deviceName, ipAddress, packageType, oltIp);
 
         return "Provision Complete";
 
@@ -105,7 +105,7 @@ public class AutoProvisionController {
     }
 
     public String executeAnsible(String accountNo, String serialNumber, String macAddress, String deviceName,
-            String onu_private_ip, String oltIp) {
+            String onu_private_ip, String packageType, String oltIp) {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/launch/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
@@ -126,6 +126,7 @@ public class AutoProvisionController {
                 "\\nstatus: Activated " +
                 "\\nonu_private_ip: " + onu_private_ip +
                 "\\ndownstream: 11000" +
+                "\\npackage_type: " + packageType +
                 "\\nupstream: 11000\""
                 +
                 "}";
