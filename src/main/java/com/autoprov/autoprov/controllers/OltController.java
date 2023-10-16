@@ -85,7 +85,7 @@ public class OltController {
                 // key
                 // Handle the response
                 int onuIndex = nodeValue.indexOf("interface onu", 0);
-                String onuInterface = nodeValue.substring(onuIndex, onuIndex + 20);
+                String onuInterface = nodeValue.substring(onuIndex + 13, onuIndex + 19);
                 System.out.println("Value of the node: " + onuInterface);
                 return onuInterface;
             } catch (Exception e) {
