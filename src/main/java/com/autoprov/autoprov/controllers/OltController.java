@@ -28,7 +28,7 @@ public class OltController {
     public CompletableFuture<Optional<Olt>> findByOltSite(
             @PathVariable("oltSite") String oltSite) {
 
-        return CompletableFuture.completedFuture(oltRepo.findByolt_site(oltSite));
+        return CompletableFuture.completedFuture(oltRepo.findByOlt_site(oltSite));
     }
 
 }
