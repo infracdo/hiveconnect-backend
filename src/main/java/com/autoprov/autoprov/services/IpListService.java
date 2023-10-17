@@ -31,6 +31,7 @@ public class IpListService {
             Integer vlanId) {
         Integer host = 0;
         Integer gatewayHost = Integer.parseInt(internetGateway);
+        System.out.println("Gateway: " + gatewayHost);
         Integer oltIpHost = 0;
 
         if (oltIp != null)
@@ -74,14 +75,14 @@ public class IpListService {
         return "Successful";
     }
 
-    public static String[] defaultRemarks(Integer host, Integer gatewayIp, Integer oltIp) {
+    public static String[] defaultRemarks(Integer host, Integer gatewayHost, Integer oltIp) {
         String[] remarks = new String[3]; // [status, assignable, notes]
 
         if (host == 0) {
             remarks[0] = "Not Available";
             remarks[1] = "false";
             remarks[2] = "Network Address";
-        } else if (host == gatewayIp) {
+        } else if (host == gatewayHost) {
             remarks[0] = "Not Available";
             remarks[1] = "false";
             remarks[2] = "Internet Gateway";
