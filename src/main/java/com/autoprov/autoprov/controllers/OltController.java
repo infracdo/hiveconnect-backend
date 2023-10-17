@@ -80,7 +80,7 @@ public class OltController {
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode jsonNode = objectMapper.readTree(responseBody);
 
-                String onuInterface = jsonNode.path("results").get(0).path("config_context").asText();
+                String onuInterface = jsonNode.path("results").get(0).path("display").asText();
 
                 // for (JsonNode field : configContextNode) {
                 // onuInterface = field.fieldNames().next();
