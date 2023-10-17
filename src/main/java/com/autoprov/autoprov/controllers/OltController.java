@@ -83,7 +83,7 @@ public class OltController {
                 JsonNode configContextNode = jsonNode.path("results").get(0).path("config_context");
 
                 String onuInterface = configContextNode.fieldNames().next();
-                onuInterface = onuInterface.substring(0, (onuInterface.lastIndexOf(" ")));
+                onuInterface = onuInterface.substring((onuInterface.lastIndexOf(" ")));
 
                 return onuInterface;
             } catch (Exception e) {
