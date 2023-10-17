@@ -40,6 +40,7 @@ public class IpManagementController {
     @PostMapping("/populateSubnetIPs")
     public CompletableFuture<String> populateSubnetIPs(@RequestBody Map<String, String> params) {
         String response = IpListService.populateIpByNetworkAddress(params.get("NetworkAddress"),
+                params.get("InternetGatewayHost"), params.get("OltIpHost"),
                 Integer.parseInt(params.get("VlanID")));
 
         return CompletableFuture.completedFuture(response);
@@ -49,6 +50,7 @@ public class IpManagementController {
     @PostMapping("/addNetworkAddress")
     public CompletableFuture<String> addNetworkAddress(@RequestBody Map<String, String> params) {
         String response = IpListService.addNetworkAddress(params.get("NetworkAddress"), params.get("AccountNumber"),
+                params.get("InternetGatewayHost"), params.get("OltIpHost"),
                 Integer.parseInt(params.get("VlanID")), params.get("Site"), params.get("Type"), params.get("Status"),
                 params.get("Notes"));
         return CompletableFuture.completedFuture(response);

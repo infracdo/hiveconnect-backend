@@ -27,17 +27,26 @@ public class IpListService {
     }
 
     // Functions and Services
-    public static String populateIpByNetworkAddress(String networkAddress, Integer vlanId) {
+    public static String populateIpByNetworkAddress(String networkAddress, String internetGateway, String oltIp,
+            Integer vlanId) {
         Integer host = 0;
+        Integer gatewayHost = Integer.parseInt(networkAddress);
+        Integer oltIpHost = 0;
+
+        if (oltIp != null)
+            oltIpHost = Integer.parseInt(oltIp);
+        else
+            oltIpHost = 400;
+
         while (host <= 255) {
 
             IpAddress ipAdd = IpAddress.builder()
                     .ipAddress(networkAddress.substring(0, (networkAddress.lastIndexOf(".") + 1)) + host.toString())
-                    .status(defaultRemarks(host)[0])
+                    .status(defaultRemarks(host, gatewayHost, oltIpHost)[0])
                     .accountNumber(" ")
                     .vlanId(vlanId)
-                    .assignable(Boolean.valueOf(defaultRemarks(host)[1]))
-                    .notes(defaultRemarks(host)[2])
+                    .assignable(Boolean.valueOf(defaultRemarks(host, gatewayHost, oltIpHost)[1]))
+                    .notes(defaultRemarks(host, gatewayHost, oltIpHost)[2])
                     .build();
             ipAddRepo.save(ipAdd);
             host++;
@@ -45,7 +54,8 @@ public class IpListService {
         return "successful";
     }
 
-    public static String addNetworkAddress(String networkAddress, String accountNumber, Integer vlanId, String site,
+    public static String addNetworkAddress(String networkAddress, String accountNumber, String internetGateway,
+            String oltIp, Integer vlanId, String site,
             String type, String status, String notes) {
         NetworkAddress networkAdd = NetworkAddress.builder()
                 .networkAddress(networkAddress)
@@ -56,7 +66,7 @@ public class IpListService {
                 .notes(notes)
                 .build();
         networkAddressRepo.save(networkAdd);
-        populateIpByNetworkAddress(networkAddress, vlanId);
+        populateIpByNetworkAddress(networkAddress, internetGateway, oltIp, vlanId);
         // if (type.equals("Residential") || type.equals("RES")) {
         // populateIpByNetworkAddress(networkAddress, vlanId);
         // }
@@ -64,30 +74,31 @@ public class IpListService {
         return "Successful";
     }
 
-    public static String[] defaultRemarks(Integer host) {
+    public static String[] defaultRemarks(Integer host, Integer gatewayIp, Integer oltIp) {
         String[] remarks = new String[3]; // [status, assignable, notes]
 
-        switch (host) {
-            case 0:
-                remarks[0] = "Not Available";
-                remarks[1] = "false";
-                remarks[2] = "Network Address";
-                break;
-            case 1:
-                remarks[0] = "Not Available";
-                remarks[1] = "false";
-                remarks[2] = "Internet Gateway";
-                break;
-            case 255:
-                remarks[0] = "Not Available";
-                remarks[1] = "false";
-                remarks[2] = "Broadcast Address";
-                break;
-            default:
-                remarks[0] = "Available";
-                remarks[1] = "true";
-                remarks[2] = "Ready to Assign";
+        if (host == 0) {
+            remarks[0] = "Not Available";
+            remarks[1] = "false";
+            remarks[2] = "Network Address";
+        } else if (host == gatewayIp) {
+            remarks[0] = "Not Available";
+            remarks[1] = "false";
+            remarks[2] = "Internet Gateway";
+        } else if (host == oltIp) {
+            remarks[0] = "Not Available";
+            remarks[1] = "false";
+            remarks[2] = "OLT IP";
+        } else if (host == 255) {
+            remarks[0] = "Not Available";
+            remarks[1] = "false";
+            remarks[2] = "Broadcast Address";
+        } else {
+            remarks[0] = "Available";
+            remarks[1] = "true";
+            remarks[2] = "Ready to Assign";
         }
+
         return remarks;
     }
 }
