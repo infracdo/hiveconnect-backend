@@ -30,7 +30,7 @@ public class IpListService {
     public static String populateIpByNetworkAddress(String networkAddress, String internetGateway, String oltIp,
             Integer vlanId) {
         Integer host = 0;
-        Integer gatewayHost = Integer.parseInt(networkAddress);
+        Integer gatewayHost = Integer.parseInt(internetGateway);
         Integer oltIpHost = 0;
 
         if (oltIp != null)
