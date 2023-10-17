@@ -79,11 +79,7 @@ public class IpListService {
         String[] remarks = new String[3]; // [status, assignable, notes]
 
         System.out.println(gatewayHost);
-        if (host == 0) {
-            remarks[0] = "Not Available";
-            remarks[1] = "false";
-            remarks[2] = "Network Address";
-        } else if (host == gatewayHost) {
+        if (host == gatewayHost) {
             remarks[0] = "Not Available";
             remarks[1] = "false";
             remarks[2] = "Internet Gateway";
@@ -95,6 +91,10 @@ public class IpListService {
             remarks[0] = "Not Available";
             remarks[1] = "false";
             remarks[2] = "Broadcast Address";
+        } else if (host == 0) {
+            remarks[0] = "Not Available";
+            remarks[1] = "false";
+            remarks[2] = "Network Address";
         } else {
             remarks[0] = "Available";
             remarks[1] = "true";
