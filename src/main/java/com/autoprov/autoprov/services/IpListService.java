@@ -78,6 +78,7 @@ public class IpListService {
     public static String[] defaultRemarks(Integer host, Integer gatewayHost, Integer oltIp) {
         String[] remarks = new String[3]; // [status, assignable, notes]
 
+        System.out.println(gatewayHost);
         if (host == 0) {
             remarks[0] = "Not Available";
             remarks[1] = "false";
