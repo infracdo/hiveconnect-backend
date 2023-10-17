@@ -80,13 +80,14 @@ public class OltController {
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode jsonNode = objectMapper.readTree(responseBody);
 
-                String nodeValue = jsonNode.path("results").get(0).path("comments").asText(); // Replace "key" with your
-                                                                                              // actual JSON
+                String onuInterface = jsonNode.path("results").get(0).path("config_context").asText(); // Replace "key"
+                                                                                                       // with your
+                // actual JSON
                 // key
                 // Handle the response
-                int onuIndex = nodeValue.indexOf("interface onu", 0);
-                String onuInterface = nodeValue.substring(onuIndex + 13, onuIndex + 19);
-                System.out.println("Value of the node: " + onuInterface);
+                // int onuIndex = nodeValue.indexOf("interface onu", 0);
+                // String onuInterface = nodeValue.substring(onuIndex + 13, onuIndex + 19);
+                // System.out.println("Value of the node: " + onuInterface);
                 return onuInterface;
             } catch (Exception e) {
                 // Handle the exception
