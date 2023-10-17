@@ -79,12 +79,14 @@ public class OltController {
                 // Use ObjectMapper to extract a specific node
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode jsonNode = objectMapper.readTree(responseBody);
+                String onuInterface = " ";
 
-                String onuInterface = jsonNode.path("results").get(0).path("config_context").asText(); // Replace "key"
-                                                                                                       // with your
-                // actual JSON
-                // key
-                // Handle the response
+                JsonNode configContextNode = jsonNode.path("results").get(0).path("config_context");
+
+                for (JsonNode field : configContextNode) {
+                    onuInterface = field.fieldNames().next();
+                    System.out.println("Key Name inside config_context: " + onuInterface);
+                }
                 // int onuIndex = nodeValue.indexOf("interface onu", 0);
                 // String onuInterface = nodeValue.substring(onuIndex + 13, onuIndex + 19);
                 // System.out.println("Value of the node: " + onuInterface);
