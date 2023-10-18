@@ -35,16 +35,22 @@ public class IpListService {
         Integer host = 0;
         Integer hostRange = 0;
 
-        switch (maskBits) {
-            case 24:
-                hostRange = 255;
-                break;
-            case 29:
-                hostRange = 8;
-                break;
-            default:
-                return "CIDR not supported. Only supports /24 and /29";
-        }
+        // switch (maskBits) {
+        // case 24:
+        // hostRange = 255;
+        // break;
+        // case 29:
+        // hostRange = 8;
+        // break;
+        // default:
+        // return "CIDR not supported. Only supports /24 and /29";
+        // }
+        if (maskBits == 24)
+            hostRange = 255;
+        if (maskBits == 29)
+            hostRange = 8;
+        if (maskBits != 24 && maskBits != 29)
+            return "CIDR not supported. Only supports /24 and /29";
 
         Integer gatewayHost = Integer.parseInt(internetGateway);
         System.out.println("Gateway: " + gatewayHost);
