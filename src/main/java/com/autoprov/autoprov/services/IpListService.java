@@ -39,8 +39,10 @@ public class IpListService {
             hostRange = 255;
         else if (maskBits == 29)
             hostRange = 8;
-        else
+        else if (maskBits != 24 || maskBits != 29)
             return "CIDR not supported. Only supports /24 and /29";
+        else
+            return null;
 
         Integer gatewayHost = Integer.parseInt(internetGateway);
         System.out.println("Gateway: " + gatewayHost);
