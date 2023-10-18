@@ -33,6 +33,7 @@ public class NetworkAddress {
     @Column(name = "network_type")
     private String type;
     private String site;
+    private String size;
     private Integer vlanId;
     private String notes;
 

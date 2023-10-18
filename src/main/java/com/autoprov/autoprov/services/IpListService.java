@@ -29,7 +29,18 @@ public class IpListService {
     // Functions and Services
     public static String populateIpByNetworkAddress(String networkAddress, String internetGateway, String oltIp,
             Integer vlanId) {
+
+        Integer maskBits = Integer.parseInt(networkAddress.substring((networkAddress.lastIndexOf("/") + 1)));
         Integer host = 0;
+        Integer hostRange = 0;
+
+        if (maskBits == 24)
+            hostRange = 255;
+        else if (maskBits == 29)
+            hostRange = 8;
+        else
+            return "CIDR not supported. Only supports /24 and /29";
+
         Integer gatewayHost = Integer.parseInt(internetGateway);
         System.out.println("Gateway: " + gatewayHost);
         Integer oltIpHost = 0;
@@ -37,17 +48,17 @@ public class IpListService {
         if (oltIp != null)
             oltIpHost = Integer.parseInt(oltIp);
         else
-            oltIpHost = 400;
+            oltIpHost = -1;
 
-        while (host <= 255) {
+        while (host <= hostRange) {
 
             IpAddress ipAdd = IpAddress.builder()
                     .ipAddress(networkAddress.substring(0, (networkAddress.lastIndexOf(".") + 1)) + host.toString())
-                    .status(defaultRemarks(host, gatewayHost, oltIpHost)[0])
+                    .status(defaultRemarks(host, hostRange, gatewayHost, oltIpHost)[0])
                     .accountNumber(" ")
                     .vlanId(vlanId)
-                    .assignable(Boolean.valueOf(defaultRemarks(host, gatewayHost, oltIpHost)[1]))
-                    .notes(defaultRemarks(host, gatewayHost, oltIpHost)[2])
+                    .assignable(Boolean.valueOf(defaultRemarks(host, hostRange, gatewayHost, oltIpHost)[1]))
+                    .notes(defaultRemarks(host, hostRange, gatewayHost, oltIpHost)[2])
                     .build();
             ipAddRepo.save(ipAdd);
             host++;
@@ -75,7 +86,7 @@ public class IpListService {
         return "Successful";
     }
 
-    public static String[] defaultRemarks(Integer host, Integer gatewayHost, Integer oltIp) {
+    public static String[] defaultRemarks(Integer host, Integer hostRange, Integer gatewayHost, Integer oltIp) {
         String[] remarks = new String[3]; // [status, assignable, notes]
 
         System.out.println(gatewayHost);
@@ -87,7 +98,7 @@ public class IpListService {
             remarks[0] = "Not Available";
             remarks[1] = "false";
             remarks[2] = "OLT IP";
-        } else if (host == 255) {
+        } else if (host == hostRange) {
             remarks[0] = "Not Available";
             remarks[1] = "false";
             remarks[2] = "Broadcast Address";
