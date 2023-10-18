@@ -31,6 +31,7 @@ public class IpListService {
             Integer vlanId) {
 
         Integer maskBits = Integer.parseInt(networkAddress.substring((networkAddress.lastIndexOf("/") + 1)));
+        System.out.println(maskBits);
         Integer host = 0;
         Integer hostRange = 0;
 
