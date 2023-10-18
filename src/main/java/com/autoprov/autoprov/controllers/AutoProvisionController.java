@@ -68,7 +68,7 @@ public class AutoProvisionController {
         // Ansible Process
         executeAnsible(accountNo, serialNumber, macAddress, deviceName, ipAddress, packageType, oltIp);
 
-        return "Provision Complete";
+        return "Provision Pushed";
 
     }
 
