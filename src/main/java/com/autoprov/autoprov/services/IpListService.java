@@ -27,13 +27,9 @@ public class IpListService {
     }
 
     // Functions and Services
-    public static String populateIpByNetworkAddress(String networkAddress, String internetGateway, String oltIp,
+    public static String populateIpByNetworkAddress(String networkAddress, Integer internetGateway, Integer hostRange,
+            String oltIp,
             Integer vlanId) {
-
-        Integer maskBits = Integer.parseInt(networkAddress.substring((networkAddress.lastIndexOf("/") + 1)));
-        System.out.println(maskBits);
-        Integer host = 0;
-        Integer hostRange = 0;
 
         // switch (maskBits) {
         // case 24:
@@ -45,18 +41,7 @@ public class IpListService {
         // default:
         // return "CIDR not supported. Only supports /24 and /29";
         // }
-        if (maskBits == 24) {
-            hostRange = 255;
-        }
-        if (maskBits == 29) {
-            hostRange = 8;
-        }
-        if (maskBits != 24 && maskBits != 29) {
-            return "CIDR not supported. Only supports /24 and /29";
-        }
-
-        Integer gatewayHost = Integer.parseInt(internetGateway);
-        System.out.println("Gateway: " + gatewayHost);
+        Integer host = 0;
         Integer oltIpHost = 0;
 
         if (oltIp != null)
@@ -68,11 +53,12 @@ public class IpListService {
 
             IpAddress ipAdd = IpAddress.builder()
                     .ipAddress(networkAddress.substring(0, (networkAddress.lastIndexOf(".") + 1)) + host.toString())
-                    .status(defaultRemarks(host, hostRange, gatewayHost, oltIpHost)[0])
+                    .status(defaultRemarks(host, hostRange, internetGateway, oltIpHost)[0])
                     .accountNumber(" ")
                     .vlanId(vlanId)
-                    .assignable(Boolean.valueOf(defaultRemarks(host, hostRange, gatewayHost, oltIpHost)[1]))
-                    .notes(defaultRemarks(host, hostRange, gatewayHost, oltIpHost)[2])
+                    .assignable(
+                            Boolean.valueOf(defaultRemarks(host, hostRange, internetGateway, oltIpHost)[1]))
+                    .notes(defaultRemarks(host, hostRange, internetGateway, oltIpHost)[2])
                     .build();
             ipAddRepo.save(ipAdd);
             host++;
@@ -83,6 +69,23 @@ public class IpListService {
     public static String addNetworkAddress(String networkAddress, String accountNumber, String internetGateway,
             String oltIp, Integer vlanId, String site,
             String type, String status, String notes) {
+
+        Integer maskBits = Integer.parseInt(networkAddress.substring((networkAddress.lastIndexOf("/") + 1)));
+        System.out.println(maskBits);
+        Integer hostRange = 0;
+
+        if (maskBits == 24) {
+            hostRange = 255;
+        }
+        if (maskBits == 29) {
+            hostRange = 8;
+        }
+        if (maskBits != 24 && maskBits != 29) {
+            return "CIDR not supported. Only supports /24 and /29";
+        }
+
+        Integer gatewayHost = Integer.parseInt(internetGateway);
+
         NetworkAddress networkAdd = NetworkAddress.builder()
                 .networkAddress(networkAddress)
                 .accountNumber(accountNumber)
@@ -92,7 +95,7 @@ public class IpListService {
                 .notes(notes)
                 .build();
         networkAddressRepo.save(networkAdd);
-        populateIpByNetworkAddress(networkAddress, internetGateway, oltIp, vlanId);
+        populateIpByNetworkAddress(networkAddress, gatewayHost, hostRange, oltIp, vlanId);
         // if (type.equals("Residential") || type.equals("RES")) {
         // populateIpByNetworkAddress(networkAddress, vlanId);
         // }

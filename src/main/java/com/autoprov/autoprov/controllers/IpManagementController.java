@@ -36,15 +36,17 @@ public class IpManagementController {
     @Autowired
     private NetworkAddressRepository networkdAddRepo;
 
-    @Async("asyncExecutor")
-    @PostMapping("/populateSubnetIPs")
-    public CompletableFuture<String> populateSubnetIPs(@RequestBody Map<String, String> params) {
-        String response = IpListService.populateIpByNetworkAddress(params.get("NetworkAddress"),
-                params.get("InternetGatewayHost"), params.get("OltIpHost"),
-                Integer.parseInt(params.get("VlanID")));
+    // @Async("asyncExecutor")
+    // @PostMapping("/populateSubnetIPs")
+    // public CompletableFuture<String> populateSubnetIPs(@RequestBody Map<String,
+    // String> params) {
+    // String response =
+    // IpListService.populateIpByNetworkAddress(params.get("NetworkAddress"),
+    // params.get("InternetGatewayHost"), params.get("OltIpHost"),
+    // Integer.parseInt(params.get("VlanID")));
 
-        return CompletableFuture.completedFuture(response);
-    }
+    // return CompletableFuture.completedFuture(response);
+    // }
 
     @Async("asyncExecutor")
     @PostMapping("/addNetworkAddress")
