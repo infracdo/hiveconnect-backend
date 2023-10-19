@@ -16,13 +16,13 @@ public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
     List<IpAddress> findAllAvailableIp();
 
     @Query(value = "SELECT * from ipaddresses where ip_address LIKE ?1%", nativeQuery = true)
-    List<IpAddress> findAllUnderNetworkAddress(String networkAddress);
+    List<IpAddress> findAllUnderCidrBlock(String cidrBlock);
 
     @Query(value = "SELECT ip_address from ipaddresses where ip_address LIKE ?1% AND notes LIKE '%OLT IP%'", nativeQuery = true)
-    String getOltIpOfIpAddress(String networkAddress);
+    String getOltIpOfIpAddress(String cidrBlock);
 
     @Query(value = "SELECT ip_address from ipaddresses where ip_address LIKE ?1% AND notes LIKE '%Internet Gateway%'", nativeQuery = true)
-    String getGatewayOfIpAddress(String networkAddress);
+    String getGatewayOfIpAddress(String cidrBlock);
 
     @Modifying
     @Transactional
@@ -33,6 +33,19 @@ public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
     @Transactional
     @Query("update IpAddress u set u.accountNumber = ?1, u.status = \'Reserved\' where u.ipAddress = ?2")
     void reserveIpAddressToAccountNumber(String accountNumber, String ipAddress);
+
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE from ipaddresses where ip_address LIKE ?1%", nativeQuery = true)
+    void deleteIpAddressUnderCidrBlock(String cidrBlock);
+
+    @Query(value = "SELECT * from ipaddresses where status =\"Available\" AND ip_address LIKE ?1% LIMIT 1", nativeQuery = true)
+    List<IpAddress> getOneAvailableIpAddressUnderCidrBlock(String cidrBlock);
+
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE from cidr_block where network_address LIKE ?1%", nativeQuery = true)
+    void deleteCidrBlock(String cidrBlock);
 
     Optional<IpAddress> findByipAddress(String ipAddress);
 

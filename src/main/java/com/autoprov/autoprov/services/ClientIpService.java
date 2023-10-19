@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.autoprov.autoprov.repositories.IpAddressRepository;
 import com.autoprov.autoprov.domain.Client;
-import com.autoprov.autoprov.domain.NetworkAddress;
+import com.autoprov.autoprov.domain.CidrBlock;
 import com.autoprov.autoprov.repositories.ClientRepository;
 
 @Service

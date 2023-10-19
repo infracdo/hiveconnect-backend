@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,9 +23,9 @@ import com.autoprov.autoprov.domain.Client;
 import com.autoprov.autoprov.services.IpListService;
 
 import com.autoprov.autoprov.domain.IpAddress;
-import com.autoprov.autoprov.domain.NetworkAddress;
+import com.autoprov.autoprov.domain.CidrBlock;
 import com.autoprov.autoprov.repositories.IpAddressRepository;
-import com.autoprov.autoprov.repositories.NetworkAddressRepository;
+import com.autoprov.autoprov.repositories.CidrBlockRepository;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -34,7 +35,7 @@ public class IpManagementController {
     private IpAddressRepository ipAddRepo;
 
     @Autowired
-    private NetworkAddressRepository networkdAddRepo;
+    private CidrBlockRepository networkdAddRepo;
 
     // @Async("asyncExecutor")
     // @PostMapping("/populateSubnetIPs")
@@ -49,9 +50,9 @@ public class IpManagementController {
     // }
 
     @Async("asyncExecutor")
-    @PostMapping("/addNetworkAddress")
-    public CompletableFuture<String> addNetworkAddress(@RequestBody Map<String, String> params) {
-        String response = IpListService.addNetworkAddress(params.get("NetworkAddress"), params.get("AccountNumber"),
+    @PostMapping("/addCidrBlock")
+    public CompletableFuture<String> addCidrBlock(@RequestBody Map<String, String> params) {
+        String response = IpListService.addCidrBlock(params.get("CidrBlock"), params.get("AccountNumber"),
                 params.get("InternetGatewayHost"), params.get("OltIpHost"),
                 Integer.parseInt(params.get("VlanID")), params.get("Site"), params.get("Type"), params.get("Status"),
                 params.get("Notes"));
@@ -59,12 +60,12 @@ public class IpManagementController {
     }
 
     @Async("asyncExecutor")
-    @GetMapping("/getNetworkAddresses")
-    public CompletableFuture<List<NetworkAddress>> getNetworkAddresses() {
-        List<NetworkAddress> NetworkAddress = new ArrayList<>();
-        networkdAddRepo.findAll().forEach(NetworkAddress::add);
+    @GetMapping("/getCidrBlocks")
+    public CompletableFuture<List<CidrBlock>> getNetworkAddresses() {
+        List<CidrBlock> CidrBlock = new ArrayList<>();
+        networkdAddRepo.findAll().forEach(CidrBlock::add);
 
-        return CompletableFuture.completedFuture(NetworkAddress);
+        return CompletableFuture.completedFuture(CidrBlock);
     }
 
     @Async("asyncExecutor")
@@ -82,37 +83,56 @@ public class IpManagementController {
     }
 
     @Async("asyncExecutor")
-    @GetMapping("/getIpAddressesOfNetworkAddress")
-    public CompletableFuture<List<IpAddress>> getIpAddressesOfNetworkAddress(@RequestBody Map<String, String> params) {
-        List<IpAddress> NetworkAddress = new ArrayList<>();
-        String networkAddress = params.get("NetworkAddress");
-        networkAddress = networkAddress.substring(0, (networkAddress.lastIndexOf(".")));
-        System.out.println(networkAddress);
-        ipAddRepo.findAllUnderNetworkAddress(networkAddress).forEach(NetworkAddress::add);
-        return CompletableFuture.completedFuture(NetworkAddress);
+    @GetMapping("/getOneAvailableIpAddress/{cidrBlock}")
+    public CompletableFuture<List<IpAddress>> getOneAvailableIpAddressUnderCidrBlock(
+            @PathVariable("cidrBlock") String cidrBlock) {
+        return CompletableFuture.completedFuture(
+                // TODO: add sanitation, input should be in IPv4 format
+                ipAddRepo.getOneAvailableIpAddressUnderCidrBlock(cidrBlock.substring(0, cidrBlock.lastIndexOf("."))));
+    }
+
+    // @Async("asyncExecutor")
+    // @GetMapping("/getIpAddressesOfCidrBlock")
+    // public CompletableFuture<List<IpAddress>>
+    // getIpAddressesOfCidrBlock(@RequestBody Map<String, String> params) {
+    // List<IpAddress> CidrBlock = new ArrayList<>();
+    // String cidrBlock = params.get("CidrBlock");
+    // cidrBlock = cidrBlock.substring(0, (CidrBlock.lastIndexOf(".")));
+    // System.out.println(CidrBlock);
+    // ipAddRepo.findAllUnderCidrBlock(cidrBlock).forEach(CidrBlock::add);
+    // return CompletableFuture.completedFuture(CidrBlock);
+    // }
+
+    @Async("asyncExecutor")
+    @GetMapping("/getIpAddressesOfCidrBlock/{cidrBlock}")
+    public CompletableFuture<List<IpAddress>> getIpAddressesOfCidrBlockPath(
+            @PathVariable("cidrBlock") String cidrBlock) {
+        List<IpAddress> CidrBlockIps = new ArrayList<>();
+        cidrBlock = cidrBlock.substring(0, (cidrBlock.lastIndexOf(".")));
+        System.out.println(cidrBlock);
+        ipAddRepo.findAllUnderCidrBlock(cidrBlock).forEach(CidrBlockIps::add);
+        return CompletableFuture.completedFuture(CidrBlockIps);
     }
 
     @Async("asyncExecutor")
-    @GetMapping("/getIpAddressesOfNetworkAddress/{networkAdd}")
-    public CompletableFuture<List<IpAddress>> getIpAddressesOfNetworkAddressPath(
-            @PathVariable("networkAdd") String networkAddress) {
-        List<IpAddress> NetworkAddress = new ArrayList<>();
-        networkAddress = networkAddress.substring(0, (networkAddress.lastIndexOf(".")));
-        System.out.println(networkAddress);
-        ipAddRepo.findAllUnderNetworkAddress(networkAddress).forEach(NetworkAddress::add);
-        return CompletableFuture.completedFuture(NetworkAddress);
+    @DeleteMapping("/deleteCidrBlock/{cidrBlock}")
+    public CompletableFuture<String> deleteCidrBlock(@PathVariable("cidrBlock") String cidrBlock) {
+        ipAddRepo.deleteIpAddressUnderCidrBlock(cidrBlock.substring(0, cidrBlock.lastIndexOf(".")));
+        ipAddRepo.deleteCidrBlock(cidrBlock.substring(0, cidrBlock.lastIndexOf(".")));
+
+        return CompletableFuture.completedFuture("IP Address and CIDR Block deleted");
     }
 
     @Async("asyncExecutor")
     @PatchMapping("/updateNetworkAddress/{networkAddress}")
-    public CompletableFuture<ResponseEntity<NetworkAddress>> updateNetworkAddress(
+    public CompletableFuture<ResponseEntity<CidrBlock>> updateNetworkAddress(
             @PathVariable("networkAddress") String networkAddress,
             @RequestBody Map<String, String> params) {
-        Optional<NetworkAddress> optionalNetworkAddress = networkdAddRepo.findByNetworkAddress(networkAddress);
+        Optional<CidrBlock> optionalNetworkAddress = networkdAddRepo.findByCidrBlock(networkAddress);
 
         if (optionalNetworkAddress.isPresent()) {
             // Modify the fields of the entity object
-            NetworkAddress networkAdd = optionalNetworkAddress.get();
+            CidrBlock networkAdd = optionalNetworkAddress.get();
 
             networkAdd.setAccountNumber(params.get("AccountNumber"));
             networkAdd.setNotes(params.get("Notes"));

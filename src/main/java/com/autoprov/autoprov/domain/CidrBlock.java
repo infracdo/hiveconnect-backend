@@ -18,17 +18,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Entity // labels an entity that can be used for JPA
-@Table(name = "networkaddresses")
-public class NetworkAddress {
+@Table(name = "cidr_block")
+public class CidrBlock {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "networkAddress", unique = true)
-    private String networkAddress;
+    @Column(name = "cidr_block", unique = true)
+    private String cidrBlock;
 
     private String accountNumber; // related to subscriber "clients" table
+    private String networkAddress;
 
     @Column(name = "network_type")
     private String type;

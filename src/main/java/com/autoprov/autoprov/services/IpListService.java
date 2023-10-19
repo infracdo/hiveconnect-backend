@@ -6,15 +6,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.autoprov.autoprov.domain.IpAddress;
-import com.autoprov.autoprov.domain.NetworkAddress;
+import com.autoprov.autoprov.domain.CidrBlock;
 import com.autoprov.autoprov.repositories.IpAddressRepository;
-import com.autoprov.autoprov.repositories.NetworkAddressRepository;
+import com.autoprov.autoprov.repositories.CidrBlockRepository;
 
 @Service
 public class IpListService {
 
     private static IpAddressRepository ipAddRepo;
-    private static NetworkAddressRepository networkAddressRepo;
+    private static CidrBlockRepository cidrBlockRepo;
 
     @Autowired
     public void IpAddressRepoImpl(IpAddressRepository ipAddRepo) {
@@ -22,12 +22,12 @@ public class IpListService {
     }
 
     @Autowired
-    public void NetworkAddressRepositoryImpl(NetworkAddressRepository networkAddressRepo) {
-        IpListService.networkAddressRepo = networkAddressRepo;
+    public void cidrBlockRepositoryImpl(CidrBlockRepository cidrBlockRepo) {
+        IpListService.cidrBlockRepo = cidrBlockRepo;
     }
 
     // Functions and Services
-    public static String populateIpByNetworkAddress(String networkAddress, Integer internetGateway, Integer hostRange,
+    public static String populateIpBycidrBlock(String cidrBlock, Integer internetGateway, Integer hostRange,
             String oltIp,
             Integer vlanId) {
 
@@ -52,7 +52,7 @@ public class IpListService {
         while (host <= hostRange) {
 
             IpAddress ipAdd = IpAddress.builder()
-                    .ipAddress(networkAddress.substring(0, (networkAddress.lastIndexOf(".") + 1)) + host.toString())
+                    .ipAddress(cidrBlock.substring(0, (cidrBlock.lastIndexOf(".") + 1)) + host.toString())
                     .status(defaultRemarks(host, hostRange, internetGateway, oltIpHost)[0])
                     .accountNumber(" ")
                     .vlanId(vlanId)
@@ -66,11 +66,11 @@ public class IpListService {
         return "successful";
     }
 
-    public static String addNetworkAddress(String networkAddress, String accountNumber, String internetGateway,
+    public static String addCidrBlock(String cidrBlock, String accountNumber, String internetGateway,
             String oltIp, Integer vlanId, String site,
             String type, String status, String notes) {
 
-        Integer maskBits = Integer.parseInt(networkAddress.substring((networkAddress.lastIndexOf("/") + 1)));
+        Integer maskBits = Integer.parseInt(cidrBlock.substring((cidrBlock.lastIndexOf("/") + 1)));
         System.out.println(maskBits);
         Integer hostRange = 0;
 
@@ -86,18 +86,19 @@ public class IpListService {
 
         Integer gatewayHost = Integer.parseInt(internetGateway);
 
-        NetworkAddress networkAdd = NetworkAddress.builder()
-                .networkAddress(networkAddress)
+        CidrBlock networkAdd = CidrBlock.builder()
+                .cidrBlock(cidrBlock)
+                .networkAddress(cidrBlock.substring(0, cidrBlock.lastIndexOf("/")))
                 .accountNumber(accountNumber)
                 .type(type)
                 .site(site)
                 .vlanId(vlanId)
                 .notes(notes)
                 .build();
-        networkAddressRepo.save(networkAdd);
-        populateIpByNetworkAddress(networkAddress, gatewayHost, hostRange, oltIp, vlanId);
+        cidrBlockRepo.save(networkAdd);
+        populateIpBycidrBlock(cidrBlock, gatewayHost, hostRange, oltIp, vlanId);
         // if (type.equals("Residential") || type.equals("RES")) {
-        // populateIpByNetworkAddress(networkAddress, vlanId);
+        // populateIpBycidrBlock(cidrBlock, vlanId);
         // }
 
         return "Successful";
@@ -111,15 +112,15 @@ public class IpListService {
             remarks[0] = "Not Available";
             remarks[1] = "false";
             remarks[2] = "Network Address";
-        } else if (host == gatewayHost) {
+        } else if (host.equals(gatewayHost)) {
             remarks[0] = "Not Available";
             remarks[1] = "false";
             remarks[2] = "Internet Gateway";
-        } else if (host == oltIp) {
+        } else if (host.equals(oltIp)) {
             remarks[0] = "Not Available";
             remarks[1] = "false";
             remarks[2] = "OLT IP";
-        } else if (host == hostRange) {
+        } else if (host.equals(hostRange)) {
             remarks[0] = "Not Available";
             remarks[1] = "false";
             remarks[2] = "Broadcast Address";
