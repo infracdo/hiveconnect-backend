@@ -91,7 +91,7 @@ public class AutoProvisionController {
         jsonBody.append("{");
         jsonBody.append("\"SN\":\"" + params.get("serialNumber") + "\",");
         jsonBody.append("\"Instance\":\"" + instance + "\",");
-        jsonBody.append("\"Toggle\":\"" + toggle + "\",");
+        jsonBody.append("\"Toggle\":\"" + toggle + "\"");
 
         jsonBody.append("}");
 
@@ -126,7 +126,7 @@ public class AutoProvisionController {
         jsonBody.append("{");
         jsonBody.append("\"SN\":\"" + params.get("serialNumber") + "\",");
         jsonBody.append("\"Instance\":\"" + instance + "\",");
-        jsonBody.append("\"Toggle\":\"" + toggle + "\",");
+        jsonBody.append("\"Toggle\":\"" + toggle + "\"");
 
         jsonBody.append("}");
 
