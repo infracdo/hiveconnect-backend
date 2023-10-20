@@ -72,6 +72,76 @@ public class AutoProvisionController {
 
     }
 
+    @Async("AsyncExecutor")
+    @PostMapping("/disconnectClient")
+    public String disconnectClient(@RequestBody Map<String, String> params) {
+        // TODO: Call to ACS to Disconnect Wan2
+        String apiUrl = "http://172.91.0.136:7547/toggleWan";
+
+        // Create headers with Content-Type set to application/json
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String instance = "2";
+        String toggle = "0";
+
+        // Create a JSON request body
+        StringBuilder jsonBody = new StringBuilder();
+
+        jsonBody.append("{");
+        jsonBody.append("\"SN\":\"" + params.get("serialNumber") + "\",");
+        jsonBody.append("\"Instance\":\"" + instance + "\",");
+        jsonBody.append("\"Toggle\":\"" + toggle + "\",");
+
+        jsonBody.append("}");
+
+        String jsonRequestBody = jsonBody.toString();
+        System.out.println(jsonRequestBody);
+        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+
+        System.out.println("HiveConnect: ACS Push: WAN2 Disable Task Pushed");
+        System.out.println("Response: " + jsonResponse);
+
+        return null;
+    }
+
+    @Async("AsyncExecutor")
+    @PostMapping("/reconnectClient")
+    public String reconnectClient(@RequestBody Map<String, String> params) {
+        // TODO: Call to ACS to Disconnect Wan2
+        String apiUrl = "http://172.91.0.136:7547/toggleWan";
+
+        // Create headers with Content-Type set to application/json
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String instance = "2";
+        String toggle = "1";
+
+        // Create a JSON request body
+        StringBuilder jsonBody = new StringBuilder();
+
+        jsonBody.append("{");
+        jsonBody.append("\"SN\":\"" + params.get("serialNumber") + "\",");
+        jsonBody.append("\"Instance\":\"" + instance + "\",");
+        jsonBody.append("\"Toggle\":\"" + toggle + "\",");
+
+        jsonBody.append("}");
+
+        String jsonRequestBody = jsonBody.toString();
+        System.out.println(jsonRequestBody);
+        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+
+        System.out.println("HiveConnect: ACS Push: WAN2 Enable Task Pushed");
+        System.out.println("Response: " + jsonResponse);
+
+        return null;
+    }
+
     public String pushToACS(String clientName, String serialNumber, String defaultGateway, String ipAddress,
             Integer vlanId) {
         // Define the API URL
