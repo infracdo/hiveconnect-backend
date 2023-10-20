@@ -51,8 +51,7 @@ public class AutoProvisionController {
         // Prepare RequestBody Values
         String accountNo = params.get("accountNo");
         String clientName = params.get("clientName");
-        String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
-        System.out.println(deviceName);
+
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
         String ipAddress = params.get("ipAddress");
@@ -66,14 +65,14 @@ public class AutoProvisionController {
         pushToACS(clientName, serialNumber, defaultGateway, ipAddress, vlanId);
 
         // Ansible Process
-        executeAnsible(accountNo, serialNumber, macAddress, deviceName, ipAddress, packageType, oltIp);
+        executeAnsible(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, oltIp);
 
         return "Provision Pushed";
 
     }
 
     @Async("AsyncExecutor")
-    @PostMapping("/disconnectClient")
+    @PostMapping("/temporaryDisconnectClient")
     public String disconnectClient(@RequestBody Map<String, String> params) {
         // TODO: Call to ACS to Disconnect Wan2
         String apiUrl = "http://172.91.0.136:7547/toggleWan";
@@ -174,11 +173,14 @@ public class AutoProvisionController {
         return null;
     }
 
-    public String executeAnsible(String accountNo, String serialNumber, String macAddress, String deviceName,
+    public String executeAnsible(String accountNo, String serialNumber, String macAddress, String clientName,
             String onu_private_ip, String packageType, String oltIp) {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/launch/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+
+        String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
+        System.out.println(deviceName);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
