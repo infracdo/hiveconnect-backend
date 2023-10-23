@@ -270,6 +270,6 @@ public class AutoProvisionController {
         System.out.println("Last Job ID: " + lastJobId);
         System.out.println("Last Job Status: " + lastJobStatus);
 
-        return ("Last Job ID: " + lastJobId + "\nLast Job Status: " + lastJobStatus);
+        return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus);
     }
 }
