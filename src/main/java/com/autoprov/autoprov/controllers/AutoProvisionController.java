@@ -95,7 +95,6 @@ public class AutoProvisionController {
         jsonBody.append("\"SN\":\"" + params.get("serialNumber") + "\",");
         jsonBody.append("\"Instance\":\"" + instance + "\",");
         jsonBody.append("\"Toggle\":\"" + toggle + "\"");
-
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
