@@ -142,7 +142,7 @@ public class AutoProvisionController {
         System.out.println("HiveConnect: ACS Push: WAN2 Enable Task Pushed");
         System.out.println("Response: " + jsonResponse);
 
-        return null;
+        return jsonResponse;
     }
 
     public String pushToACS(String clientName, String serialNumber, String defaultGateway, String ipAddress,
