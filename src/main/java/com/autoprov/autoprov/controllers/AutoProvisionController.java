@@ -21,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -231,6 +232,8 @@ public class AutoProvisionController {
         return requestBody;
     }
 
+    @Async("AsyncExecutor")
+    @GetMapping("/lastStatusJob")
     public ResponseEntity<String> lastStatusJob(String jobId) {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/";
