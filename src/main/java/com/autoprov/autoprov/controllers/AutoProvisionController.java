@@ -71,7 +71,7 @@ public class AutoProvisionController {
         pushToACS(clientName, serialNumber, defaultGateway, ipAddress, vlanId);
 
         // Ansible Process
-        return executeAnsible(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, oltIp);
+        return executeMonitoring(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, oltIp);
 
     }
 
@@ -177,7 +177,9 @@ public class AutoProvisionController {
         return null;
     }
 
-    public String executeAnsible(String accountNo, String serialNumber, String macAddress, String clientName,
+    @Async("AsyncExecutor")
+    @PostMapping("/executeMonitoring")
+    public String executeMonitoring(String accountNo, String serialNumber, String macAddress, String clientName,
             String onu_private_ip, String packageType, String oltIp)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
