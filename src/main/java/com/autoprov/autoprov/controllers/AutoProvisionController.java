@@ -31,6 +31,10 @@ import com.autoprov.autoprov.domain.Client;
 import com.autoprov.autoprov.domain.IpAddress;
 import com.autoprov.autoprov.repositories.ClientRepository;
 import com.autoprov.autoprov.repositories.IpAddressRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.*;
 
 @CrossOrigin(origins = "*")
@@ -234,7 +238,7 @@ public class AutoProvisionController {
 
     @Async("AsyncExecutor")
     @GetMapping("/lastStatusJob")
-    public ResponseEntity<String> lastStatusJob(String jobId) {
+    public String lastStatusJob(String jobId) throws JsonMappingException, JsonProcessingException {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
@@ -249,16 +253,23 @@ public class AutoProvisionController {
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> response = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+        ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
                 String.class);
 
-        System.out.println("HiveConnect: Ansible executed");
+        String responseBody = responseEntity.getBody();
 
-        if (response.getStatusCode() == HttpStatus.CREATED) {
-            System.out.println("Request successful. Response: " + response.getBody());
-        } else {
-            System.out.println("Request failed. Response: " + response.getStatusCode());
-        }
-        return response;
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(responseBody);
+
+        // Extract last job details
+        JsonNode lastJob = jsonNode.get("summary_fields").get("last_job");
+        int lastJobId = lastJob.get("id").asInt();
+        String lastJobStatus = lastJob.get("status").asText();
+
+        // Print the results
+        System.out.println("Last Job ID: " + lastJobId);
+        System.out.println("Last Job Status: " + lastJobStatus);
+
+        return ("Last Job ID: " + lastJobId + "\n Last Job Status: " + lastJobStatus);
     }
 }
