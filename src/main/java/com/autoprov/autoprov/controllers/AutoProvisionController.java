@@ -11,6 +11,7 @@ import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -50,7 +51,7 @@ public class AutoProvisionController {
     @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
     public String executeProvision(@RequestBody Map<String, String> params)
-            throws JsonMappingException, JsonProcessingException {
+            throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         System.out.println("HiveService: Provision executed");
 
@@ -181,7 +182,7 @@ public class AutoProvisionController {
 
     public String executeAnsible(String accountNo, String serialNumber, String macAddress, String clientName,
             String onu_private_ip, String packageType, String oltIp)
-            throws JsonMappingException, JsonProcessingException {
+            throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/launch/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
@@ -240,7 +241,9 @@ public class AutoProvisionController {
 
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
-    public String lastJobStatus() throws JsonMappingException, JsonProcessingException {
+    public String lastJobStatus() throws JsonMappingException, JsonProcessingException, InterruptedException {
+
+        TimeUnit.SECONDS.sleep(150);
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
@@ -269,8 +272,8 @@ public class AutoProvisionController {
         String lastJobStatus = lastJob.get("status").asText();
 
         // Print the results
-        System.out.println("Last Job ID: " + lastJobId);
-        System.out.println("Last Job Status: " + lastJobStatus);
+        System.out.println("Job ID: " + lastJobId);
+        System.out.println("Job Status: " + lastJobStatus);
 
         return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus);
     }
