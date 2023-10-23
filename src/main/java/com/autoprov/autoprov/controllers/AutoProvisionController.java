@@ -49,7 +49,8 @@ public class AutoProvisionController {
 
     @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
-    public String executeProvision(@RequestBody Map<String, String> params) {
+    public String executeProvision(@RequestBody Map<String, String> params)
+            throws JsonMappingException, JsonProcessingException {
 
         System.out.println("HiveService: Provision executed");
 
@@ -179,7 +180,8 @@ public class AutoProvisionController {
     }
 
     public String executeAnsible(String accountNo, String serialNumber, String macAddress, String clientName,
-            String onu_private_ip, String packageType, String oltIp) {
+            String onu_private_ip, String packageType, String oltIp)
+            throws JsonMappingException, JsonProcessingException {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/launch/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
@@ -233,12 +235,12 @@ public class AutoProvisionController {
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
         }
-        return requestBody;
+        return lastJobStatus();
     }
 
     @Async("AsyncExecutor")
-    @GetMapping("/lastStatusJob")
-    public String lastStatusJob(String jobId) throws JsonMappingException, JsonProcessingException {
+    @GetMapping("/lastJobStatus")
+    public String lastJobStatus() throws JsonMappingException, JsonProcessingException {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
