@@ -107,7 +107,7 @@ public class AutoProvisionController {
         System.out.println("HiveConnect: ACS Push: WAN2 Disable Task Pushed");
         System.out.println("Response: " + jsonResponse);
 
-        return null;
+        return jsonResponse;
     }
 
     @Async("AsyncExecutor")
