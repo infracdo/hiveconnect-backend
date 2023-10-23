@@ -230,4 +230,32 @@ public class AutoProvisionController {
         }
         return requestBody;
     }
+
+    public ResponseEntity<String> lastStatusJob(String jobId) {
+
+        String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/";
+        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String requestBody = "{\"job_template\": \"9\"}";
+        System.out.println(requestBody);
+
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(ansibleApiUrl, HttpMethod.POST, requestEntity,
+                String.class);
+
+        System.out.println("HiveConnect: Ansible executed");
+
+        if (response.getStatusCode() == HttpStatus.CREATED) {
+            System.out.println("Request successful. Response: " + response.getBody());
+        } else {
+            System.out.println("Request failed. Response: " + response.getStatusCode());
+        }
+        return response;
+    }
 }
