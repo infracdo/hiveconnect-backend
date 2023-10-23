@@ -179,6 +179,20 @@ public class AutoProvisionController {
 
     @Async("AsyncExecutor")
     @PostMapping("/executeMonitoring")
+    public String executeMonitoringAPI(@RequestBody Map<String, String> params)
+            throws JsonMappingException, JsonProcessingException, InterruptedException {
+        String accountNo = params.get("accountNo");
+        String clientName = params.get("clientName");
+        String serialNumber = params.get("serialNumber");
+        String macAddress = params.get("macAddress");
+        String ipAddress = params.get("ipAddress");
+        String oltIp = params.get("olt");
+        String packageType = params.get("packageType");
+
+        return executeMonitoring(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, oltIp);
+
+    }
+
     public String executeMonitoring(String accountNo, String serialNumber, String macAddress, String clientName,
             String onu_private_ip, String packageType, String oltIp)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
