@@ -58,7 +58,6 @@ public class AutoProvisionController {
         // Prepare RequestBody Values
         String accountNo = params.get("accountNo");
         String clientName = params.get("clientName");
-
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
         String ipAddress = params.get("ipAddress");
@@ -72,9 +71,7 @@ public class AutoProvisionController {
         pushToACS(clientName, serialNumber, defaultGateway, ipAddress, vlanId);
 
         // Ansible Process
-        executeAnsible(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, oltIp);
-
-        return "Provision Pushed";
+        return executeAnsible(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, oltIp);
 
     }
 
