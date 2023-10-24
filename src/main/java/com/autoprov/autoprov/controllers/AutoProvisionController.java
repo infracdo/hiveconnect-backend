@@ -60,7 +60,7 @@ public class AutoProvisionController {
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
-        String ipAddress = params.get("ipAddress");
+        String ipAddress = ipAddRepo.getOneAvailableIpAddressUnderCidrBlock(params.get("cidr")).get(0).getIpAddress();
         String oltIp = params.get("olt");
         String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0, (ipAddress.lastIndexOf("."))));
         String packageType = params.get("packageType");
