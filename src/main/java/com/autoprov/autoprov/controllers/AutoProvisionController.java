@@ -60,11 +60,13 @@ public class AutoProvisionController {
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
-        String cidr = ipAddRepo.getOneAvailableIpAddressUnderCidrBlock(params.get("cidr")).get(0).getIpAddress();
+        String cidr = params.get("cidr");
         String oltIp = params.get("olt");
         String defaultGateway = ipAddRepo.getGatewayOfIpAddress(cidr.substring(0, (cidr.lastIndexOf("."))));
         String packageType = params.get("packageType");
 
+        cidr = ipAddRepo.getOneAvailableIpAddressUnderCidrBlock(cidr.substring(0, (cidr.lastIndexOf(".")))).get(0)
+                .getIpAddress();
         // ACS Processes
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(cidr);
         Integer vlanId = ipAddressData.get().getVlanId();
