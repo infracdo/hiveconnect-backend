@@ -60,18 +60,18 @@ public class AutoProvisionController {
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
-        String ipAddress = ipAddRepo.getOneAvailableIpAddressUnderCidrBlock(params.get("cidr")).get(0).getIpAddress();
+        String cidr = ipAddRepo.getOneAvailableIpAddressUnderCidrBlock(params.get("cidr")).get(0).getIpAddress();
         String oltIp = params.get("olt");
-        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0, (ipAddress.lastIndexOf("."))));
+        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(cidr.substring(0, (cidr.lastIndexOf("."))));
         String packageType = params.get("packageType");
 
         // ACS Processes
-        Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
+        Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(cidr);
         Integer vlanId = ipAddressData.get().getVlanId();
-        pushToACS(clientName, serialNumber, defaultGateway, ipAddress, vlanId);
+        pushToACS(clientName, serialNumber, defaultGateway, cidr, vlanId);
 
         // Ansible Process
-        return executeMonitoring(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, oltIp);
+        return executeMonitoring(accountNo, serialNumber, macAddress, clientName, cidr, packageType, oltIp);
 
     }
 
