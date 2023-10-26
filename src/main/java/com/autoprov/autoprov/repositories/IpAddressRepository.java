@@ -42,7 +42,19 @@ public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
     @Query(value = "SELECT * from ipaddresses where status =\"Available\" AND ip_address LIKE ?1% LIMIT 1", nativeQuery = true)
     List<IpAddress> getOneAvailableIpAddressUnderCidrBlock(String cidrBlock);
 
-    @Query(value = "SELECT * from ipaddresses where status =\"Available\" AND network_address LIKE (SELECT network_address from cidr_block where site = ?1 AND network_type = ?2) LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * from hive.ipaddresses where status = \"Available\" and ip_address LIKE\n" + //
+            "(\n" + //
+            "\tSELECT CONCAT(truncated_network_address, '%') FROM\n" + //
+            "\t(\n" + //
+            "\tSELECT \n" + //
+            "\t  SUBSTRING_INDEX(network_address, '.', 3) AS truncated_network_address\n" + //
+            "\tFROM \n" + //
+            "\t  hive.cidr_block \n" + //
+            "\tWHERE \n" + //
+            "\t  site = \"CDO_01\" AND network_type = \"Private\"\n" + //
+            "\t) AS subquery\n" + //
+            ")\n" + //
+            "LIMIT 1;", nativeQuery = true)
     List<IpAddress> getOneAvailableIpAddressUnderSite(String site, String type);
 
     @Query(value = "SELECT * from ipaddresses where status =\"Available\" AND type = ?1 ip_address LIKE ?2% LIMIT 1", nativeQuery = true)
