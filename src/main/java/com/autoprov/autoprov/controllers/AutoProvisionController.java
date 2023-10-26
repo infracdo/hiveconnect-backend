@@ -53,6 +53,7 @@ public class AutoProvisionController {
     public String executeProvision(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
+        String networkType = "";
         System.out.println("HiveService: Provision executed");
 
         // Prepare RequestBody Values
@@ -62,11 +63,26 @@ public class AutoProvisionController {
         String macAddress = params.get("macAddress");
         String cidr = params.get("cidr");
         String oltIp = params.get("olt");
-        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(cidr.substring(0, (cidr.lastIndexOf("."))));
         String packageType = params.get("packageType");
+        String publicIpCount = params.get("publicIpCount");
+        String privateIpCount = params.get("privateIpCount");
+        // TODO: shift api to receive number of private and public IP required
 
-        cidr = ipAddRepo.getOneAvailableIpAddressUnderCidrBlock(cidr.substring(0, (cidr.lastIndexOf(".")))).get(0)
-                .getIpAddress();
+        if (packageType.contains("RES"))
+            networkType = "Private";
+
+        if (packageType.contains("SME"))
+            networkType = "Public";
+
+        // IP Address Assignment
+        String ipAddress = ipAddRepo
+                .getOneAvailableIpAddressUnderCidrBlockAndType(networkType,
+                        (cidr.substring(0, (cidr.lastIndexOf(".")))))
+                .get(0)
+                .getIpAddress(); // TODO: change according to request. Should be able to provide both private and
+                                 // public if needed
+        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(cidr.substring(0, (cidr.lastIndexOf("."))));
+
         // ACS Processes
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(cidr);
         Integer vlanId = ipAddressData.get().getVlanId();
@@ -290,5 +306,16 @@ public class AutoProvisionController {
         System.out.println("Job Status: " + lastJobStatus);
 
         return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus);
+    }
+
+    public String getAvailableIpAddress(String type, String cidr) {
+        String ipAddress = ipAddRepo
+                .getOneAvailableIpAddressUnderCidrBlockAndType("Private",
+                        (cidr.substring(0, (cidr.lastIndexOf(".")))))
+                .get(0)
+                .getIpAddress();
+        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(cidr.substring(0, (cidr.lastIndexOf("."))));
+
+        return ipAddress;
     }
 }

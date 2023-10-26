@@ -37,6 +37,7 @@ public class IpAddress {
     @Column(name = "accountNumber")
     private String accountNumber; // related to subscriber "clients" table
 
+    private String type;
     private Integer vlanId;
     private Boolean assignable;
     private String notes;

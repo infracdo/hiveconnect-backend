@@ -28,8 +28,7 @@ public class IpListService {
 
     // Functions and Services
     public static String populateIpBycidrBlock(String cidrBlock, Integer internetGateway, Integer hostRange,
-            String oltIp,
-            Integer vlanId) {
+            String oltIp, String type, Integer vlanId) {
 
         // switch (maskBits) {
         // case 24:
@@ -55,6 +54,7 @@ public class IpListService {
                     .ipAddress(cidrBlock.substring(0, (cidrBlock.lastIndexOf(".") + 1)) + host.toString())
                     .status(defaultRemarks(host, hostRange, internetGateway, oltIpHost)[0])
                     .accountNumber(" ")
+                    .type(type)
                     .vlanId(vlanId)
                     .assignable(
                             Boolean.valueOf(defaultRemarks(host, hostRange, internetGateway, oltIpHost)[1]))
@@ -96,7 +96,7 @@ public class IpListService {
                 .notes(notes)
                 .build();
         cidrBlockRepo.save(networkAdd);
-        populateIpBycidrBlock(cidrBlock, gatewayHost, hostRange, oltIp, vlanId);
+        populateIpBycidrBlock(cidrBlock, gatewayHost, hostRange, oltIp, type, vlanId);
         // if (type.equals("Residential") || type.equals("RES")) {
         // populateIpBycidrBlock(cidrBlock, vlanId);
         // }
