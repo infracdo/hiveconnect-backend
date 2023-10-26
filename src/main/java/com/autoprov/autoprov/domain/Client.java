@@ -39,6 +39,9 @@ public class Client {
     @Column(name = "onuSerialNumber", unique = true)
     private String onuSerialNumber;
 
+    @Column(name = "site")
+    private String site;
+
     @Column(name = "oltIp")
     private String oltIp;
 

@@ -61,27 +61,40 @@ public class AutoProvisionController {
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
-        String cidr = params.get("cidr");
+        String cidr = params.get("cidr"); // Cidr block of site
+        String site = params.get("site"); // To determine IPAM site
         String oltIp = params.get("olt");
+        String wanMode = params.get("wanMode"); // Bridged or Routed
         String packageType = params.get("packageType");
-        String publicIpCount = params.get("publicIpCount");
-        String privateIpCount = params.get("privateIpCount");
         // TODO: shift api to receive number of private and public IP required
 
-        if (packageType.contains("RES"))
-            networkType = "Private";
+        // if (packageType.contains("RES"))
+        // networkType = "Private";
 
-        if (packageType.contains("SME"))
-            networkType = "Public";
+        // if (packageType.contains("SME"))
+        // networkType = "Public";
 
-        // IP Address Assignment
         String ipAddress = ipAddRepo
-                .getOneAvailableIpAddressUnderCidrBlockAndType(networkType,
-                        (cidr.substring(0, (cidr.lastIndexOf(".")))))
+                .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
-                .getIpAddress(); // TODO: change according to request. Should be able to provide both private and
-                                 // public if needed
-        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(cidr.substring(0, (cidr.lastIndexOf("."))));
+                .getIpAddress();
+
+        // IP Address Assignment - Block
+        // String ipAddress = ipAddRepo
+        // .getOneAvailableIpAddressUnderCidrBlockAndType("Private",
+        // (cidr.substring(0, (cidr.lastIndexOf(".")))))
+        // .get(0)
+        // .getIpAddress();
+
+        // IP Address Assignment - BlockAndType
+        // String ipAddress = ipAddRepo
+        // .getOneAvailableIpAddressUnderCidrBlockAndType(networkType,
+        // (cidr.substring(0, (cidr.lastIndexOf(".")))))
+        // .get(0)
+        // .getIpAddress(); // TODO: change according to request. Should be able to
+        // provide both private and
+        // // public if needed
+        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0, (ipAddress.lastIndexOf("."))));
 
         // ACS Processes
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(cidr);

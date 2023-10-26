@@ -42,6 +42,9 @@ public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
     @Query(value = "SELECT * from ipaddresses where status =\"Available\" AND ip_address LIKE ?1% LIMIT 1", nativeQuery = true)
     List<IpAddress> getOneAvailableIpAddressUnderCidrBlock(String cidrBlock);
 
+    @Query(value = "SELECT * from ipaddresses where status =\"Available\" AND network_address LIKE (SELECT network_address from cidr_block where site = ?1 AND network_type = ?2) LIMIT 1", nativeQuery = true)
+    List<IpAddress> getOneAvailableIpAddressUnderSite(String site, String type);
+
     @Query(value = "SELECT * from ipaddresses where status =\"Available\" AND type = ?1 ip_address LIKE ?2% LIMIT 1", nativeQuery = true)
     List<IpAddress> getOneAvailableIpAddressUnderCidrBlockAndType(String type, String cidrBlock);
 
