@@ -49,6 +49,12 @@ public class AutoProvisionController {
     private ClientRepository clientRepo;
 
     @Async("AsyncExecutor")
+    @PostMapping("/hello")
+    public String hellowWorld() {
+        return "Hi!";
+    }
+
+    @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
     public String executeProvision(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
