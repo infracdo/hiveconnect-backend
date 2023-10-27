@@ -298,6 +298,7 @@ public class AutoProvisionController {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+        String error = "";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -326,37 +327,40 @@ public class AutoProvisionController {
         System.out.println("Job ID: " + lastJobId);
         System.out.println("Job Status: " + lastJobStatus);
 
-        ansibleApiUrl = "http://172.91.10.189/api/v2/jobs/ +" + lastJobId + "/job_events/?failed=True";
-        requestEntity = new HttpEntity<>(requestBody, headers);
+        if (lastJobStatus.contains("fail")) {
 
-        restTemplate = new RestTemplate();
-        responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
-                String.class);
-        responseBody = responseEntity.getBody();
+            ansibleApiUrl = "http://172.91.10.189/api/v2/jobs/ +" + lastJobId + "/job_events/?failed=True";
+            requestEntity = new HttpEntity<>(requestBody, headers);
 
-        try {
-            objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(responseBody);
+            restTemplate = new RestTemplate();
+            responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+                    String.class);
+            responseBody = responseEntity.getBody();
 
-            JsonNode resultsNode = rootNode.get("results");
+            try {
+                objectMapper = new ObjectMapper();
+                JsonNode rootNode = objectMapper.readTree(responseBody);
 
-            if (resultsNode.isArray()) {
-                for (JsonNode resultNode : resultsNode) {
-                    JsonNode eventDataNode = resultNode.path("event_data");
+                JsonNode resultsNode = rootNode.get("results");
 
-                    if (resultNode.path("failed").asBoolean() && !eventDataNode.isMissingNode()) {
-                        String stderr = eventDataNode.path("stderr").asText();
-                        System.out.println("Error message: " + stderr);
+                if (resultsNode.isArray()) {
+                    for (JsonNode resultNode : resultsNode) {
+                        JsonNode eventDataNode = resultNode.path("event_data");
 
-                        return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "Error: " + stderr);
+                        if (resultNode.path("failed").asBoolean() && !eventDataNode.isMissingNode()) {
+                            error = eventDataNode.path("stderr").asText();
+                            System.out.println("Error message: " + error);
+
+                            return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "Error: " + error);
+                        }
                     }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
-        return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus);
+        return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + error);
     }
 
     public String getAvailableIpAddress(String type, String cidr) {
