@@ -326,6 +326,36 @@ public class AutoProvisionController {
         System.out.println("Job ID: " + lastJobId);
         System.out.println("Job Status: " + lastJobStatus);
 
+        ansibleApiUrl = "http://172.91.10.189/api/v2/jobs/ +" + lastJobId + "/job_events/?failed=True";
+        requestEntity = new HttpEntity<>(requestBody, headers);
+
+        restTemplate = new RestTemplate();
+        responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+                String.class);
+        responseBody = responseEntity.getBody();
+
+        try {
+            objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(responseBody);
+
+            JsonNode resultsNode = rootNode.get("results");
+
+            if (resultsNode.isArray()) {
+                for (JsonNode resultNode : resultsNode) {
+                    JsonNode eventDataNode = resultNode.path("event_data");
+
+                    if (resultNode.path("failed").asBoolean() && !eventDataNode.isMissingNode()) {
+                        String stderr = eventDataNode.path("stderr").asText();
+                        System.out.println("Error message: " + stderr);
+
+                        return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "Error: " + stderr);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus);
     }
 
