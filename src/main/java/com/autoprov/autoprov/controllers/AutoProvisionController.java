@@ -287,14 +287,13 @@ public class AutoProvisionController {
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
         }
+        TimeUnit.SECONDS.sleep(150);
         return lastJobStatus();
     }
 
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
     public String lastJobStatus() throws JsonMappingException, JsonProcessingException, InterruptedException {
-
-        TimeUnit.SECONDS.sleep(150);
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
