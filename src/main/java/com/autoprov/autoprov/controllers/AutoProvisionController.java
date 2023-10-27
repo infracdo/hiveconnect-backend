@@ -297,6 +297,7 @@ public class AutoProvisionController {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+        String stderr = "";
         String error = "";
 
         HttpHeaders headers = new HttpHeaders();
@@ -350,11 +351,15 @@ public class AutoProvisionController {
                     // Check if "stderr" is present in the "res" section
                     if (res.has("stderr")) {
                         // Extract the "stderr" field
-                        error = res.path("stderr").asText();
+                        stderr = res.path("stderr").asText();
+
+                        if (stderr.contains("Pseudo-terminal will not be allocated because stdin is not a terminal"))
+                            error = "Bad OLT-IP";
 
                         // Print the "stderr" field for each item
-                        System.out.println("stderr: " + error);
-                        return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError: " + error);
+                        System.out.println("stderr: " + stderr);
+                        return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" + error
+                                + "\nMessage: " + stderr);
                     }
 
                 }
