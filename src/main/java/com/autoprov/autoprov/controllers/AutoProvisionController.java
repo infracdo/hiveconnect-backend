@@ -353,16 +353,25 @@ public class AutoProvisionController {
                         // Extract the "stderr" field
                         stderr = res.path("stderr").asText();
 
-                        if (stderr.contains("Pseudo-terminal will not be allocated because stdin is not a terminal"))
-                            error = "Bad OLT-IP";
+                        // Print the "stderr" field for each item
+                    }
+                    if (res.has("stdout")) {
+                        // Extract the "stderr" field
+                        stderr = res.path("stdout").asText();
 
                         // Print the "stderr" field for each item
-                        System.out.println("stderr: " + stderr);
-                        return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" + error
-                                + "\nMessage: " + stderr);
                     }
 
                 }
+                if (stderr.contains("Pseudo-terminal will not be allocated because stdin is not a terminal"))
+                    error = "Bad OLT-IP";
+
+                if (stderr.contains("Duplicate termination found for"))
+                    error = "Duplicate Interface Connection";
+
+                System.out.println("stderr: " + stderr);
+                return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" + error
+                        + "\nMessage: " + stderr);
 
             } catch (Exception e) {
                 e.printStackTrace();
