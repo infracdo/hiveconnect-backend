@@ -51,7 +51,7 @@ public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
             "\tFROM \n" + //
             "\t  hive.cidr_block \n" + //
             "\tWHERE \n" + //
-            "\t  site = \"CDO_01\" AND network_type = \"Private\"\n" + //
+            "\t  site = ?1 AND network_type = \"Private\"\n" + //
             "\t) AS subquery\n" + //
             ")\n" + //
             "LIMIT 1;", nativeQuery = true)
