@@ -61,11 +61,14 @@ public class AutoProvisionController {
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
-        String cidr = params.get("cidr"); // Cidr block of site
+        // String cidr = params.get("cidr"); // Cidr block of site
         String site = params.get("site"); // To determine IPAM site
         String oltIp = params.get("olt");
-        String wanMode = params.get("wanMode"); // Bridged or Routed
+        // String wanMode = params.get("wanMode"); // Bridged or Routed
         String packageType = params.get("packageType");
+        String upstream = params.get("upstream");
+        String downstream = params.get("downstream");
+
         // TODO: shift api to receive number of private and public IP required
 
         // if (packageType.contains("RES"))
@@ -74,6 +77,7 @@ public class AutoProvisionController {
         // if (packageType.contains("SME"))
         // networkType = "Public";
 
+        site = "Gusa_01";
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
@@ -97,12 +101,13 @@ public class AutoProvisionController {
         String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0, (ipAddress.lastIndexOf("."))));
 
         // ACS Processes
-        Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(cidr);
+        Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         Integer vlanId = ipAddressData.get().getVlanId();
-        pushToACS(clientName, serialNumber, defaultGateway, cidr, vlanId);
+        pushToACS(clientName, serialNumber, defaultGateway, ipAddress, vlanId);
 
         // Ansible Process
-        return executeMonitoring(accountNo, serialNumber, macAddress, clientName, cidr, packageType, oltIp);
+        return executeMonitoring(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, upstream,
+                downstream, oltIp);
 
     }
 
@@ -204,7 +209,7 @@ public class AutoProvisionController {
         System.out.println("HiveConnect: ACS Push executed");
         System.out.println("Response: " + jsonResponse);
 
-        return null;
+        return "Provisioning...";
     }
 
     @Async("AsyncExecutor")
@@ -218,13 +223,16 @@ public class AutoProvisionController {
         String ipAddress = params.get("ipAddress");
         String oltIp = params.get("olt");
         String packageType = params.get("packageType");
+        String upstream = params.get("upstream");
+        String downstream = params.get("downstream");
 
-        return executeMonitoring(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, oltIp);
+        return executeMonitoring(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, upstream,
+                downstream, oltIp);
 
     }
 
     public String executeMonitoring(String accountNo, String serialNumber, String macAddress, String clientName,
-            String onu_private_ip, String packageType, String oltIp)
+            String onu_private_ip, String packageType, String upstream, String downstream, String oltIp)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/launch/";
@@ -248,9 +256,9 @@ public class AutoProvisionController {
                 "\\naccount_number: null " +
                 "\\nstatus: Activated " +
                 "\\nonu_private_ip: " + onu_private_ip +
-                "\\ndownstream: 11000" +
                 "\\npackage_type: " + packageType +
-                "\\nupstream: 11000\""
+                "\\ndownstream: " + downstream +
+                "\\nupstream:" + upstream + "\""
                 +
                 "}";
         System.out.println(requestBody);
