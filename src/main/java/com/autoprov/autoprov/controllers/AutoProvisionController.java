@@ -338,17 +338,24 @@ public class AutoProvisionController {
 
             try {
                 objectMapper = new ObjectMapper();
-                JsonNode rootNode = objectMapper.readTree(responseBody);
+                jsonNode = objectMapper.readTree(responseBody);
 
-                JsonNode resultsArray = rootNode.get("results");
+                JsonNode resultsArray = jsonNode.get("results");
 
                 for (JsonNode result : resultsArray) {
                     // Extract the "stderr" field from each item
-                    String stderr = result.path("event_data").path("res").path("stderr").asText();
-                    System.out.println("stderr: " + stderr);
+                    JsonNode eventData = result.path("event_data");
+                    JsonNode res = eventData.path("res");
 
-                    return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError: " + error);
-                    // Print the "stderr" field for each item
+                    // Check if "stderr" is present in the "res" section
+                    if (res.has("stderr")) {
+                        // Extract the "stderr" field
+                        String stderr = res.path("stderr").asText();
+
+                        // Print the "stderr" field for each item
+                        System.out.println("stderr: " + stderr);
+                        return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError: " + error);
+                    }
 
                 }
 
