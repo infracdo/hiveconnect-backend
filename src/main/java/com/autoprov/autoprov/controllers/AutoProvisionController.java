@@ -258,9 +258,7 @@ public class AutoProvisionController {
                 "\\nonu_private_ip: " + onu_private_ip +
                 "\\npackage_type: " + packageType +
                 "\\ndownstream: " + downstream +
-                "\\nupstream:" + upstream + "\""
-                +
-                "}";
+                "\\nupstream:" + upstream + "\"}";
         System.out.println(requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
