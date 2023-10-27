@@ -329,7 +329,7 @@ public class AutoProvisionController {
 
         if (lastJobStatus.contains("fail")) {
 
-            ansibleApiUrl = "http://172.91.10.189/api/v2/jobs/ +" + lastJobId + "/job_events/?failed=True";
+            ansibleApiUrl = "http://172.91.10.189/api/v2/jobs/" + lastJobId + "/job_events/?failed=True";
             requestEntity = new HttpEntity<>(requestBody, headers);
 
             restTemplate = new RestTemplate();
