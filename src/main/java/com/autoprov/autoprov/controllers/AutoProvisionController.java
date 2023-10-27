@@ -350,10 +350,10 @@ public class AutoProvisionController {
                     // Check if "stderr" is present in the "res" section
                     if (res.has("stderr")) {
                         // Extract the "stderr" field
-                        String stderr = res.path("stderr").asText();
+                        error = res.path("stderr").asText();
 
                         // Print the "stderr" field for each item
-                        System.out.println("stderr: " + stderr);
+                        System.out.println("stderr: " + error);
                         return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError: " + error);
                     }
 
