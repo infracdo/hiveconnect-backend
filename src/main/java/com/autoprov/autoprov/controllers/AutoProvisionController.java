@@ -294,12 +294,67 @@ public class AutoProvisionController {
             System.out.println("Request failed. Response: " + response.getStatusCode());
         }
         TimeUnit.SECONDS.sleep(150);
-        return lastJobStatus();
+        return lastJobStatus(serialNumber);
+    }
+
+    public String setInformInterval(String serialNumber) {
+        String apiUrl = "http://172.91.0.136:7547/setInformInterval";
+
+        // Create headers with Content-Type set to application/json
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Create a JSON request body
+        StringBuilder jsonBody = new StringBuilder();
+
+        jsonBody.append("{");
+        jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
+        jsonBody.append("\"time\":\"" + "600" + "\",");
+        jsonBody.append("}");
+
+        String jsonRequestBody = jsonBody.toString();
+        System.out.println(jsonRequestBody);
+        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+
+        System.out.println("HiveConnect: Set Inform Interval");
+        System.out.println("Response: " + jsonResponse);
+
+        return "Provisioning Complete";
+    }
+
+    public String deleteWanInstance(String serialNumber) {
+        String apiUrl = "http://172.91.0.136:7547/deleteWanInstance";
+
+        // Create headers with Content-Type set to application/json
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Create a JSON request body
+        StringBuilder jsonBody = new StringBuilder();
+
+        jsonBody.append("{");
+        jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
+        jsonBody.append("\"instance\":\"" + "2" + "\",");
+        jsonBody.append("}");
+
+        String jsonRequestBody = jsonBody.toString();
+        System.out.println(jsonRequestBody);
+        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+
+        System.out.println("HiveConnect: Set Inform Interval");
+        System.out.println("Response: " + jsonResponse);
+
+        return "Provisioning Complete";
     }
 
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
-    public String lastJobStatus() throws JsonMappingException, JsonProcessingException, InterruptedException {
+    public String lastJobStatus(String serialNumber)
+            throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
@@ -334,6 +389,8 @@ public class AutoProvisionController {
         System.out.println("Job Status: " + lastJobStatus);
 
         if (lastJobStatus.contains("fail")) {
+
+            deleteWanInstance(serialNumber);
 
             ansibleApiUrl = "http://172.91.10.189/api/v2/jobs/" + lastJobId + "/job_events/?failed=True";
             requestEntity = new HttpEntity<>(requestBody, headers);
@@ -375,6 +432,7 @@ public class AutoProvisionController {
             }
         }
 
+        setInformInterval(lastJobStatus);
         return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + error);
     }
 
