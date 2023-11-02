@@ -109,14 +109,19 @@ public class AutoProvisionController {
         // ACS Processes
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         Integer vlanId = ipAddressData.get().getVlanId();
-        pushToACS(clientName, serialNumber, defaultGateway, ipAddress, vlanId);
 
-        // Ansible Process
-        return executeMonitoring(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, upstream,
-                downstream, oltIp);
+        String acsPushResponse = pushToACS(clientName, serialNumber, defaultGateway, ipAddress, vlanId);
+
+        if (acsPushResponse.contains("Successful"))
+            return executeMonitoring(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, upstream,
+                    downstream, oltIp);
+
+        else
+            return acsPushResponse;
 
     }
 
+    // Connect-Disconnect
     @Async("AsyncExecutor")
     @PostMapping("/temporaryDisconnectClient")
     public String disconnectClient(@RequestBody Map<String, String> params) {
@@ -186,6 +191,7 @@ public class AutoProvisionController {
         return jsonResponse;
     }
 
+    // AutoProvisioning
     public String pushToACS(String clientName, String serialNumber, String defaultGateway, String ipAddress,
             Integer vlanId) {
         // Define the API URL
@@ -351,6 +357,7 @@ public class AutoProvisionController {
         return "Provisioning Complete";
     }
 
+    // Troubleshooting
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
     public String lastJobStatus(String serialNumber)
