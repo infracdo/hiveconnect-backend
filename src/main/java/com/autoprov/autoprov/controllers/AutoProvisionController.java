@@ -221,7 +221,7 @@ public class AutoProvisionController {
         System.out.println("HiveConnect: ACS Push executed");
         System.out.println("Response: " + jsonResponse);
 
-        return "Provisioning...";
+        return jsonResponse;
     }
 
     @Async("AsyncExecutor")
