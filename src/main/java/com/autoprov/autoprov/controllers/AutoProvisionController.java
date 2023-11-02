@@ -345,7 +345,7 @@ public class AutoProvisionController {
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
 
-        System.out.println("HiveConnect: Set Inform Interval");
+        System.out.println("HiveConnect: ACS Task Rollback");
         System.out.println("Response: " + jsonResponse);
 
         return "Provisioning Complete";
