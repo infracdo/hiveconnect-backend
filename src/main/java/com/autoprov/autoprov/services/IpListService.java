@@ -131,7 +131,7 @@ public class IpListService {
                 .notes(notes)
                 .build();
         cidrBlockRepo.save(networkAdd);
-        populateIpBycidrBlock(cidrBlock, gatewayHost, hostRange, oltIp, type, vlanId);
+        populateIpBycidrBlock(cidrBlock, gatewayHost, maskBits, oltIp, type, vlanId);
         // if (type.equals("Residential") || type.equals("RES")) {
         // populateIpBycidrBlock(cidrBlock, vlanId);
         // }
