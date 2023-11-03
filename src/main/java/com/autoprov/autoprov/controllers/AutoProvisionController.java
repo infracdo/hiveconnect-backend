@@ -247,7 +247,7 @@ public class AutoProvisionController {
             String onu_private_ip, String packageType, String upstream, String downstream, String oltIp)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
-        String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/launch/";
+        String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/15/launch/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
@@ -363,7 +363,7 @@ public class AutoProvisionController {
     public String lastJobStatus(String serialNumber)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
-        String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/9/";
+        String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/15/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
         String stderr = "";
         String error = "";
@@ -437,6 +437,9 @@ public class AutoProvisionController {
 
                         if (stderr.contains("Host with the same visible name"))
                             error = "Client's device is already provisioned";
+
+                        if (stderr.contains("Duplicate termination found"))
+                            error = "IP Address already assigned to someone";
 
                         System.out.println("stderr: " + stderr);
                         return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" + error
