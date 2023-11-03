@@ -27,8 +27,24 @@ public class IpListService {
     }
 
     // Functions and Services
-    public static String populateIpBycidrBlock(String cidrBlock, Integer internetGateway, Integer hostRange,
+    public static String populateIpBycidrBlock(String cidrBlock, Integer internetGateway, Integer maskBits,
             String oltIp, String type, Integer vlanId) {
+
+        Integer hostRangeA = 0;
+        Integer hostRangeB = 0;
+        Integer hostA = 0;
+        Integer hostB = 0;
+
+        if (maskBits == 16) {
+            hostRangeA = 255;
+            hostRangeB = 255;
+        }
+        if (maskBits == 24) {
+            hostRangeA = 255;
+        }
+        if (maskBits == 29) {
+            hostRangeA = 8;
+        }
 
         // switch (maskBits) {
         // case 24:
@@ -48,20 +64,46 @@ public class IpListService {
         else
             oltIpHost = -1;
 
-        while (host <= hostRange) {
+        if (hostRangeB == 0) {
+            while (host <= hostRangeA) {
 
-            IpAddress ipAdd = IpAddress.builder()
-                    .ipAddress(cidrBlock.substring(0, (cidrBlock.lastIndexOf(".") + 1)) + host.toString())
-                    .status(defaultRemarks(host, hostRange, internetGateway, oltIpHost)[0])
-                    .accountNumber(" ")
-                    .type(type)
-                    .vlanId(vlanId)
-                    .assignable(
-                            Boolean.valueOf(defaultRemarks(host, hostRange, internetGateway, oltIpHost)[1]))
-                    .notes(defaultRemarks(host, hostRange, internetGateway, oltIpHost)[2])
-                    .build();
-            ipAddRepo.save(ipAdd);
-            host++;
+                IpAddress ipAdd = IpAddress.builder()
+                        .ipAddress(cidrBlock.substring(0, (cidrBlock.lastIndexOf(".") + 1)) + host.toString())
+                        .status(defaultRemarks(host, hostRangeA, internetGateway, oltIpHost)[0])
+                        .accountNumber(" ")
+                        .type(type)
+                        .vlanId(vlanId)
+                        .assignable(
+                                Boolean.valueOf(defaultRemarks(host, hostRangeA, internetGateway, oltIpHost)[1]))
+                        .notes(defaultRemarks(host, hostRangeA, internetGateway, oltIpHost)[2])
+                        .build();
+                ipAddRepo.save(ipAdd);
+                host++;
+            }
+        } else {
+            // str.indexOf(ch, str.indexOf(ch) + 1)
+
+            while (hostB <= hostRangeB) {
+                while (hostA <= hostRangeA) {
+
+                    IpAddress ipAdd = IpAddress.builder()
+                            .ipAddress(cidrBlock.substring(0, (cidrBlock.indexOf(".", cidrBlock.indexOf(".") + 1) + 1))
+                                    + host.toString())
+                            .status(defaultRemarks(host, hostRangeA, internetGateway, oltIpHost)[0])
+                            .accountNumber(" ")
+                            .type(type)
+                            .vlanId(vlanId)
+                            .assignable(
+                                    Boolean.valueOf(defaultRemarks(host, hostRangeA, internetGateway, oltIpHost)[1]))
+                            .notes(defaultRemarks(host, hostRangeA, internetGateway, oltIpHost)[2])
+                            .build();
+                    ipAddRepo.save(ipAdd);
+                    hostA++;
+                }
+                hostB++;
+                hostA = 0;
+            }
+
         }
         return "successful";
     }
@@ -74,15 +116,8 @@ public class IpListService {
         System.out.println(maskBits);
         Integer hostRange = 0;
 
-        if (maskBits == 24) {
-            hostRange = 255;
-        }
-        if (maskBits == 29) {
-            hostRange = 8;
-        }
-        if (maskBits != 24 && maskBits != 29) {
+        if (maskBits != 24 && maskBits != 29 && maskBits != 16)
             return "CIDR not supported. Only supports /24 and /29";
-        }
 
         Integer gatewayHost = Integer.parseInt(internetGateway);
 
