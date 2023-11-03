@@ -427,9 +427,20 @@ public class AutoProvisionController {
                             error = "Bad OLT-IP";
 
                         // Print the "stderr" field for each item
+                        deleteWanInstance(serialNumber);
                         System.out.println("stderr: " + stderr);
                         return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" + error
                                 + "\nMessage: " + stderr);
+                    } else if (res.has("msg")) {
+                        stderr = res.path("msg").asText();
+
+                        if (stderr.contains("Host with the same visible name"))
+                            error = "Client's device is already provisioned";
+
+                        System.out.println("stderr: " + stderr);
+                        return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" + error
+                                + "\nMessage: " + stderr);
+
                     }
 
                 }
