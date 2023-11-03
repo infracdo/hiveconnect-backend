@@ -351,10 +351,10 @@ public class AutoProvisionController {
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
 
-        System.out.println("HiveConnect: ACS Task Rollback");
+        System.out.println("HiveConnect: ACS Task Rollback for " + serialNumber);
         System.out.println("Response: " + jsonResponse);
 
-        return "Provisioning Complete";
+        return "ACS Task Rollback";
     }
 
     // Troubleshooting
@@ -439,7 +439,7 @@ public class AutoProvisionController {
             }
         }
 
-        setInformInterval(lastJobStatus);
+        setInformInterval(serialNumber);
         return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + error);
     }
 
