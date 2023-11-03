@@ -431,7 +431,8 @@ public class AutoProvisionController {
                         System.out.println("stderr: " + stderr);
                         return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" + error
                                 + "\nMessage: " + stderr);
-                    } else if (res.has("msg")) {
+                    }
+                    if (res.has("msg")) {
                         stderr = res.path("msg").asText();
 
                         if (stderr.contains("Host with the same visible name"))
