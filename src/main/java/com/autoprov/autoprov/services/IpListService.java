@@ -27,7 +27,7 @@ public class IpListService {
     }
 
     // Functions and Services
-    public static String populateIpBycidrBlock(String cidrBlock, Integer internetGateway, Integer maskBits,
+    public static String populateIpBycidrBlock(String cidrBlock, String internetGateway, Integer maskBits,
             String oltIp, String type, Integer vlanId) {
 
         Integer hostRangeA = 0;
@@ -56,8 +56,12 @@ public class IpListService {
         // default:
         // return "CIDR not supported. Only supports /24 and /29";
         // }
-        Integer host = 0;
+
         Integer oltIpHost = 0;
+        String status = "";
+        String notes = "";
+        Boolean assignable = true;
+        String ipAddress = "";
 
         if (oltIp != null)
             oltIpHost = Integer.parseInt(oltIp);
@@ -65,20 +69,42 @@ public class IpListService {
             oltIpHost = -1;
 
         if (hostRangeB == 0) {
-            while (host <= hostRangeA) {
+            while (hostA <= hostRangeA) {
 
+                ipAddress = cidrBlock.substring(0, (cidrBlock.indexOf(".", cidrBlock.indexOf(".") + 1) + 1))
+                        + hostB.toString() + "." + hostA.toString();
+
+                if (ipAddress.equals(internetGateway)) {
+                    status = "Not Available";
+                    assignable = false;
+                    notes = "Internet Gateway";
+                } else if (hostA.equals(0)) {
+                    status = "Not Available";
+                    assignable = false;
+                    notes = "Network Address";
+                } else if (hostA.equals(hostRangeA)) {
+                    status = "Not Available";
+                    assignable = false;
+                    notes = "Broadcast Address";
+                } else {
+                    status = "Available";
+                    assignable = true;
+                    notes = "Ready to assign";
+                }
+
+                System.out.println(ipAddress);
                 IpAddress ipAdd = IpAddress.builder()
-                        .ipAddress(cidrBlock.substring(0, (cidrBlock.lastIndexOf(".") + 1)) + host.toString())
-                        .status(defaultRemarks(host, hostRangeA, internetGateway, oltIpHost)[0])
+                        .ipAddress(ipAddress)
+                        .status(status)
                         .accountNumber(" ")
                         .type(type)
                         .vlanId(vlanId)
                         .assignable(
-                                Boolean.valueOf(defaultRemarks(host, hostRangeA, internetGateway, oltIpHost)[1]))
-                        .notes(defaultRemarks(host, hostRangeA, internetGateway, oltIpHost)[2])
+                                assignable)
+                        .notes(notes)
                         .build();
                 ipAddRepo.save(ipAdd);
-                host++;
+                hostA++;
             }
         } else {
             // str.indexOf(ch, str.indexOf(ch) + 1)
@@ -86,16 +112,33 @@ public class IpListService {
             while (hostB <= hostRangeB) {
                 while (hostA <= hostRangeA) {
 
+                    ipAddress = cidrBlock.substring(0, (cidrBlock.indexOf(".", cidrBlock.indexOf(".") + 1) + 1))
+                            + hostB.toString() + "." + hostA.toString();
+
+                    if (ipAddress.equals(internetGateway)) {
+                        status = "Not Available";
+                        assignable = false;
+                        notes = "Internet Gateway";
+                    } else if (hostA.equals(hostRangeA) && hostB.equals(hostRangeB)) {
+                        status = "Not Available";
+                        assignable = false;
+                        notes = "Broadcast Address";
+                    } else {
+                        status = "Available";
+                        assignable = true;
+                        notes = "Ready to assign";
+                    }
+
+                    System.out.println(ipAddress);
                     IpAddress ipAdd = IpAddress.builder()
-                            .ipAddress(cidrBlock.substring(0, (cidrBlock.indexOf(".", cidrBlock.indexOf(".") + 1) + 1))
-                                    + host.toString())
-                            .status(defaultRemarks(host, hostRangeA, internetGateway, oltIpHost)[0])
+                            .ipAddress(ipAddress)
+                            .status(status)
                             .accountNumber(" ")
                             .type(type)
                             .vlanId(vlanId)
                             .assignable(
-                                    Boolean.valueOf(defaultRemarks(host, hostRangeA, internetGateway, oltIpHost)[1]))
-                            .notes(defaultRemarks(host, hostRangeA, internetGateway, oltIpHost)[2])
+                                    assignable)
+                            .notes(notes)
                             .build();
                     ipAddRepo.save(ipAdd);
                     hostA++;
@@ -103,8 +146,8 @@ public class IpListService {
                 hostB++;
                 hostA = 0;
             }
+}
 
-        }
         return "successful";
     }
 
@@ -116,10 +159,10 @@ public class IpListService {
         System.out.println(maskBits);
         Integer hostRange = 0;
 
-        if (maskBits != 24 && maskBits != 29 && maskBits != 16)
-            return "CIDR not supported. Only supports /24 and /29";
-
-        Integer gatewayHost = Integer.parseInt(internetGateway);
+        if (maskBits == 24 || maskBits == 29 || maskBits == 16)
+            System.out.println("Populating...");
+        else
+            return "CIDR not supported. Only supports /16, /24 and /29";
 
         CidrBlock networkAdd = CidrBlock.builder()
                 .cidrBlock(cidrBlock)
@@ -131,7 +174,7 @@ public class IpListService {
                 .notes(notes)
                 .build();
         cidrBlockRepo.save(networkAdd);
-        populateIpBycidrBlock(cidrBlock, gatewayHost, maskBits, oltIp, type, vlanId);
+        populateIpBycidrBlock(cidrBlock, internetGateway, maskBits, oltIp, type, vlanId);
         // if (type.equals("Residential") || type.equals("RES")) {
         // populateIpBycidrBlock(cidrBlock, vlanId);
         // }
@@ -139,32 +182,33 @@ public class IpListService {
         return "Successful";
     }
 
-    public static String[] defaultRemarks(Integer host, Integer hostRange, Integer gatewayHost, Integer oltIp) {
-        String[] remarks = new String[3]; // [status, assignable, notes]
+    // public static String[] defaultRemarks(Integer host, Integer hostRange,
+    // Integer gatewayHost, Integer oltIp) {
+    // String[] remarks = new String[3]; // [status, assignable, notes]
 
-        System.out.println(gatewayHost);
-        if (host == 0) {
-            remarks[0] = "Not Available";
-            remarks[1] = "false";
-            remarks[2] = "Network Address";
-        } else if (host.equals(gatewayHost)) {
-            remarks[0] = "Not Available";
-            remarks[1] = "false";
-            remarks[2] = "Internet Gateway";
-        } else if (host.equals(oltIp)) {
-            remarks[0] = "Not Available";
-            remarks[1] = "false";
-            remarks[2] = "OLT IP";
-        } else if (host.equals(hostRange)) {
-            remarks[0] = "Not Available";
-            remarks[1] = "false";
-            remarks[2] = "Broadcast Address";
-        } else {
-            remarks[0] = "Available";
-            remarks[1] = "true";
-            remarks[2] = "Ready to Assign";
-        }
+    // System.out.println(gatewayHost);
+    // if (host == 0) {
+    // remarks[0] = "Not Available";
+    // remarks[1] = "false";
+    // remarks[2] = "Network Address";
+    // } else if (host.equals(gatewayHost)) {
+    // remarks[0] = "Not Available";
+    // remarks[1] = "false";
+    // remarks[2] = "Internet Gateway";
+    // } else if (host.equals(oltIp)) {
+    // remarks[0] = "Not Available";
+    // remarks[1] = "false";
+    // remarks[2] = "OLT IP";
+    // } else if (host.equals(hostRange)) {
+    // remarks[0] = "Not Available";
+    // remarks[1] = "false";
+    // remarks[2] = "Broadcast Address";
+    // } else {
+    // remarks[0] = "Available";
+    // remarks[1] = "true";
+    // remarks[2] = "Ready to Assign";
+    // }
 
-        return remarks;
-    }
+    // return remarks;
+    // }
 }
