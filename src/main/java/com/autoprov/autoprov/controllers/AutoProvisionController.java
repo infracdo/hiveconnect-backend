@@ -315,7 +315,7 @@ public class AutoProvisionController {
 
         jsonBody.append("{");
         jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
-        jsonBody.append("\"time\":\"" + "600" + "\",");
+        jsonBody.append("\"time\":\"" + "600" + "\"");
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
@@ -342,7 +342,7 @@ public class AutoProvisionController {
 
         jsonBody.append("{");
         jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
-        jsonBody.append("\"instance\":\"" + "2" + "\",");
+        jsonBody.append("\"instance\":\"" + "2" + "\"");
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
