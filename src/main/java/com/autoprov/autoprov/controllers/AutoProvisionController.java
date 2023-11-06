@@ -90,16 +90,21 @@ public class AutoProvisionController {
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         Integer vlanId = ipAddressData.get().getVlanId();
 
-        Map<String, String> acsPushResponse = pushToACS(clientName, serialNumber, defaultGateway,
+        String acsPushResponse = pushToACS(clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
 
-        if (acsPushResponse.containsValue("Successful"))
+        if (acsPushResponse.contains("Successful"))
             return executeMonitoring(accountNo, serialNumber, macAddress, clientName,
                     ipAddress, packageType, upstream,
                     downstream, oltIp);
 
-        else
-            return acsPushResponse;
+        else {
+            Map<String, String> response = new HashMap<>();
+            response.put("Status", "500");
+            response.put("Error", acsPushResponse);
+            return response;
+        }
+        // return acsPushResponse;
 
     }
 
@@ -251,8 +256,7 @@ public class AutoProvisionController {
     }
 
     // AutoProvisioning
-    public Map<String, String> pushToACS(String clientName, String serialNumber, String defaultGateway,
-            String ipAddress,
+    public String pushToACS(String clientName, String serialNumber, String defaultGateway, String ipAddress,
             Integer vlanId) {
         // Define the API URL
         String apiUrl = "http://172.91.0.136:7547/executeAutoConfig";
@@ -280,12 +284,6 @@ public class AutoProvisionController {
 
         System.out.println("HiveConnect: ACS Push executed");
         System.out.println("Response: " + jsonResponse);
-
-        Map<String, String> response = new HashMap<>();
-        response.put("Status", lastJobStatus);
-        response.put("Error", error);
-        response.put("Message", stderr);
-        return response;
 
         return jsonResponse;
     }
