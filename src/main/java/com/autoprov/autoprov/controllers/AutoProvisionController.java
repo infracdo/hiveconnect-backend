@@ -109,7 +109,6 @@ public class AutoProvisionController {
             @RequestParam("clientName") String clientName,
             @RequestParam("serialNumber") String serialNumber,
             @RequestParam("macAddress") String macAddress,
-            @RequestParam("site") String site,
             @RequestParam("olt") String oltIp,
             @RequestParam("packageType") String packageType,
             @RequestParam("upstream") String upstream,
@@ -121,7 +120,7 @@ public class AutoProvisionController {
 
         // Additional code remains unchanged...
 
-        site = "CDO_1";
+        String site = "CDO_1";
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
