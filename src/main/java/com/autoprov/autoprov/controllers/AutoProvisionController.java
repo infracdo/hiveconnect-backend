@@ -83,7 +83,7 @@ public class AutoProvisionController {
         // if (packageType.contains("SME"))
         // networkType = "Public";
 
-        site = "Gusa_01";
+        site = "CDO_1";
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
