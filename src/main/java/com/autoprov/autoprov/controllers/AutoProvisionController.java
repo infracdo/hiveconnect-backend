@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -57,7 +58,7 @@ public class AutoProvisionController {
 
     @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
-    public String executeProvision(@RequestBody Map<String, String> params)
+    public Map<String, String> executeProvision(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String networkType = "";
@@ -89,10 +90,10 @@ public class AutoProvisionController {
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         Integer vlanId = ipAddressData.get().getVlanId();
 
-        String acsPushResponse = pushToACS(clientName, serialNumber, defaultGateway,
+        Map<String, String> acsPushResponse = pushToACS(clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
 
-        if (acsPushResponse.contains("Successful"))
+        if (acsPushResponse.containsValue("Successful"))
             return executeMonitoring(accountNo, serialNumber, macAddress, clientName,
                     ipAddress, packageType, upstream,
                     downstream, oltIp);
@@ -250,7 +251,8 @@ public class AutoProvisionController {
     }
 
     // AutoProvisioning
-    public String pushToACS(String clientName, String serialNumber, String defaultGateway, String ipAddress,
+    public Map<String, String> pushToACS(String clientName, String serialNumber, String defaultGateway,
+            String ipAddress,
             Integer vlanId) {
         // Define the API URL
         String apiUrl = "http://172.91.0.136:7547/executeAutoConfig";
@@ -279,12 +281,18 @@ public class AutoProvisionController {
         System.out.println("HiveConnect: ACS Push executed");
         System.out.println("Response: " + jsonResponse);
 
+        Map<String, String> response = new HashMap<>();
+        response.put("Status", lastJobStatus);
+        response.put("Error", error);
+        response.put("Message", stderr);
+        return response;
+
         return jsonResponse;
     }
 
     @Async("AsyncExecutor")
     @PostMapping("/executeMonitoring")
-    public String executeMonitoringAPI(@RequestBody Map<String, String> params)
+    public Map<String, String> executeMonitoringAPI(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
         String accountNo = params.get("accountNo");
         String clientName = params.get("clientName");
@@ -301,7 +309,8 @@ public class AutoProvisionController {
 
     }
 
-    public String executeMonitoring(String accountNo, String serialNumber, String macAddress, String clientName,
+    public Map<String, String> executeMonitoring(String accountNo, String serialNumber, String macAddress,
+            String clientName,
             String onu_private_ip, String packageType, String upstream, String downstream, String oltIp)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
@@ -418,7 +427,7 @@ public class AutoProvisionController {
     // Troubleshooting
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
-    public String lastJobStatus(String serialNumber)
+    public Map<String, String> lastJobStatus(String serialNumber)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/15/";
@@ -487,8 +496,14 @@ public class AutoProvisionController {
                         // Print the "stderr" field for each item
                         deleteWanInstance(serialNumber);
                         System.out.println("stderr: " + stderr);
-                        return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" + error
-                                + "\nMessage: " + stderr);
+                        // return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" +
+                        // error
+                        // + "\nMessage: " + stderr);
+                        Map<String, String> response = new HashMap<>();
+                        response.put("Status", "500");
+                        response.put("Error", error);
+                        response.put("Message", stderr);
+                        return response;
                     }
                     if (res.has("msg")) {
                         stderr = res.path("msg").asText();
@@ -500,8 +515,15 @@ public class AutoProvisionController {
                             error = "IP Address already assigned to someone";
 
                         System.out.println("stderr: " + stderr);
-                        return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" + error
-                                + "\nMessage: " + stderr);
+                        // return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" +
+                        // error
+                        // + "\nMessage: " + stderr);
+
+                        Map<String, String> response = new HashMap<>();
+                        response.put("Status", "500");
+                        response.put("Error", error);
+                        response.put("Message", stderr);
+                        return response;
 
                     }
 
@@ -513,7 +535,12 @@ public class AutoProvisionController {
         }
 
         setInformInterval(serialNumber);
-        return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + error);
+        // return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + error);
+        Map<String, String> response = new HashMap<>();
+        response.put("Status", "200");
+        response.put("Error", error);
+        response.put("Message", stderr);
+        return response;
     }
 
     public String getAvailableIpAddress(String type, String cidr) {
