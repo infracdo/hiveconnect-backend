@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -54,34 +55,71 @@ public class AutoProvisionController {
         return "Hi!";
     }
 
+    // @Async("AsyncExecutor")
+    // @PostMapping("/executeProvision")
+    // public String executeProvision(@RequestBody Map<String, String> params)
+    // throws JsonMappingException, JsonProcessingException, InterruptedException {
+
+    // String networkType = "";
+    // System.out.println("HiveService: Provision executed");
+
+    // // Prepare RequestBody Values
+    // String accountNo = params.get("accountNo");
+    // String clientName = params.get("clientName");
+    // String serialNumber = params.get("serialNumber");
+    // String macAddress = params.get("macAddress");
+    // // String cidr = params.get("cidr"); // Cidr block of site
+    // String site = params.get("site"); // To determine IPAM site
+    // String oltIp = params.get("olt");
+    // // String wanMode = params.get("wanMode"); // Bridged or Routed
+    // String packageType = params.get("packageType");
+    // String upstream = params.get("upstream");
+    // String downstream = params.get("downstream");
+
+    // site = "CDO_1";
+    // String ipAddress = ipAddRepo
+    // .getOneAvailableIpAddressUnderSite(site, "Private")
+    // .get(0)
+    // .getIpAddress();
+
+    // String defaultGateway =
+    // ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0,
+    // (ipAddress.lastIndexOf("."))));
+
+    // // ACS Processes
+    // Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
+    // Integer vlanId = ipAddressData.get().getVlanId();
+
+    // String acsPushResponse = pushToACS(clientName, serialNumber, defaultGateway,
+    // ipAddress, vlanId);
+
+    // if (acsPushResponse.contains("Successful"))
+    // return executeMonitoring(accountNo, serialNumber, macAddress, clientName,
+    // ipAddress, packageType, upstream,
+    // downstream, oltIp);
+
+    // else
+    // return acsPushResponse;
+
+    // }
+
     @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
-    public String executeProvision(@RequestBody Map<String, String> params)
+    public String executeProvision(@RequestParam("accountNo") String accountNo,
+            @RequestParam("clientName") String clientName,
+            @RequestParam("serialNumber") String serialNumber,
+            @RequestParam("macAddress") String macAddress,
+            @RequestParam("site") String site,
+            @RequestParam("olt") String oltIp,
+            @RequestParam("packageType") String packageType,
+            @RequestParam("upstream") String upstream,
+            @RequestParam("downstream") String downstream)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String networkType = "";
         System.out.println("HiveService: Provision executed");
 
-        // Prepare RequestBody Values
-        String accountNo = params.get("accountNo");
-        String clientName = params.get("clientName");
-        String serialNumber = params.get("serialNumber");
-        String macAddress = params.get("macAddress");
-        // String cidr = params.get("cidr"); // Cidr block of site
-        String site = params.get("site"); // To determine IPAM site
-        String oltIp = params.get("olt");
-        // String wanMode = params.get("wanMode"); // Bridged or Routed
-        String packageType = params.get("packageType");
-        String upstream = params.get("upstream");
-        String downstream = params.get("downstream");
-
-        // TODO: shift api to receive number of private and public IP required
-
-        // if (packageType.contains("RES"))
-        // networkType = "Private";
-
-        // if (packageType.contains("SME"))
-        // networkType = "Public";
+        // Additional code remains unchanged...
 
         site = "CDO_1";
         String ipAddress = ipAddRepo
@@ -89,36 +127,23 @@ public class AutoProvisionController {
                 .get(0)
                 .getIpAddress();
 
-        // IP Address Assignment - Block
-        // String ipAddress = ipAddRepo
-        // .getOneAvailableIpAddressUnderCidrBlockAndType("Private",
-        // (cidr.substring(0, (cidr.lastIndexOf(".")))))
-        // .get(0)
-        // .getIpAddress();
-
-        // IP Address Assignment - BlockAndType
-        // String ipAddress = ipAddRepo
-        // .getOneAvailableIpAddressUnderCidrBlockAndType(networkType,
-        // (cidr.substring(0, (cidr.lastIndexOf(".")))))
-        // .get(0)
-        // .getIpAddress(); // TODO: change according to request. Should be able to
-        // provide both private and
-        // // public if needed
-        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0, (ipAddress.lastIndexOf("."))));
+        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0,
+                (ipAddress.lastIndexOf("."))));
 
         // ACS Processes
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         Integer vlanId = ipAddressData.get().getVlanId();
 
-        String acsPushResponse = pushToACS(clientName, serialNumber, defaultGateway, ipAddress, vlanId);
+        String acsPushResponse = pushToACS(clientName, serialNumber, defaultGateway,
+                ipAddress, vlanId);
 
         if (acsPushResponse.contains("Successful"))
-            return executeMonitoring(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, upstream,
+            return executeMonitoring(accountNo, serialNumber, macAddress, clientName,
+                    ipAddress, packageType, upstream,
                     downstream, oltIp);
 
         else
             return acsPushResponse;
-
     }
 
     // Connect-Disconnect
@@ -503,3 +528,27 @@ public class AutoProvisionController {
         return ipAddress;
     }
 }
+
+// IP Address Assignment - Block
+// String ipAddress = ipAddRepo
+// .getOneAvailableIpAddressUnderCidrBlockAndType("Private",
+// (cidr.substring(0, (cidr.lastIndexOf(".")))))
+// .get(0)
+// .getIpAddress();
+
+// IP Address Assignment - BlockAndType
+// String ipAddress = ipAddRepo
+// .getOneAvailableIpAddressUnderCidrBlockAndType(networkType,
+// (cidr.substring(0, (cidr.lastIndexOf(".")))))
+// .get(0)
+// .getIpAddress(); // TODO: change according to request. Should be able to
+// provide both private and
+// // public if needed
+
+// TODO: shift api to receive number of private and public IP required
+
+// if (packageType.contains("RES"))
+// networkType = "Private";
+
+// if (packageType.contains("SME"))
+// networkType = "Public";
