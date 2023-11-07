@@ -125,49 +125,6 @@ public class AutoProvisionController {
 
     }
 
-    // @Async("AsyncExecutor")
-    // @PostMapping("/executeProvision")
-    // public String executeProvision(@RequestParam("accountNo") String accountNo,
-    // @RequestParam("clientName") String clientName,
-    // @RequestParam("serialNumber") String serialNumber,
-    // @RequestParam("macAddress") String macAddress,
-    // @RequestParam("olt") String oltIp,
-    // @RequestParam("packageType") String packageType,
-    // @RequestParam("upstream") String upstream,
-    // @RequestParam("downstream") String downstream)
-    // throws JsonMappingException, JsonProcessingException, InterruptedException {
-
-    // String networkType = "";
-    // System.out.println("HiveService: Provision executed");
-
-    // // Additional code remains unchanged...
-
-    // String site = "CDO_1";
-    // String ipAddress = ipAddRepo
-    // .getOneAvailableIpAddressUnderSite(site, "Private")
-    // .get(0)
-    // .getIpAddress();
-
-    // String defaultGateway =
-    // ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0,
-    // (ipAddress.lastIndexOf("."))));
-
-    // // ACS Processes
-    // Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
-    // Integer vlanId = ipAddressData.get().getVlanId();
-
-    // String acsPushResponse = pushToACS(clientName, serialNumber, defaultGateway,
-    // ipAddress, vlanId);
-
-    // if (acsPushResponse.contains("Successful"))
-    // return executeMonitoring(accountNo, serialNumber, macAddress, clientName,
-    // ipAddress, packageType, upstream,
-    // downstream, oltIp);
-
-    // else
-    // return acsPushResponse;
-    // }
-
     // Connect-Disconnect
     @Async("AsyncExecutor")
     @PostMapping("/temporaryDisconnectClient")
@@ -380,7 +337,7 @@ public class AutoProvisionController {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        TimeUnit.SECONDS.sleep(150);
+        TimeUnit.SECONDS.sleep(10);
 
         return lastJobStatus();
     }
@@ -508,11 +465,10 @@ public class AutoProvisionController {
 
                         // Print the "stderr" field for each item
                         System.out.println("stderr: " + stderr);
-                        // return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" +
-                        // error
-                        // + "\nMessage: " + stderr);
+
                     }
                     if (res.has("msg")) {
+                        System.out.println("Reached has msg node");
                         stderr = res.path("msg").asText();
 
                         if (stderr.contains("Host with the same visible name"))
@@ -525,9 +481,6 @@ public class AutoProvisionController {
                             error = "Bad OLT-IP";
 
                         System.out.println("stderr: " + stderr);
-                        // return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" +
-                        // error
-                        // + "\nMessage: " + stderr);
 
                     }
                     Map<String, String> response = new HashMap<>();
