@@ -404,7 +404,6 @@ public class AutoProvisionController {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/15/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
-        String stderr = "";
         String error = "";
 
         HttpHeaders headers = new HttpHeaders();
@@ -442,67 +441,37 @@ public class AutoProvisionController {
             restTemplate = new RestTemplate();
             responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
                     String.class);
-            responseBody = responseEntity.getBody();
+            String stderr = responseEntity.getBody().toString();
 
             System.out.println(responseBody);
 
             try {
-                objectMapper = new ObjectMapper();
-                jsonNode = objectMapper.readTree(responseBody);
 
-                System.out.println(jsonNode.toString());
+                if (stderr.contains("Pseudo-terminal will not be allocated because stdin is not a terminal"))
+                    error = "Bad OLT-IP";
 
-                JsonNode resultsArray = jsonNode.get("results");
+                if (stderr.contains("name: OLT Vendor"))
+                    error = "Bad OLT-IP";
 
-                for (JsonNode result : resultsArray) {
-                    // Extract the "event_data" field from each item
-                    JsonNode eventData = result.path("event_data");
+                if (stderr.contains("Host with the same visible name"))
+                    error = "Client's device is already provisioned";
 
-                    // Check if "res" is present in the "event_data" section
-                    if (eventData.has("res")) {
-                        System.out.println("Reached has res node");
-                        JsonNode res = eventData.path("res");
+                if (stderr.contains("Duplicate termination found"))
+                    error = "IP Address already assigned to someone";
 
-                        // Check if "stderr" is present in the "res" section
-                        if (res.has("stderr")) {
-                            // Extract the "stderr" field
-                            stderr = res.path("stderr").asText();
+                System.out.println("stderr: " + stderr);
 
-                            if (stderr
-                                    .contains("Pseudo-terminal will not be allocated because stdin is not a terminal"))
-                                error = "Bad OLT-IP";
+                Map<String, String> response = new HashMap<>();
+                response.put("status", "500");
+                response.put("message", error);
+                response.put("awx_job_id: ", lastJobId.toString());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 
-                            // Print the "stderr" field for each item
-                            System.out.println("stderr: " + stderr);
-                        }
+            }
 
-                        // Check if "msg" is present in the "res" section
-                        if (res.has("msg")) {
-                            System.out.println("Reached has msg node");
-                            stderr = res.path("msg").asText();
+            catch (
 
-                            if (stderr.contains("Host with the same visible name"))
-                                error = "Client's device is already provisioned";
-
-                            if (stderr.contains("Duplicate termination found"))
-                                error = "IP Address already assigned to someone";
-
-                            if (stderr.contains("name: OLT Vendor"))
-                                error = "Bad OLT-IP";
-
-                            System.out.println("stderr: " + stderr);
-                        }
-                    }
-                    Map<String, String> response = new HashMap<>();
-                    response.put("status", "500");
-                    response.put("error", error);
-                    response.put("awx_job_id: ", lastJobId.toString());
-                    response.put("message", stderr);
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-
-                }
-
-            } catch (Exception e) {
+            Exception e) {
                 e.printStackTrace();
             }
         }
