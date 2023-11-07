@@ -108,6 +108,15 @@ public class AutoProvisionController {
                 return responseEntity;
 
             }
+
+            else {
+                deleteWanInstance(serialNumber);
+                Map<String, String> response = new HashMap<>();
+                response.put("Status", "500");
+                response.put("Error", acsPushResponse);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
+
         } else {
             deleteWanInstance(serialNumber);
             Map<String, String> response = new HashMap<>();
@@ -116,7 +125,6 @@ public class AutoProvisionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
         // return acsPushResponse;
-        return null;
 
     }
 
