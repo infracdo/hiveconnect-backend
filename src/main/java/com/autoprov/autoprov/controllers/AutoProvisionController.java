@@ -512,12 +512,6 @@ public class AutoProvisionController {
                         // error
                         // + "\nMessage: " + stderr);
                     }
-                    if (res.has("stdout")) {
-                        stderr = res.path("stdout").asText();
-
-                        if (stderr.contains("name: OLT Vendor"))
-                            error = "Bad OLT-IP";
-                    }
                     if (res.has("msg")) {
                         stderr = res.path("msg").asText();
 
@@ -527,6 +521,11 @@ public class AutoProvisionController {
                         if (stderr.contains("Duplicate termination found"))
                             error = "IP Address already assigned to someone";
 
+                        if (stderr.contains("name: OLT Vendor\\\\n" + //
+                                "  ^ here\\\\n" + //
+                                "\\"))
+                            error = "Bad OLT-IP";
+
                         System.out.println("stderr: " + stderr);
                         // return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" +
                         // error
@@ -534,10 +533,10 @@ public class AutoProvisionController {
 
                     }
                     Map<String, String> response = new HashMap<>();
-                    response.put("Status", "500");
-                    response.put("Error", error);
-                    response.put("AWX Job ID: ", lastJobId.toString());
-                    response.put("Message", stderr);
+                    response.put("status", "500");
+                    response.put("error", error);
+                    response.put("awx_job_id: ", lastJobId.toString());
+                    response.put("message", stderr);
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 
                 }
@@ -549,8 +548,8 @@ public class AutoProvisionController {
 
         // return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + error);
         Map<String, String> response = new HashMap<>();
-        response.put("Status", "200");
-        response.put("Message", "Provisioning and Monitoring Successful!");
+        response.put("status", "200");
+        response.put("message", "Provisioning and Monitoring Successful!");
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
