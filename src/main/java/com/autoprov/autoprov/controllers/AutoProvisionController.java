@@ -125,6 +125,59 @@ public class AutoProvisionController {
 
     }
 
+    @Async("AsyncExecutor")
+    @PostMapping("/executeAutoConfig")
+    public ResponseEntity<Map<String, String>> executeAutoConfig(@RequestBody Map<String, String> params)
+            throws JsonMappingException, JsonProcessingException, InterruptedException {
+
+        String networkType = "";
+        System.out.println("HiveService: Provision executed");
+
+        // Prepare RequestBody Values
+        String accountNo = params.get("accountNo");
+        String clientName = params.get("clientName");
+        String serialNumber = params.get("serialNumber");
+        String macAddress = params.get("macAddress");
+        // String cidr = params.get("cidr"); // Cidr block of site
+        String site = params.get("site"); // To determine IPAM site
+        String oltIp = params.get("olt");
+        // String wanMode = params.get("wanMode"); // Bridged or Routed
+        String packageType = params.get("packageType");
+        String upstream = params.get("upstream");
+        String downstream = params.get("downstream");
+
+        site = "CDO_1";
+        String ipAddress = ipAddRepo
+                .getOneAvailableIpAddressUnderSite(site, "Private")
+                .get(0)
+                .getIpAddress();
+
+        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0,
+                (ipAddress.lastIndexOf("."))));
+
+        // ACS Processes
+        Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
+        Integer vlanId = ipAddressData.get().getVlanId();
+
+        String acsPushResponse = pushToACS(clientName, serialNumber, defaultGateway,
+                ipAddress, vlanId);
+
+        if (acsPushResponse.contains("Successful")) {
+            Map<String, String> response = new HashMap<>();
+            response.put("Status", "200");
+            response.put("Error", acsPushResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        } else {
+            deleteWanInstance(serialNumber);
+            Map<String, String> response = new HashMap<>();
+            response.put("Status", "500");
+            response.put("Error", acsPushResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+        // return acsPushResponse;
+
+    }
+
     // Connect-Disconnect
     @Async("AsyncExecutor")
     @PostMapping("/temporaryDisconnectClient")
@@ -451,13 +504,19 @@ public class AutoProvisionController {
                     error = "Bad OLT-IP";
 
                 if (stderr.contains("name: OLT Vendor"))
-                    error = "Bad OLT-IP";
+                    error = "Bad OLT-IP; OLT-IP not live";
 
                 if (stderr.contains("Host with the same visible name"))
                     error = "Client's device is already provisioned";
 
                 if (stderr.contains("Duplicate termination found"))
                     error = "IP Address already assigned to someone";
+
+                if (stderr.contains("[prometheus]: UNREACHABLE! =>"))
+                    error = "Monitoring platform Prometheus is unreachable. Try again later";
+
+                if (stderr.contains("FAILED!") && stderr.contains("mac-address-table"))
+                    error = "Error on MAC Address Filtering";
 
                 System.out.println("stderr: " + stderr);
 
