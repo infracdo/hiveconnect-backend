@@ -444,11 +444,13 @@ public class AutoProvisionController {
                     String.class);
             responseBody = responseEntity.getBody();
 
-            System.out.println(responseBody.toString());
+            System.out.println(responseBody);
 
             try {
                 objectMapper = new ObjectMapper();
                 jsonNode = objectMapper.readTree(responseBody);
+
+                System.out.println(jsonNode.toString());
 
                 JsonNode resultsArray = jsonNode.get("results");
 
