@@ -40,6 +40,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.*;
 
+import io.micrometer.core.ipc.http.HttpSender.Response;
+
 @CrossOrigin(origins = "*")
 @RestController
 public class AutoProvisionController {
@@ -58,7 +60,7 @@ public class AutoProvisionController {
 
     @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
-    public Map<String, String> executeProvision(@RequestBody Map<String, String> params)
+    public ResponseEntity<Map<String, String>> executeProvision(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String networkType = "";
@@ -102,7 +104,7 @@ public class AutoProvisionController {
             Map<String, String> response = new HashMap<>();
             response.put("Status", "500");
             response.put("Error", acsPushResponse);
-            return response;
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
         // return acsPushResponse;
 
@@ -290,7 +292,7 @@ public class AutoProvisionController {
 
     @Async("AsyncExecutor")
     @PostMapping("/executeMonitoring")
-    public Map<String, String> executeMonitoringAPI(@RequestBody Map<String, String> params)
+    public ResponseEntity<Map<String, String>> executeMonitoringAPI(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
         String accountNo = params.get("accountNo");
         String clientName = params.get("clientName");
@@ -307,7 +309,8 @@ public class AutoProvisionController {
 
     }
 
-    public Map<String, String> executeMonitoring(String accountNo, String serialNumber, String macAddress,
+    public ResponseEntity<Map<String, String>> executeMonitoring(String accountNo, String serialNumber,
+            String macAddress,
             String clientName,
             String onu_private_ip, String packageType, String upstream, String downstream, String oltIp)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
@@ -363,6 +366,7 @@ public class AutoProvisionController {
 
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
+            return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         TimeUnit.SECONDS.sleep(150);
         return lastJobStatus(serialNumber);
@@ -425,7 +429,7 @@ public class AutoProvisionController {
     // Troubleshooting
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
-    public Map<String, String> lastJobStatus(String serialNumber)
+    public ResponseEntity<Map<String, String>> lastJobStatus(String serialNumber)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/15/";
@@ -497,11 +501,6 @@ public class AutoProvisionController {
                         // return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" +
                         // error
                         // + "\nMessage: " + stderr);
-                        Map<String, String> response = new HashMap<>();
-                        response.put("Status", "500");
-                        response.put("Error", error);
-                        response.put("Message", stderr);
-                        return response;
                     }
                     if (res.has("msg")) {
                         stderr = res.path("msg").asText();
@@ -517,13 +516,12 @@ public class AutoProvisionController {
                         // error
                         // + "\nMessage: " + stderr);
 
-                        Map<String, String> response = new HashMap<>();
-                        response.put("Status", "500");
-                        response.put("Error", error);
-                        response.put("Message", stderr);
-                        return response;
-
                     }
+                    Map<String, String> response = new HashMap<>();
+                    response.put("Status", "500");
+                    response.put("Error", error);
+                    response.put("Message", stderr);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 
                 }
 
@@ -538,7 +536,7 @@ public class AutoProvisionController {
         response.put("Status", "200");
         response.put("Error", error);
         response.put("Message", stderr);
-        return response;
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     public String getAvailableIpAddress(String type, String cidr) {
