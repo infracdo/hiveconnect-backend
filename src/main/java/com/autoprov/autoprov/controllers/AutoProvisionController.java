@@ -453,37 +453,43 @@ public class AutoProvisionController {
                 JsonNode resultsArray = jsonNode.get("results");
 
                 for (JsonNode result : resultsArray) {
-                    // Extract the "stderr" field from each item
+                    // Extract the "event_data" field from each item
                     JsonNode eventData = result.path("event_data");
-                    JsonNode res = eventData.path("res");
 
-                    // Check if "stderr" is present in the "res" section
-                    if (res.has("stderr")) {
-                        // Extract the "stderr" field
-                        stderr = res.path("stderr").asText();
+                    // Check if "res" is present in the "event_data" section
+                    if (eventData.has("res")) {
+                        System.out.println("Reached has res node");
+                        JsonNode res = eventData.path("res");
 
-                        if (stderr.contains("Pseudo-terminal will not be allocated because stdin is not a terminal"))
-                            error = "Bad OLT-IP";
+                        // Check if "stderr" is present in the "res" section
+                        if (res.has("stderr")) {
+                            // Extract the "stderr" field
+                            stderr = res.path("stderr").asText();
 
-                        // Print the "stderr" field for each item
-                        System.out.println("stderr: " + stderr);
+                            if (stderr
+                                    .contains("Pseudo-terminal will not be allocated because stdin is not a terminal"))
+                                error = "Bad OLT-IP";
 
-                    }
-                    if (res.has("msg")) {
-                        System.out.println("Reached has msg node");
-                        stderr = res.path("msg").asText();
+                            // Print the "stderr" field for each item
+                            System.out.println("stderr: " + stderr);
+                        }
 
-                        if (stderr.contains("Host with the same visible name"))
-                            error = "Client's device is already provisioned";
+                        // Check if "msg" is present in the "res" section
+                        if (res.has("msg")) {
+                            System.out.println("Reached has msg node");
+                            stderr = res.path("msg").asText();
 
-                        if (stderr.contains("Duplicate termination found"))
-                            error = "IP Address already assigned to someone";
+                            if (stderr.contains("Host with the same visible name"))
+                                error = "Client's device is already provisioned";
 
-                        if (stderr.contains("name: OLT Vendor"))
-                            error = "Bad OLT-IP";
+                            if (stderr.contains("Duplicate termination found"))
+                                error = "IP Address already assigned to someone";
 
-                        System.out.println("stderr: " + stderr);
+                            if (stderr.contains("name: OLT Vendor"))
+                                error = "Bad OLT-IP";
 
+                            System.out.println("stderr: " + stderr);
+                        }
                     }
                     Map<String, String> response = new HashMap<>();
                     response.put("status", "500");
