@@ -444,6 +444,8 @@ public class AutoProvisionController {
                     String.class);
             responseBody = responseEntity.getBody();
 
+            System.out.println(responseBody.toString());
+
             try {
                 objectMapper = new ObjectMapper();
                 jsonNode = objectMapper.readTree(responseBody);
