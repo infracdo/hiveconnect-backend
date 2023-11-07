@@ -95,18 +95,28 @@ public class AutoProvisionController {
         String acsPushResponse = pushToACS(clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
 
-        if (acsPushResponse.contains("Successful"))
-            return executeMonitoring(accountNo, serialNumber, macAddress, clientName,
+        if (acsPushResponse.contains("Successful")) {
+            ResponseEntity responseEntity = executeMonitoring(accountNo, serialNumber, macAddress, clientName,
                     ipAddress, packageType, upstream,
                     downstream, oltIp);
+            if (responseEntity.equals(HttpStatus.OK)) {
 
-        else {
+                // update ipAddress table
+                ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
+                setInformInterval(serialNumber);
+
+                return responseEntity;
+
+            }
+        } else {
+            deleteWanInstance(serialNumber);
             Map<String, String> response = new HashMap<>();
             response.put("Status", "500");
             response.put("Error", acsPushResponse);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
         // return acsPushResponse;
+        return null;
 
     }
 
@@ -354,9 +364,6 @@ public class AutoProvisionController {
         if (response.getStatusCode() == HttpStatus.CREATED) {
             System.out.println("Request successful. Response: " + response.getBody());
 
-            // update ipAddress table
-            ipAddRepo.associateIpAddressToAccountNumber(accountNo, onu_private_ip);
-
             Optional<Client> optionalClient = clientRepo.findClientBySerialNumber(serialNumber);
             if (optionalClient.isPresent()) {
                 Client client = optionalClient.get();
@@ -369,7 +376,8 @@ public class AutoProvisionController {
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         TimeUnit.SECONDS.sleep(150);
-        return lastJobStatus(serialNumber);
+
+        return lastJobStatus();
     }
 
     public String setInformInterval(String serialNumber) {
@@ -429,7 +437,7 @@ public class AutoProvisionController {
     // Troubleshooting
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
-    public ResponseEntity<Map<String, String>> lastJobStatus(String serialNumber)
+    public ResponseEntity<Map<String, String>> lastJobStatus()
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/15/";
@@ -466,8 +474,6 @@ public class AutoProvisionController {
 
         if (lastJobStatus.contains("fail")) {
 
-            deleteWanInstance(serialNumber);
-
             ansibleApiUrl = "http://172.91.10.189/api/v2/jobs/" + lastJobId + "/job_events/?failed=True";
             requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -496,7 +502,6 @@ public class AutoProvisionController {
                             error = "Bad OLT-IP";
 
                         // Print the "stderr" field for each item
-                        deleteWanInstance(serialNumber);
                         System.out.println("stderr: " + stderr);
                         // return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + "\nError:" +
                         // error
@@ -505,7 +510,7 @@ public class AutoProvisionController {
                     if (res.has("stdout")) {
                         stderr = res.path("stdout").asText();
 
-                        if (stderr.contains("The offending line appears to be:\\n\\n\\n- name: OLT Vendor"))
+                        if (stderr.contains("name: OLT Vendor"))
                             error = "Bad OLT-IP";
                     }
                     if (res.has("msg")) {
@@ -537,7 +542,6 @@ public class AutoProvisionController {
             }
         }
 
-        setInformInterval(serialNumber);
         // return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + error);
         Map<String, String> response = new HashMap<>();
         response.put("Status", "200");
