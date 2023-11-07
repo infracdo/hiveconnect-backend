@@ -111,10 +111,7 @@ public class AutoProvisionController {
 
             else {
                 deleteWanInstance(serialNumber);
-                Map<String, String> response = new HashMap<>();
-                response.put("Status", "500");
-                response.put("Error", acsPushResponse);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+                return responseEntity;
             }
 
         } else {
