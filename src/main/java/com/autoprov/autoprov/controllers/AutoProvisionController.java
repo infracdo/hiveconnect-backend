@@ -457,7 +457,7 @@ public class AutoProvisionController {
 
         // Extract last job details
         JsonNode lastJob = jsonNode.get("summary_fields").get("last_job");
-        int lastJobId = lastJob.get("id").asInt();
+        JsonNode lastJobId = lastJob.get("id");
         String lastJobStatus = lastJob.get("status").asText();
 
         // Print the results
@@ -502,6 +502,12 @@ public class AutoProvisionController {
                         // error
                         // + "\nMessage: " + stderr);
                     }
+                    if (res.has("stdout")) {
+                        stderr = res.path("stdout").asText();
+
+                        if (stderr.contains("The offending line appears to be:\\n\\n\\n- name: OLT Vendor"))
+                            error = "Bad OLT-IP";
+                    }
                     if (res.has("msg")) {
                         stderr = res.path("msg").asText();
 
@@ -520,6 +526,7 @@ public class AutoProvisionController {
                     Map<String, String> response = new HashMap<>();
                     response.put("Status", "500");
                     response.put("Error", error);
+                    response.put("AWX Job ID: ", lastJobId.toString());
                     response.put("Message", stderr);
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 
@@ -534,8 +541,7 @@ public class AutoProvisionController {
         // return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + error);
         Map<String, String> response = new HashMap<>();
         response.put("Status", "200");
-        response.put("Error", error);
-        response.put("Message", stderr);
+        response.put("Message", "Provisioning and Monitoring Successful!");
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
