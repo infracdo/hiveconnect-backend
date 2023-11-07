@@ -521,9 +521,7 @@ public class AutoProvisionController {
                         if (stderr.contains("Duplicate termination found"))
                             error = "IP Address already assigned to someone";
 
-                        if (stderr.contains("name: OLT Vendor\\\\n" + //
-                                "  ^ here\\\\n" + //
-                                "\\"))
+                        if (stderr.contains("name: OLT Vendor"))
                             error = "Bad OLT-IP";
 
                         System.out.println("stderr: " + stderr);
