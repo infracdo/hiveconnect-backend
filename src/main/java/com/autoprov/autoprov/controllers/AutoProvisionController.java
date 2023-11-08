@@ -400,7 +400,7 @@ public class AutoProvisionController {
         ResponseEntity lastJobStatus = lastJobStatus();
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)) {
-            deleteWanInstance(serialNumber);
+            // deleteWanInstance(serialNumber);
             return lastJobStatus;
         } else {
             return lastJobStatus;
