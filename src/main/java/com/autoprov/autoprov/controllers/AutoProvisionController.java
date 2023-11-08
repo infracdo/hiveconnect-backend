@@ -164,14 +164,14 @@ public class AutoProvisionController {
 
         if (acsPushResponse.contains("Successful")) {
             Map<String, String> response = new HashMap<>();
-            response.put("Status", "200");
-            response.put("Message", acsPushResponse);
+            response.put("status", "200");
+            response.put("message", acsPushResponse);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
             deleteWanInstance(serialNumber);
             Map<String, String> response = new HashMap<>();
-            response.put("Status", "500");
-            response.put("Error", acsPushResponse);
+            response.put("status", "500");
+            response.put("message", acsPushResponse);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
         // return acsPushResponse;
