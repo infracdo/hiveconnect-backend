@@ -397,7 +397,14 @@ public class AutoProvisionController {
         }
         TimeUnit.SECONDS.sleep(150);
 
-        return lastJobStatus();
+        ResponseEntity lastJobStatus = lastJobStatus();
+
+        if (lastJobStatus.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)) {
+            deleteWanInstance(serialNumber);
+            return lastJobStatus;
+        } else {
+            return lastJobStatus;
+        }
     }
 
     public String setInformInterval(String serialNumber) {
