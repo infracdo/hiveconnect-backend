@@ -340,6 +340,11 @@ public class AutoProvisionController {
             String onu_private_ip, String packageType, String upstream, String downstream, String oltIp)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
+        if (packageType.equals("RES10mbps")) {
+            upstream = "15000";
+            downstream = "15000";
+        }
+
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/15/launch/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
 
