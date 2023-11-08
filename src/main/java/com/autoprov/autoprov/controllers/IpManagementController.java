@@ -76,10 +76,22 @@ public class IpManagementController {
         return CompletableFuture.completedFuture(IpAddress);
     }
 
+    // @Async("asyncExecutor")
+    // @GetMapping("/getOneAvailableIpAddress")
+    // public CompletableFuture<List<IpAddress>> getOneAvailableIpAddress() {
+    // return
+    // CompletableFuture.completedFuture(ipAddRepo.getOneAvailableIpAddress());
+    // }
+
     @Async("asyncExecutor")
     @GetMapping("/getOneAvailableIpAddress")
-    public CompletableFuture<List<IpAddress>> getOneAvailableIpAddress() {
-        return CompletableFuture.completedFuture(ipAddRepo.getOneAvailableIpAddress());
+    public CompletableFuture<String> getOneAvailableIpAddress() {
+        String site = "CDO_1";
+        String ipAddress = ipAddRepo
+                .getOneAvailableIpAddressUnderSite(site, "Private")
+                .get(0)
+                .getIpAddress();
+        return CompletableFuture.completedFuture(ipAddress);
     }
 
     @Async("asyncExecutor")
