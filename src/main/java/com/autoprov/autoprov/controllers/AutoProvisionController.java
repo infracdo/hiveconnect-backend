@@ -390,7 +390,7 @@ public class AutoProvisionController {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        TimeUnit.SECONDS.sleep(10);
+        TimeUnit.SECONDS.sleep(150);
 
         return lastJobStatus();
     }
