@@ -400,9 +400,10 @@ public class AutoProvisionController {
         ResponseEntity lastJobStatus = lastJobStatus();
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)) {
-            // deleteWanInstance(serialNumber);
+            deleteWanInstance(serialNumber);
             return lastJobStatus;
         } else {
+            onuOnboarded(serialNumber);
             return lastJobStatus;
         }
     }
@@ -459,6 +460,32 @@ public class AutoProvisionController {
         System.out.println("Response: " + jsonResponse);
 
         return "ACS Task Rollback";
+    }
+
+    public String onuOnboarded(String serialNumber) {
+        String apiUrl = "http://172.91.0.136:7547/onuOnboarded";
+
+        // Create headers with Content-Type set to application/json
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Create a JSON request body
+        StringBuilder jsonBody = new StringBuilder();
+
+        jsonBody.append("{");
+        jsonBody.append("\"serialNumber\":\"" + serialNumber + "\"");
+        jsonBody.append("}");
+
+        String jsonRequestBody = jsonBody.toString();
+        System.out.println(jsonRequestBody);
+        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+
+        System.out.println("HiveConnect: ACS Server Removed " + serialNumber + " from Rogue");
+        System.out.println("Response: " + jsonResponse);
+
+        return "HiveConnect: ACS Server Removed " + serialNumber + " from Rogue";
     }
 
     // Troubleshooting
