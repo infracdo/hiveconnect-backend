@@ -91,6 +91,12 @@ public class ClientIpController {
     public CompletableFuture<ResponseEntity<Client>> updateClient(@PathVariable("id") Long id,
             @RequestBody Map<String, String> params) {
         // Retrieve the entity object
+        System.out.println("Update Client Invoked for " + params.get("serialNumber"));
+        String site = "CDO_1";
+        String ipAddress = ipAddRepo
+                .getOneAvailableIpAddressUnderSite(site, "Private")
+                .get(0)
+                .getIpAddress();
         Optional<Client> optionalClient = clientRepo.findById(id);
         Optional<IpAddress> optionalIpAddress = ipAddRepo.findByipAddress(params.get("ipAddress"));
 
@@ -99,7 +105,7 @@ public class ClientIpController {
                         || !optionalIpAddress.get().getStatus().equals("Reserved"))) {
             // Modify the fields of the entity object
             Client client = optionalClient.get();
-            client.setIpAssigned(params.get("ipAddress"));
+            client.setIpAssigned(ipAddress);
             client.setOnuSerialNumber(params.get("serialNumber"));
             client.setOltIp(params.get("olt"));
             client.setOnuMacAddress(params.get("macAddress"));
