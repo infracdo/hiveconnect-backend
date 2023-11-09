@@ -31,14 +31,14 @@ public class AcsController {
     // Exposed for HiveApp ----------------------------------------
     @Async("AsyncExecutor")
     @GetMapping("/getRogueDevices")
-    public static CompletableFuture<List> getRougeDevices(@RequestBody Map<String, String> params) {
+    public static ResponseEntity<List> getRougeDevices(@RequestBody Map<String, String> params) {
         // TODO: Call to ACS to Disconnect Wan2
         String apiUrl = "http://172.91.0.136:7547/getRogueDevices";
 
         RestTemplate restTemplate = new RestTemplate();
         List response = restTemplate.getForObject(apiUrl, List.class);
 
-        return (CompletableFuture<List>) response;
+        return ResponseEntity.status(HttpStatus.OK).body(response);
 
     }
 
