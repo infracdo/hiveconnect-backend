@@ -2,7 +2,6 @@
 Description=AutoProvision Backend
 
 [Service]
-ExecStartPre=ssh-keyscan -t rsa 172.91.10.112 >> ~/.ssh/known_hosts
 ExecStart=/usr/bin/java -jar /home/ubuntu/IP-Management-Test/target/autoprov-0.0.1-SNAPSHOT.jar
 SuccessExitStatus=143
 
