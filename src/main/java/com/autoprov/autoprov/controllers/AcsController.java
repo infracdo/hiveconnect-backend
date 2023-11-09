@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,22 +21,24 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.util.JSONPObject;
 
+import io.micrometer.core.ipc.http.HttpSender.Response;
+import io.swagger.v3.core.util.Json;
+
 @CrossOrigin(origins = "*")
 @RestController
 public class AcsController {
 
     // Exposed for HiveApp ----------------------------------------
     @Async("AsyncExecutor")
-    @PostMapping("/getRogueDevices")
-    public static JSONParser getRougeDevices(@RequestBody Map<String, String> params) {
+    @GetMapping("/getRogueDevices")
+    public static CompletableFuture<List> getRougeDevices(@RequestBody Map<String, String> params) {
         // TODO: Call to ACS to Disconnect Wan2
         String apiUrl = "http://172.91.0.136:7547/getRogueDevices";
 
-        StringBuilder jsonBody = new StringBuilder();
         RestTemplate restTemplate = new RestTemplate();
-        String response = restTemplate.getForObject(apiUrl, String.class);
-        JSONParser parser = new JSONParser(response);
-        return parser;
+        List response = restTemplate.getForObject(apiUrl, List.class);
+
+        return (CompletableFuture<List>) response;
 
     }
 
