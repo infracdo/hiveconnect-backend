@@ -101,23 +101,12 @@ public class AutoProvisionController {
             ResponseEntity responseEntity = executeMonitoring(accountNo, serialNumber, macAddress, clientName,
                     ipAddress, packageType, upstream,
                     downstream, oltIp);
-            if (responseEntity.equals(HttpStatus.OK)) {
 
-                // update ipAddress table
-                ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
-                AcsController.setInformInterval(serialNumber);
-
-                return responseEntity;
-
-            }
-
-            else {
-                AcsController.deleteWanInstance(serialNumber);
-                return responseEntity;
-            }
+            return responseEntity;
 
         } else {
             AcsController.deleteWanInstance(serialNumber);
+            AcsController.rollbackSsid(serialNumber);
             Map<String, String> response = new HashMap<>();
             response.put("Status", "500");
             response.put("Error", acsPushResponse);
@@ -140,7 +129,7 @@ public class AutoProvisionController {
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
-        // String cidr = params.get("cidr"); // Cidr block of site
+        String ipAddress = params.get("ipAddress");
         String site = params.get("site"); // To determine IPAM site
         String oltIp = params.get("olt");
         // String wanMode = params.get("wanMode"); // Bridged or Routed
@@ -148,11 +137,11 @@ public class AutoProvisionController {
         String upstream = params.get("upstream");
         String downstream = params.get("downstream");
 
-        site = "CDO_1";
-        String ipAddress = ipAddRepo
-                .getOneAvailableIpAddressUnderSite(site, "Private")
-                .get(0)
-                .getIpAddress();
+        // site = "CDO_1";
+        // String ipAddress = ipAddRepo
+        // .getOneAvailableIpAddressUnderSite(site, "Private")
+        // .get(0)
+        // .getIpAddress();
 
         String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0,
                 (ipAddress.lastIndexOf("."))));
@@ -171,12 +160,32 @@ public class AutoProvisionController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
             AcsController.deleteWanInstance(serialNumber);
+            AcsController.rollbackSsid(serialNumber);
             Map<String, String> response = new HashMap<>();
             response.put("status", "500");
             response.put("message", acsPushResponse);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
         // return acsPushResponse;
+
+    }
+
+    @Async("AsyncExecutor")
+    @PostMapping("/executeMonitoring")
+    public ResponseEntity<Map<String, String>> executeMonitoringAPI(@RequestBody Map<String, String> params)
+            throws JsonMappingException, JsonProcessingException, InterruptedException {
+        String accountNo = params.get("accountNo");
+        String clientName = params.get("clientName");
+        String serialNumber = params.get("serialNumber");
+        String macAddress = params.get("macAddress");
+        String ipAddress = params.get("ipAddress");
+        String oltIp = params.get("olt");
+        String packageType = params.get("packageType");
+        String upstream = params.get("upstream");
+        String downstream = params.get("downstream");
+
+        return executeMonitoring(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, upstream,
+                downstream, oltIp);
 
     }
 
@@ -211,25 +220,6 @@ public class AutoProvisionController {
         System.out.println("Response: " + jsonResponse);
 
         return jsonResponse;
-    }
-
-    @Async("AsyncExecutor")
-    @PostMapping("/executeMonitoring")
-    public ResponseEntity<Map<String, String>> executeMonitoringAPI(@RequestBody Map<String, String> params)
-            throws JsonMappingException, JsonProcessingException, InterruptedException {
-        String accountNo = params.get("accountNo");
-        String clientName = params.get("clientName");
-        String serialNumber = params.get("serialNumber");
-        String macAddress = params.get("macAddress");
-        String ipAddress = params.get("ipAddress");
-        String oltIp = params.get("olt");
-        String packageType = params.get("packageType");
-        String upstream = params.get("upstream");
-        String downstream = params.get("downstream");
-
-        return executeMonitoring(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, upstream,
-                downstream, oltIp);
-
     }
 
     public ResponseEntity<Map<String, String>> executeMonitoring(String accountNo, String serialNumber,
@@ -297,11 +287,15 @@ public class AutoProvisionController {
 
         ResponseEntity lastJobStatus = lastJobStatus();
 
-        if (lastJobStatus.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)) {
-            AcsController.deleteWanInstance(serialNumber);
+        if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
+            ipAddRepo.associateIpAddressToAccountNumber(accountNo, onu_private_ip);
+            AcsController.setInformInterval(serialNumber);
+            AcsController.onuOnboarded(serialNumber);
             return lastJobStatus;
         } else {
-            AcsController.onuOnboarded(serialNumber);
+            AcsController.deleteWanInstance(serialNumber);
+            AcsController.rollbackSsid(serialNumber);
+
             return lastJobStatus;
         }
     }
