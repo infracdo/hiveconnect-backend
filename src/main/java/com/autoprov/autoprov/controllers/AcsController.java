@@ -62,8 +62,8 @@ public class AcsController {
 
         {
             Map<String, String> response = new HashMap<>();
-            response.put("Status", "500");
-            response.put("Error", jsonResponse);
+            response.put("status", "500");
+            response.put("message", jsonResponse);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -103,16 +103,16 @@ public class AcsController {
         if (jsonResponse.contains("Successful")) {
 
             Map<String, String> response = new HashMap<>();
-            response.put("Status", "200");
-            response.put("Error", jsonResponse);
+            response.put("status", "200");
+            response.put("message", jsonResponse);
             return ResponseEntity.status(HttpStatus.OK).body(response);
 
         } else
 
         {
             Map<String, String> response = new HashMap<>();
-            response.put("Status", "500");
-            response.put("Error", jsonResponse);
+            response.put("status", "500");
+            response.put("message", jsonResponse);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -152,16 +152,16 @@ public class AcsController {
         if (jsonResponse.contains("Successful")) {
 
             Map<String, String> response = new HashMap<>();
-            response.put("Status", "200");
-            response.put("Error", jsonResponse);
+            response.put("status", "200");
+            response.put("message", jsonResponse);
             return ResponseEntity.status(HttpStatus.OK).body(response);
 
         } else
 
         {
             Map<String, String> response = new HashMap<>();
-            response.put("Status", "500");
-            response.put("Error", jsonResponse);
+            response.put("status", "500");
+            response.put("message", jsonResponse);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
