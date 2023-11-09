@@ -98,7 +98,7 @@ public class ClientIpController {
                 .get(0)
                 .getIpAddress();
         Optional<Client> optionalClient = clientRepo.findById(id);
-        Optional<IpAddress> optionalIpAddress = ipAddRepo.findByipAddress(params.get("ipAddress"));
+        Optional<IpAddress> optionalIpAddress = ipAddRepo.findByipAddress(ipAddress);
 
         if (optionalClient.isPresent() && optionalIpAddress.isPresent()
                 && (!optionalIpAddress.get().getStatus().equals("Assigned")
