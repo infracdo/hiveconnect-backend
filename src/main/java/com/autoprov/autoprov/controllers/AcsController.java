@@ -31,7 +31,7 @@ public class AcsController {
     // Exposed for HiveApp ----------------------------------------
     @Async("AsyncExecutor")
     @GetMapping("/getRogueDevices")
-    public static ResponseEntity<List> getRougeDevices(@RequestBody Map<String, String> params) {
+    public static ResponseEntity<List> getRougeDevices() {
         // TODO: Call to ACS to Disconnect Wan2
         String apiUrl = "http://172.91.0.136:7547/getRogueDevices";
 
