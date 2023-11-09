@@ -189,7 +189,7 @@ public class AutoProvisionController {
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
         String ipAddress = ipAddRepo
-                .getOneAvailableIpAddressUnderSite("CDO_01", "Private")
+                .getOneAvailableIpAddressUnderSite("CDO_1", "Private")
                 .get(0)
                 .getIpAddress();
         String oltIp = params.get("olt");
