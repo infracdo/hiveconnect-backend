@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.autoprov.autoprov.controllers.AcsController;
 import com.autoprov.autoprov.domain.Client;
 import com.autoprov.autoprov.domain.IpAddress;
 import com.autoprov.autoprov.repositories.ClientRepository;
@@ -79,6 +80,7 @@ public class AutoProvisionController {
         String upstream = params.get("upstream");
         String downstream = params.get("downstream");
 
+        // TODO: Dynamic Site, get actual IP Address according to Site
         site = "CDO_1";
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
@@ -103,19 +105,19 @@ public class AutoProvisionController {
 
                 // update ipAddress table
                 ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
-                setInformInterval(serialNumber);
+                AcsController.setInformInterval(serialNumber);
 
                 return responseEntity;
 
             }
 
             else {
-                deleteWanInstance(serialNumber);
+                AcsController.deleteWanInstance(serialNumber);
                 return responseEntity;
             }
 
         } else {
-            deleteWanInstance(serialNumber);
+            AcsController.deleteWanInstance(serialNumber);
             Map<String, String> response = new HashMap<>();
             response.put("Status", "500");
             response.put("Error", acsPushResponse);
@@ -168,7 +170,7 @@ public class AutoProvisionController {
             response.put("message", acsPushResponse);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
-            deleteWanInstance(serialNumber);
+            AcsController.deleteWanInstance(serialNumber);
             Map<String, String> response = new HashMap<>();
             response.put("status", "500");
             response.put("message", acsPushResponse);
@@ -176,110 +178,6 @@ public class AutoProvisionController {
         }
         // return acsPushResponse;
 
-    }
-
-    // Connect-Disconnect
-    @Async("AsyncExecutor")
-    @PostMapping("/temporaryDisconnectClient")
-    public String disconnectClient(@RequestBody Map<String, String> params) {
-        // TODO: Call to ACS to Disconnect Wan2
-        String apiUrl = "http://172.91.0.136:7547/toggleWan";
-
-        // Create headers with Content-Type set to application/json
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        String instance = "2";
-        String toggle = "0";
-
-        // Create a JSON request body
-        StringBuilder jsonBody = new StringBuilder();
-
-        jsonBody.append("{");
-        jsonBody.append("\"serialNumber\":\"" + params.get("serialNumber") + "\",");
-        jsonBody.append("\"Instance\":\"" + instance + "\",");
-        jsonBody.append("\"Toggle\":\"" + toggle + "\"");
-        jsonBody.append("}");
-
-        String jsonRequestBody = jsonBody.toString();
-        System.out.println(jsonRequestBody);
-        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
-
-        System.out.println("HiveConnect: ACS Push: WAN2 Disable Task Pushed");
-        System.out.println("Response: " + jsonResponse);
-
-        return jsonResponse;
-    }
-
-    @Async("AsyncExecutor")
-    @PostMapping("/reconnectClient")
-    public String reconnectClient(@RequestBody Map<String, String> params) {
-        // TODO: Call to ACS to Disconnect Wan2
-        String apiUrl = "http://172.91.0.136:7547/toggleWan";
-
-        // Create headers with Content-Type set to application/json
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        String instance = "2";
-        String toggle = "1";
-
-        // Create a JSON request body
-        StringBuilder jsonBody = new StringBuilder();
-
-        jsonBody.append("{");
-        jsonBody.append("\"serialNumber\":\"" + params.get("serialNumber") + "\",");
-        jsonBody.append("\"Instance\":\"" + instance + "\",");
-        jsonBody.append("\"Toggle\":\"" + toggle + "\"");
-
-        jsonBody.append("}");
-
-        String jsonRequestBody = jsonBody.toString();
-        System.out.println(jsonRequestBody);
-        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
-
-        System.out.println("HiveConnect: ACS Push: WAN2 Enable Task Pushed");
-        System.out.println("Response: " + jsonResponse);
-
-        return jsonResponse;
-    }
-
-    // permanently disconnect
-    @Async("AsyncExecutor")
-    @PostMapping("/permanentDisconnect")
-    public String permanentDisconnectClient(@RequestBody Map<String, String> params) {
-        // TODO: Call to ACS to REMOVE WAN2
-        String apiUrl = "http://172.91.0.136:7547/deleteWanInstance";
-
-        // Create headers with Content-Type set to application/json
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        String instance = "2";
-
-        // Create a JSON request body
-        StringBuilder jsonBody = new StringBuilder();
-
-        jsonBody.append("{");
-        jsonBody.append("\"serialNumber\":\"" + params.get("serialNumber") + "\",");
-        jsonBody.append("\"Instance\":\"" + instance + "\"");
-
-        jsonBody.append("}");
-
-        String jsonRequestBody = jsonBody.toString();
-        System.out.println(jsonRequestBody);
-        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
-
-        System.out.println("HiveConnect: ACS Push: WAN2 Enable Task Pushed");
-        System.out.println("Response: " + jsonResponse);
-
-        return jsonResponse;
     }
 
     // AutoProvisioning
@@ -400,92 +298,12 @@ public class AutoProvisionController {
         ResponseEntity lastJobStatus = lastJobStatus();
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)) {
-            deleteWanInstance(serialNumber);
+            AcsController.deleteWanInstance(serialNumber);
             return lastJobStatus;
         } else {
-            onuOnboarded(serialNumber);
+            AcsController.onuOnboarded(serialNumber);
             return lastJobStatus;
         }
-    }
-
-    public String setInformInterval(String serialNumber) {
-        String apiUrl = "http://172.91.0.136:7547/setInformInterval";
-
-        // Create headers with Content-Type set to application/json
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        // Create a JSON request body
-        StringBuilder jsonBody = new StringBuilder();
-
-        jsonBody.append("{");
-        jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
-        jsonBody.append("\"time\":\"" + "600" + "\"");
-        jsonBody.append("}");
-
-        String jsonRequestBody = jsonBody.toString();
-        System.out.println(jsonRequestBody);
-        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
-
-        System.out.println("HiveConnect: Set Inform Interval");
-        System.out.println("Response: " + jsonResponse);
-
-        return "Provisioning Complete";
-    }
-
-    public String deleteWanInstance(String serialNumber) {
-        String apiUrl = "http://172.91.0.136:7547/deleteWanInstance";
-
-        // Create headers with Content-Type set to application/json
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        // Create a JSON request body
-        StringBuilder jsonBody = new StringBuilder();
-
-        jsonBody.append("{");
-        jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
-        jsonBody.append("\"instance\":\"" + "2" + "\"");
-        jsonBody.append("}");
-
-        String jsonRequestBody = jsonBody.toString();
-        System.out.println(jsonRequestBody);
-        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
-
-        System.out.println("HiveConnect: ACS Task Rollback for " + serialNumber);
-        System.out.println("Response: " + jsonResponse);
-
-        return "ACS Task Rollback";
-    }
-
-    public String onuOnboarded(String serialNumber) {
-        String apiUrl = "http://172.91.0.136:7547/onuOnboarded";
-
-        // Create headers with Content-Type set to application/json
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        // Create a JSON request body
-        StringBuilder jsonBody = new StringBuilder();
-
-        jsonBody.append("{");
-        jsonBody.append("\"serialNumber\":\"" + serialNumber + "\"");
-        jsonBody.append("}");
-
-        String jsonRequestBody = jsonBody.toString();
-        System.out.println(jsonRequestBody);
-        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
-
-        System.out.println("HiveConnect: ACS Server Removed " + serialNumber + " from Rogue");
-        System.out.println("Response: " + jsonResponse);
-
-        return "HiveConnect: ACS Server Removed " + serialNumber + " from Rogue";
     }
 
     // Troubleshooting
