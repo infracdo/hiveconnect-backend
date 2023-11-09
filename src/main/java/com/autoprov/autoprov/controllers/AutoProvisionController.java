@@ -142,7 +142,7 @@ public class AutoProvisionController {
         String upstream = params.get("upstream");
         String downstream = params.get("downstream");
 
-        // site = "CDO_1";
+        site = "CDO_1";
         // String ipAddress = ipAddRepo
         // .getOneAvailableIpAddressUnderSite(site, "Private")
         // .get(0)
