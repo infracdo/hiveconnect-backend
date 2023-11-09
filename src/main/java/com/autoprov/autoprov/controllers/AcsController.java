@@ -1,8 +1,11 @@
 package com.autoprov.autoprov.controllers;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
+import org.apache.tomcat.util.json.JSONParser;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -15,9 +18,28 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.util.JSONPObject;
+
 @CrossOrigin(origins = "*")
 @RestController
 public class AcsController {
+
+    // Exposed for HiveApp ----------------------------------------
+    @Async("AsyncExecutor")
+    @PostMapping("/getRogueDevices")
+    public static JSONParser getRougeDevices(@RequestBody Map<String, String> params) {
+        // TODO: Call to ACS to Disconnect Wan2
+        String apiUrl = "http://172.91.0.136:7547/getRogueDevices";
+
+        StringBuilder jsonBody = new StringBuilder();
+        RestTemplate restTemplate = new RestTemplate();
+        String response = restTemplate.getForObject(apiUrl, String.class);
+        JSONParser parser = new JSONParser(response);
+        return parser;
+
+    }
+
+    // Exposed for HiveApp (end) ----------------------------------------
 
     // -------------------Exposed APIs for Connect-Disconnect
     @Async("AsyncExecutor")
@@ -51,8 +73,8 @@ public class AcsController {
         System.out.println("HiveConnect: ACS Push: WAN2 Disable Task Pushed");
         System.out.println("Response: " + jsonResponse);
 
-        //WAN2 Toggling Pushed on Success
-        //Fault Error on Error
+        // WAN2 Toggling Pushed on Success
+        // Fault Error on Error
 
         if (jsonResponse.contains("Pushed")) {
 
@@ -172,7 +194,8 @@ public class AcsController {
     // ----------- Controller Functions ---- On ERRORS
 
     // Rollback WAN2, delete WAN2. Applicable after succeeding errors
-    public static String deleteWanInstance(String serialNumber) {
+
+    static String deleteWanInstance(String serialNumber) {
         String apiUrl = "http://172.91.0.136:7547/deleteWanInstance";
 
         // Create headers with Content-Type set to application/json
@@ -199,7 +222,7 @@ public class AcsController {
         return "ACS Task Rollback";
     }
 
-    // Rollback SSID, return to default. Applicable after succeeding errors
+    // Rollback SSID, return to default. Applicable after succeeding erors
     public static String rollbackSsid(String serialNumber) {
         String apiUrl = "http://172.91.0.136:7547/rollbackSsid";
 
@@ -227,6 +250,7 @@ public class AcsController {
     }
 
     // ----------- Controller Functions ---- On Success
+    // Unrogue ONU on ACS
     public static String onuOnboarded(String serialNumber) {
         String apiUrl = "http://172.91.0.136:7547/onuOnboarded";
 
@@ -253,7 +277,8 @@ public class AcsController {
         return "HiveConnect: ACS Server Removed " + serialNumber + " from Rogue";
     }
 
-    public static String setInformInterval(String serialNumber) {
+    // Set inform interval for 600 seconds Post Successful Provisioning
+    public static String setInformIntervalPostProv(String serialNumber) {
         String apiUrl = "http://172.91.0.136:7547/setInformInterval";
 
         // Create headers with Content-Type set to application/json

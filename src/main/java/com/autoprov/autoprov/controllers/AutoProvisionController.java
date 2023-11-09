@@ -53,12 +53,16 @@ public class AutoProvisionController {
     @Autowired
     private ClientRepository clientRepo;
 
+    // General Exposed Endpoints ----------------------------
     @Async("AsyncExecutor")
     @GetMapping("/hello")
     public String helloWorld() {
         return "Hi!";
     }
 
+    // General Exposed Endpoints ----------------------------
+
+    // API for INET ----------------------------------------------
     @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
     public ResponseEntity<Map<String, String>> executeProvision(@RequestBody Map<String, String> params)
@@ -94,7 +98,7 @@ public class AutoProvisionController {
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         Integer vlanId = ipAddressData.get().getVlanId();
 
-        String acsPushResponse = pushToACS(clientName, serialNumber, defaultGateway,
+        String acsPushResponse = executeAutoProv(clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
 
         if (acsPushResponse.contains("Successful")) {
@@ -115,10 +119,12 @@ public class AutoProvisionController {
         // return acsPushResponse;
 
     }
+    // API for INET (end) ----------------------------------------------
 
+    // APIs for HiveApp ----------------------------------------------
     @Async("AsyncExecutor")
     @PostMapping("/executeAutoConfig")
-    public ResponseEntity<Map<String, String>> executeAutoConfig(@RequestBody Map<String, String> params)
+    public ResponseEntity<Map<String, String>> executeAutoConfigAPI(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String networkType = "";
@@ -129,7 +135,6 @@ public class AutoProvisionController {
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
-        String ipAddress = params.get("ipAddress");
         String site = params.get("site"); // To determine IPAM site
         String oltIp = params.get("olt");
         // String wanMode = params.get("wanMode"); // Bridged or Routed
@@ -143,6 +148,11 @@ public class AutoProvisionController {
         // .get(0)
         // .getIpAddress();
 
+        String ipAddress = ipAddRepo
+                .getOneAvailableIpAddressUnderSite(site, "Private")
+                .get(0)
+                .getIpAddress();
+
         String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0,
                 (ipAddress.lastIndexOf("."))));
 
@@ -150,20 +160,20 @@ public class AutoProvisionController {
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         Integer vlanId = ipAddressData.get().getVlanId();
 
-        String acsPushResponse = pushToACS(clientName, serialNumber, defaultGateway,
+        String acsResponse = executeAutoProv(clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
 
-        if (acsPushResponse.contains("Successful")) {
+        if (acsResponse.contains("Successful")) {
             Map<String, String> response = new HashMap<>();
             response.put("status", "200");
-            response.put("message", acsPushResponse);
+            response.put("message", acsResponse);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
             AcsController.deleteWanInstance(serialNumber);
             AcsController.rollbackSsid(serialNumber);
             Map<String, String> response = new HashMap<>();
             response.put("status", "500");
-            response.put("message", acsPushResponse);
+            response.put("message", acsResponse);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
         // return acsPushResponse;
@@ -189,8 +199,10 @@ public class AutoProvisionController {
 
     }
 
+    // APIs for HiveApp (end) ----------------------------------------------
+
     // AutoProvisioning
-    public String pushToACS(String clientName, String serialNumber, String defaultGateway, String ipAddress,
+    public String executeAutoProv(String clientName, String serialNumber, String defaultGateway, String ipAddress,
             Integer vlanId) {
         // Define the API URL
         String apiUrl = "http://172.91.0.136:7547/executeAutoConfig";
@@ -285,11 +297,11 @@ public class AutoProvisionController {
         }
         TimeUnit.SECONDS.sleep(150);
 
-        ResponseEntity lastJobStatus = lastJobStatus();
+        ResponseEntity lastJobStatus = lastJobStatus(clientName);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
             ipAddRepo.associateIpAddressToAccountNumber(accountNo, onu_private_ip);
-            AcsController.setInformInterval(serialNumber);
+            AcsController.setInformIntervalPostProv(serialNumber);
             AcsController.onuOnboarded(serialNumber);
             return lastJobStatus;
         } else {
@@ -303,7 +315,7 @@ public class AutoProvisionController {
     // Troubleshooting
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
-    public ResponseEntity<Map<String, String>> lastJobStatus()
+    public ResponseEntity<Map<String, String>> lastJobStatus(String clientName)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/15/";
@@ -386,10 +398,16 @@ public class AutoProvisionController {
             }
         }
 
+        String newSsid = clientName.replace(" ", "_");
+        String password = "" + clientName + "1234";
+
         // return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + error);
         Map<String, String> response = new HashMap<>();
+        response.put("awx_job_id", lastJobId.toString());
         response.put("status", "200");
         response.put("message", "Provisioning and Monitoring Successful!");
+        response.put("ssid_name", newSsid + "2.4G/5G");
+        response.put("ssid_pw", password);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
