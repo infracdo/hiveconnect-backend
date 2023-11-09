@@ -51,11 +51,14 @@ public class AcsController {
         System.out.println("HiveConnect: ACS Push: WAN2 Disable Task Pushed");
         System.out.println("Response: " + jsonResponse);
 
-        if (jsonResponse.contains("Successful")) {
+        //WAN2 Toggling Pushed on Success
+        //Fault Error on Error
+
+        if (jsonResponse.contains("Pushed")) {
 
             Map<String, String> response = new HashMap<>();
-            response.put("Status", "200");
-            response.put("Error", jsonResponse);
+            response.put("status", "200");
+            response.put("message", jsonResponse);
             return ResponseEntity.status(HttpStatus.OK).body(response);
 
         } else
@@ -100,7 +103,7 @@ public class AcsController {
         System.out.println("HiveConnect: ACS Push: WAN2 Enable Task Pushed");
         System.out.println("Response: " + jsonResponse);
 
-        if (jsonResponse.contains("Successful")) {
+        if (jsonResponse.contains("Pushed")) {
 
             Map<String, String> response = new HashMap<>();
             response.put("status", "200");
