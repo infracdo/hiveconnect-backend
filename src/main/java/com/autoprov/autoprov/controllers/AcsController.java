@@ -246,7 +246,7 @@ public class AcsController {
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
 
-        System.out.println("HiveConnect: ACS Server Removed " + serialNumber + " from Rogue");
+        System.out.println("HiveConnect: ACS Server Rolled Back SSID for  " + serialNumber);
         System.out.println("Response: " + jsonResponse);
 
         return "HiveConnect: ACS Server SSID Rollback pushed for " + serialNumber;
