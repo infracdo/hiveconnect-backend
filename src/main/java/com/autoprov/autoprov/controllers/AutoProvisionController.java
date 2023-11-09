@@ -188,7 +188,10 @@ public class AutoProvisionController {
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
-        String ipAddress = params.get("ipAddress");
+        String ipAddress = ipAddRepo
+                .getOneAvailableIpAddressUnderSite("CDO_01", "Private")
+                .get(0)
+                .getIpAddress();
         String oltIp = params.get("olt");
         String packageType = params.get("packageType");
         String upstream = params.get("upstream");
