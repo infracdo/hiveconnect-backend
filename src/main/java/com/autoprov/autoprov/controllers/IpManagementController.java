@@ -86,6 +86,7 @@ public class IpManagementController {
     @Async("asyncExecutor")
     @GetMapping("/getOneAvailableIpAddress")
     public CompletableFuture<String> getOneAvailableIpAddress() {
+        // TODO: Dynamic Site, get actual IP Address according to Site
         String site = "CDO_1";
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
