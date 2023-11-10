@@ -266,7 +266,7 @@ public class AutoProvisionController {
                 "\\ndevice_name: " + deviceName +
                 "\\nmac_address: " + macAddress +
                 "\\nolt_ip: " + oltIp +
-                "\\naccount_number: null " +
+                "\\naccount_number: null " + // TODO: add actual account number
                 "\\nstatus: Activated " +
                 "\\nonu_private_ip: " + onu_private_ip +
                 "\\npackage_type: " + packageType +
