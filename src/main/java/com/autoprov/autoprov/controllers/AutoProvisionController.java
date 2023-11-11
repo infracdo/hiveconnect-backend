@@ -630,7 +630,7 @@ public class AutoProvisionController {
             response.put("status", "500");
             response.put("message", "Job Mismatch!");
 
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 
         if (lastJobStatus.contains("fail")) {
