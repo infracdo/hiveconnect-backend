@@ -526,7 +526,7 @@ public class AutoProvisionController {
         JsonNode jsonNode = objectMapper.readTree(responseBody);
         jobId = jsonNode.get("id").asText();
 
-        System.out.println(responseBody);
+        System.out.println(responseBody); // TODO: retrieve all string because limited string is printed
         System.out.println("Checking job id" + jobId);
 
         TimeUnit.SECONDS.sleep(30);
@@ -625,7 +625,7 @@ public class AutoProvisionController {
 
         if (!lastJobId.equals(jobId)) {
             Map<String, String> response = new HashMap<>();
-            response.put("awx_job_id", lastJobId.toString());
+            response.put("awx_job_id", jobId);
             response.put("status", "500");
             response.put("message", "Job Mismatch!");
 
