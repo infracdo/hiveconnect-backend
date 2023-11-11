@@ -31,15 +31,19 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.autoprov.autoprov.controllers.AcsController;
-import com.autoprov.autoprov.domain.Client;
-import com.autoprov.autoprov.domain.IpAddress;
-import com.autoprov.autoprov.repositories.ClientRepository;
-import com.autoprov.autoprov.repositories.IpAddressRepository;
+import com.autoprov.autoprov.entity.inetDomain.Client;
+import com.autoprov.autoprov.entity.inetDomain.PackageType;
+import com.autoprov.autoprov.entity.ipamDomain.IpAddress;
+import com.autoprov.autoprov.repositories.inetRepositories.ClientRepository;
+import com.autoprov.autoprov.repositories.inetRepositories.PackageRepository;
+import com.autoprov.autoprov.repositories.ipamRepositories.IpAddressRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.micrometer.core.ipc.http.HttpSender.Response;
 
@@ -47,11 +51,20 @@ import io.micrometer.core.ipc.http.HttpSender.Response;
 @RestController
 public class AutoProvisionController {
     // Insert playbook invokes here
+
+    private static String playbookMonitoringApiUrl = "http://172.91.10.189/api/v2/job_templates/15/";
+    private static String playbookPreProvUrl = "http://172.91.10.189/api/v2/job_templates/18/";
+    private static String playbookGetJobUrl = "http://172.91.10.189/api/v2/jobs/";
+    private static String acsApiUrl = "http://172.91.0.136:7547/";
+
     @Autowired
     private IpAddressRepository ipAddRepo;
 
     @Autowired
     private ClientRepository clientRepo;
+
+    @Autowired
+    private PackageRepository packageRepo;
 
     // General Exposed Endpoints ----------------------------
     @Async("AsyncExecutor")
@@ -65,7 +78,7 @@ public class AutoProvisionController {
     // API for INET ----------------------------------------------
     @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
-    public ResponseEntity<Map<String, String>> executeProvision(@RequestBody Map<String, String> params)
+    public ResponseEntity<Map<String, String>> executeInetProvision(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String networkType = "";
@@ -98,11 +111,11 @@ public class AutoProvisionController {
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         Integer vlanId = ipAddressData.get().getVlanId();
 
-        String acsPushResponse = executeAutoProv(clientName, serialNumber, defaultGateway,
+        String acsPushResponse = executeHiveAutoProv(accountNo, clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
 
-        if (acsPushResponse.contains("Successful")) {
-            ResponseEntity responseEntity = executeMonitoring(accountNo, serialNumber, macAddress, clientName,
+        if (acsPushResponse.contains("Successful")) { // TODO: revert to monitoring for INET
+            ResponseEntity responseEntity = executeHiveMonitoring(accountNo, serialNumber, macAddress, clientName,
                     ipAddress, packageType, upstream,
                     downstream, oltIp);
 
@@ -160,7 +173,7 @@ public class AutoProvisionController {
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         Integer vlanId = ipAddressData.get().getVlanId();
 
-        String acsResponse = executeAutoProv(clientName, serialNumber, defaultGateway,
+        String acsResponse = executeHiveAutoProv(accountNo, clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
 
         if (acsResponse.contains("Successful")) {
@@ -180,35 +193,15 @@ public class AutoProvisionController {
 
     }
 
-    @Async("AsyncExecutor")
-    @PostMapping("/executeMonitoring")
-    public ResponseEntity<Map<String, String>> executeMonitoringAPI(@RequestBody Map<String, String> params)
-            throws JsonMappingException, JsonProcessingException, InterruptedException {
-        String accountNo = params.get("accountNo");
-        String clientName = params.get("clientName");
-        String serialNumber = params.get("serialNumber");
-        String macAddress = params.get("macAddress");
-        String ipAddress = ipAddRepo
-                .getOneAvailableIpAddressUnderSite("CDO_1", "Private")
-                .get(0)
-                .getIpAddress();
-        String oltIp = params.get("olt");
-        String packageType = params.get("packageType");
-        String upstream = params.get("upstream");
-        String downstream = params.get("downstream");
-
-        return executeMonitoring(accountNo, serialNumber, macAddress, clientName, ipAddress, packageType, upstream,
-                downstream, oltIp);
-
-    }
-
     // APIs for HiveApp (end) ----------------------------------------------
 
     // AutoProvisioning
-    public String executeAutoProv(String clientName, String serialNumber, String defaultGateway, String ipAddress,
+    public String executeHiveAutoProv(String accountNumber, String clientName, String serialNumber,
+            String defaultGateway,
+            String ipAddress,
             Integer vlanId) {
         // Define the API URL
-        String apiUrl = "http://172.91.0.136:7547/executeAutoConfig";
+        String apiUrl = acsApiUrl + "executeAutoConfig";
 
         // Create headers with Content-Type set to application/json
         HttpHeaders headers = new HttpHeaders();
@@ -237,18 +230,34 @@ public class AutoProvisionController {
         return jsonResponse;
     }
 
-    public ResponseEntity<Map<String, String>> executeMonitoring(String accountNo, String serialNumber,
-            String macAddress,
-            String clientName,
-            String onu_private_ip, String packageType, String upstream, String downstream, String oltIp)
+    @Async("AsyncExecutor")
+    @PostMapping("/executeMonitoring")
+    public ResponseEntity<Map<String, String>> executeHiveMonitoring(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
+        String accountNo = params.get("accountNo");
+        String clientName = params.get("clientName");
+        String serialNumber = params.get("serialNumber");
+        String macAddress = params.get("macAddress");
+        String ipAddress = ipAddRepo
+                .getOneAvailableIpAddressUnderSite("CDO_1", "Private")
+                .get(0)
+                .getIpAddress();
+        System.out.println(ipAddRepo
+                .getOneAvailableIpAddressUnderSite("CDO_1", "Private"));
+        String oltIp = params.get("olt");
+        String packageType = params.get("packageType");
+        String upstream = params.get("upstream");
+        String downstream = params.get("downstream");
 
-        if (packageType.equals("RES10mbps")) {
-            upstream = "15000";
-            downstream = "15000";
+        Optional<PackageType> optionalPackage = packageRepo.findBypackageName(packageType);
+        if (optionalPackage.isPresent()) {
+            PackageType packageT = optionalPackage.get();
+            System.out.println(packageT.toString());
+            upstream = packageT.getUpstream();
+            downstream = packageT.getDownstream();
         }
 
-        String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/15/launch/";
+        String ansibleApiUrl = playbookMonitoringApiUrl + "launch/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
@@ -259,7 +268,155 @@ public class AutoProvisionController {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         String requestBody = "{\n" +
-                "\"job_template\": \"9\",\n" +
+                "\"job_template\": \"15\",\n" +
+                "\"ask_variables_on_launch\": \"true\",\n" +
+                "\"extra_vars\": \"---" +
+                "\\nserial_number: " + serialNumber +
+                "\\ndevice_name: " + deviceName +
+                "\\nmac_address: " + macAddress +
+                "\\nolt_ip: " + oltIp +
+                "\\naccount_number: " + accountNo + // TODO: add actual account number
+                "\\nstatus: Activated " +
+                "\\nonu_private_ip: " + ipAddress +
+                "\\npackage_type: " + packageType +
+                "\\ndownstream: " + downstream +
+                "\\nupstream: " + upstream + "\""
+                +
+                "}";
+        System.out.println(requestBody);
+
+        // [[[[[[[------ALL GREEN TEST------]]]]]]] ------------------------------
+
+        // HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        // String ssidName = clientName.replace(" ", "_") + " 2.4/5G";
+        // String password = "" + clientName + "1234";
+
+        // Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
+        // if (optionalClient.isPresent()) {
+        // Client client = optionalClient.get();
+        // client.setOnuDeviceName(deviceName);
+        // client.setOnuSerialNumber(serialNumber);
+        // client.setOnuMacAddress(macAddress);
+        // client.setStatus("Activated");
+        // client.setOltIp(oltIp);
+        // client.setBackend("HiveConnect");
+        // client.setSsidName(ssidName);
+        // client.setSsidPw(password);
+        // clientRepo.save(client);
+        // }
+
+        // RestTemplate restTemplate = new RestTemplate();
+        // ResponseEntity<String> response = restTemplate.exchange(ansibleApiUrl,
+        // HttpMethod.POST, requestEntity,
+        // String.class);
+
+        // System.out.println("HiveConnect: Ansible executed");
+
+        // if (response.getStatusCode() == HttpStatus.CREATED) {
+        // System.out.println("Request successful. Response: " + response.getBody());
+
+        // } else {
+        // System.out.println("Request failed. Response: " + response.getStatusCode());
+        // return (ResponseEntity<Map<String, String>>)
+        // ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+        // }
+        // TimeUnit.SECONDS.sleep(150);
+
+        // ResponseEntity lastJobStatus = lastJobStatus(clientName);
+
+        // if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
+        // // finalize and mark everything to be activated
+        // ipAddRepo.associateIpAddressToAccountNumber(accountNo, onu_private_ip);
+        // AcsController.setInformIntervalPostProv(serialNumber);
+        // AcsController.onuOnboarded(serialNumber);
+
+        // String ssidName = clientName.replace(" ", "_");
+        // String password = "" + ssidName + "1234";
+
+        // Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
+        // if (optionalClient.isPresent()) {
+        // Client client = optionalClient.get();
+        // client.setOnuDeviceName(deviceName);
+        // client.setOnuSerialNumber(serialNumber);
+        // client.setOnuMacAddress(macAddress);
+        // client.setStatus("Activated");
+        // client.setOltIp(oltIp);
+        // client.setIpAssigned(onu_private_ip);
+        // client.setBackend("HiveConnect");
+        // client.setSsidName(ssidName + " 2.4/5G");
+        // client.setSsidPw(password);
+        // clientRepo.save(client);
+        // }
+
+        // return lastJobStatus;
+        // } else {
+        // AcsController.deleteWanInstance(serialNumber);
+        // AcsController.rollbackSsid(serialNumber);
+
+        // return lastJobStatus;
+        // }
+
+        // [[[[[[[------ALL GREEN TEST------]]]]]]] ------------------------------
+
+        String ssidName = clientName.replace(" ", "_") + " 2.4/5G";
+        String password = "" + ssidName + "1234";
+
+        ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
+
+        Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
+        if (optionalClient.isPresent()) {
+            Client client = optionalClient.get();
+            client.setOnuDeviceName(deviceName);
+            client.setOnuSerialNumber(serialNumber);
+            client.setOnuMacAddress(macAddress);
+            client.setStatus("Activated");
+            client.setIpAssigned(ipAddress);
+            client.setOltIp(oltIp);
+            client.setBackend("HiveConnect");
+            client.setSsidName(ssidName + " 2.4/5G");
+            client.setSsidPw(password);
+            clientRepo.save(client);
+        }
+
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "200");
+        response.put("message", "Provisioning and Monitoring Successful!");
+        response.put("ssid_name", ssidName + " 2.4G/5G");
+        response.put("ssid_pw", password);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @Async("AsyncExecutor")
+    @PostMapping("/preprovisionCheck")
+    public ResponseEntity<Map<String, String>> preprovisionCheck(@RequestBody Map<String, String> params) {
+
+        String accountNo = params.get("accountNo");
+        String clientName = params.get("clientName");
+        String serialNumber = params.get("serialNumber");
+        String macAddress = params.get("macAddress");
+        String ipAddress = ipAddRepo
+                .getOneAvailableIpAddressUnderSite("CDO_1", "Private")
+                .get(0)
+                .getIpAddress();
+        String oltIp = params.get("olt");
+        String packageType = params.get("packageType");
+        String upstream = params.get("upstream");
+        String downstream = params.get("downstream");
+
+        String ansibleApiUrl = playbookPreProvUrl + "launch/";
+        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+
+        String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
+        System.out.println(deviceName);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String requestBody = "{\n" +
+                "\"job_template\": \"18\",\n" +
                 "\"ask_variables_on_launch\": \"true\",\n" +
                 "\"extra_vars\": \"---" +
                 "\\nserial_number: " + serialNumber +
@@ -268,7 +425,7 @@ public class AutoProvisionController {
                 "\\nolt_ip: " + oltIp +
                 "\\naccount_number: null " + // TODO: add actual account number
                 "\\nstatus: Activated " +
-                "\\nonu_private_ip: " + onu_private_ip +
+                "\\nonu_private_ip: " + ipAddress +
                 "\\npackage_type: " + packageType +
                 "\\ndownstream: " + downstream +
                 "\\nupstream: " + upstream + "\""
@@ -279,40 +436,17 @@ public class AutoProvisionController {
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> response = restTemplate.exchange(ansibleApiUrl, HttpMethod.POST, requestEntity,
+        ResponseEntity responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.POST, requestEntity,
                 String.class);
 
-        System.out.println("HiveConnect: Ansible executed");
+        String responseBody = responseEntity.getBody().toString();
 
-        if (response.getStatusCode() == HttpStatus.CREATED) {
-            System.out.println("Request successful. Response: " + response.getBody());
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "200");
+        response.put("message", "Provisioning and Monitoring Successful!");
+        response.put("body", responseBody);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
 
-            Optional<Client> optionalClient = clientRepo.findClientBySerialNumber(serialNumber);
-            if (optionalClient.isPresent()) {
-                Client client = optionalClient.get();
-                client.setOnuDeviceName(deviceName);
-                clientRepo.save(client);
-            }
-
-        } else {
-            System.out.println("Request failed. Response: " + response.getStatusCode());
-            return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        TimeUnit.SECONDS.sleep(150);
-
-        ResponseEntity lastJobStatus = lastJobStatus(clientName);
-
-        if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
-            ipAddRepo.associateIpAddressToAccountNumber(accountNo, onu_private_ip);
-            AcsController.setInformIntervalPostProv(serialNumber);
-            AcsController.onuOnboarded(serialNumber);
-            return lastJobStatus;
-        } else {
-            AcsController.deleteWanInstance(serialNumber);
-            AcsController.rollbackSsid(serialNumber);
-
-            return lastJobStatus;
-        }
     }
 
     // Troubleshooting
@@ -321,7 +455,7 @@ public class AutoProvisionController {
     public ResponseEntity<Map<String, String>> lastJobStatus(String clientName)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
-        String ansibleApiUrl = "http://172.91.10.189/api/v2/job_templates/15/";
+        String ansibleApiUrl = playbookMonitoringApiUrl;
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
         String error = "";
 
@@ -329,9 +463,7 @@ public class AutoProvisionController {
         headers.set("Authorization", "Bearer " + accessToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        String requestBody = "{\"job_template\": \"9\"}";
-        System.out.println(requestBody);
-
+        String requestBody = "";
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
         RestTemplate restTemplate = new RestTemplate();
@@ -354,7 +486,7 @@ public class AutoProvisionController {
 
         if (lastJobStatus.contains("fail")) {
 
-            ansibleApiUrl = "http://172.91.10.189/api/v2/jobs/" + lastJobId + "/job_events/?failed=True";
+            ansibleApiUrl = "" + playbookGetJobUrl + lastJobId + "/job_events/?failed=True";
             requestEntity = new HttpEntity<>(requestBody, headers);
 
             restTemplate = new RestTemplate();
@@ -401,6 +533,30 @@ public class AutoProvisionController {
             }
         }
 
+        ansibleApiUrl = "" + playbookGetJobUrl + lastJobId + "/stdout";
+        requestEntity = new HttpEntity<>(requestBody, headers);
+
+        restTemplate = new RestTemplate();
+        responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+                String.class);
+
+        responseBody = responseEntity.getBody();
+
+        // Define the pattern
+        Pattern pattern = Pattern.compile("\"olt_interface_bind\\.stdout\"\\s*:\\s*\"([^\"]+)\"");
+
+        // Create a matcher
+        Matcher matcher = pattern.matcher(responseBody);
+
+        // Find the match
+        if (matcher.find()) {
+            // Extract the desired value
+            String oltInterfaceBind = matcher.group(1);
+            System.out.println("olt_interface_bind.stdout: " + oltInterfaceBind);
+        } else {
+            System.out.println("Match not found");
+        }
+
         String newSsid = clientName.replace(" ", "_");
         String password = "" + clientName + "1234";
 
@@ -414,38 +570,45 @@ public class AutoProvisionController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    public String getAvailableIpAddress(String type, String cidr) {
-        String ipAddress = ipAddRepo
-                .getOneAvailableIpAddressUnderCidrBlockAndType("Private",
-                        (cidr.substring(0, (cidr.lastIndexOf(".")))))
-                .get(0)
-                .getIpAddress();
-        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(cidr.substring(0, (cidr.lastIndexOf("."))));
+    // [[ ------------ TEST AREA --------------]]
+    @Async("AsyncExecutor")
+    @GetMapping("/lastStdout")
+    public String lastStdout() {
 
-        return ipAddress;
+        String ansibleApiUrl = "" + playbookGetJobUrl + "1146" + "/stdout";
+        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+        String error = "";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String requestBody = "";
+        HttpEntity requestEntity = new HttpEntity<>(requestBody, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+                String.class);
+
+        String responseBody = responseEntity.getBody();
+
+        // Define the pattern
+        Pattern pattern = Pattern.compile("\"olt_interface_bind\\.stdout\"\\s*:\\s*\"([^\"]+)\"");
+
+        // Create a matcher
+        Matcher matcher = pattern.matcher(responseBody);
+
+        // Find the match
+        if (matcher.find()) {
+            // Extract the desired value
+            String oltInterfaceBind = matcher.group(1);
+            System.out.println("olt_interface_bind.stdout: " + oltInterfaceBind);
+            return oltInterfaceBind;
+        } else {
+            System.out.println("Match not found");
+            return "Match not found";
+        }
+
     }
+
 }
-
-// IP Address Assignment - Block
-// String ipAddress = ipAddRepo
-// .getOneAvailableIpAddressUnderCidrBlockAndType("Private",
-// (cidr.substring(0, (cidr.lastIndexOf(".")))))
-// .get(0)
-// .getIpAddress();
-
-// IP Address Assignment - BlockAndType
-// String ipAddress = ipAddRepo
-// .getOneAvailableIpAddressUnderCidrBlockAndType(networkType,
-// (cidr.substring(0, (cidr.lastIndexOf(".")))))
-// .get(0)
-// .getIpAddress(); // TODO: change according to request. Should be able to
-// provide both private and
-// // public if needed
-
-// TODO: shift api to receive number of private and public IP required
-
-// if (packageType.contains("RES"))
-// networkType = "Private";
-
-// if (packageType.contains("SME"))
-// networkType = "Public";

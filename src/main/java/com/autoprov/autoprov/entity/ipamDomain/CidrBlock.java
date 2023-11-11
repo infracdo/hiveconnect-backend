@@ -1,4 +1,4 @@
-package com.autoprov.autoprov.domain;
+package com.autoprov.autoprov.entity.ipamDomain;
 
 import org.springframework.stereotype.Indexed;
 
@@ -28,7 +28,10 @@ public class CidrBlock {
     @Column(name = "cidr_block", unique = true)
     private String cidrBlock;
 
+    @Column(name = "account_no")
     private String accountNumber; // related to subscriber "clients" table
+
+    @Column(name = "network_address", unique = true)
     private String networkAddress;
 
     @Column(name = "network_type")

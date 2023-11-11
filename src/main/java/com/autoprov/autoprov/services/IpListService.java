@@ -5,10 +5,10 @@ import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.autoprov.autoprov.domain.IpAddress;
-import com.autoprov.autoprov.domain.CidrBlock;
-import com.autoprov.autoprov.repositories.IpAddressRepository;
-import com.autoprov.autoprov.repositories.CidrBlockRepository;
+import com.autoprov.autoprov.entity.ipamDomain.CidrBlock;
+import com.autoprov.autoprov.entity.ipamDomain.IpAddress;
+import com.autoprov.autoprov.repositories.ipamRepositories.CidrBlockRepository;
+import com.autoprov.autoprov.repositories.ipamRepositories.IpAddressRepository;
 
 @Service
 public class IpListService {
@@ -146,7 +146,7 @@ public class IpListService {
                 hostB++;
                 hostA = 0;
             }
-}
+        }
 
         return "successful";
     }

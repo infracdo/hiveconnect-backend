@@ -17,13 +17,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import com.autoprov.autoprov.repositories.OltRepository;
-import com.autoprov.autoprov.repositories.PackageRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.autoprov.autoprov.domain.Client;
-import com.autoprov.autoprov.domain.Olt;
-import com.autoprov.autoprov.domain.PackageType;
+import com.autoprov.autoprov.entity.inetDomain.Client;
+import com.autoprov.autoprov.entity.inetDomain.Olt;
+import com.autoprov.autoprov.entity.inetDomain.PackageType;
+import com.autoprov.autoprov.repositories.inetRepositories.OltRepository;
+import com.autoprov.autoprov.repositories.inetRepositories.PackageRepository;
 
 @CrossOrigin(origins = "*")
 @RestController
