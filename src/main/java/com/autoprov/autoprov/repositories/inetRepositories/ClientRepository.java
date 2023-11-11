@@ -31,4 +31,7 @@ public interface ClientRepository extends CrudRepository<Client, Long> {
     @Query(value = "SELECT * from clients where status = \'New\'", nativeQuery = true)
     List<Client> getNewClients();
 
+    @Query(value = "SELECT * from clients where backend = \'HiveConnect\' or backend = \'Hive Connect\' ", nativeQuery = true)
+    List<Client> getHiveConnectClients();
+
 }

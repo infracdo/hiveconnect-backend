@@ -627,7 +627,7 @@ public class AutoProvisionController {
         System.out.println("Job ID: " + lastJobId);
         System.out.println("Job Status: " + lastJobStatus);
 
-        if (lastJobId != jobId) {
+        if (!lastJobId.equals(jobId)) {
             Map<String, String> response = new HashMap<>();
             response.put("awx_job_id", jobId);
             response.put("status", "500");

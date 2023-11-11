@@ -29,7 +29,7 @@ import com.autoprov.autoprov.repositories.ipamRepositories.IpAddressRepository;
 
 @CrossOrigin(origins = "*")
 @RestController
-public class ClientIpController {
+public class ClientController {
 
     @Autowired
     private ClientRepository clientRepo;
@@ -60,6 +60,12 @@ public class ClientIpController {
     @GetMapping("/getClients")
     public CompletableFuture<List<Client>> getClients() {
         return CompletableFuture.completedFuture(clientRepo.getNewClients());
+    }
+
+    @Async("asyncExecutor")
+    @GetMapping("/getHiveClients")
+    public CompletableFuture<List<Client>> getHiveClients() {
+        return CompletableFuture.completedFuture(clientRepo.getHiveConnectClients());
     }
 
     // public CompletableFuture<List<Client>> getClients() {
