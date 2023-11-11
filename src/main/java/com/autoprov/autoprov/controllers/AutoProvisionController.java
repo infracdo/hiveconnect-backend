@@ -400,7 +400,7 @@ public class AutoProvisionController {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        TimeUnit.SECONDS.sleep(150);
+        TimeUnit.SECONDS.sleep(180);
 
         ResponseEntity lastJobStatus = lastJobStatus(clientName, jobId);
 
@@ -627,7 +627,7 @@ public class AutoProvisionController {
         System.out.println("Job ID: " + lastJobId);
         System.out.println("Job Status: " + lastJobStatus);
 
-        if (!lastJobId.equals(jobId)) {
+        if (lastJobId != jobId) {
             Map<String, String> response = new HashMap<>();
             response.put("awx_job_id", jobId);
             response.put("status", "500");
