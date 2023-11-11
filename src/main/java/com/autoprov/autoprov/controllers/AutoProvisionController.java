@@ -115,7 +115,7 @@ public class AutoProvisionController {
                 ipAddress, vlanId);
 
         if (acsPushResponse.contains("Successful")) { // TODO: revert to monitoring for INET
-            ResponseEntity responseEntity = executeHiveMonitoring(accountNo, serialNumber, macAddress, clientName,
+            ResponseEntity responseEntity = executeInetMonitoring(accountNo, serialNumber, macAddress, clientName,
                     ipAddress, packageType, upstream,
                     downstream, oltIp);
 
@@ -386,6 +386,11 @@ public class AutoProvisionController {
         response.put("ssid_pw", password);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    public ResponseEntity<Map<String, String>> executeInetMonitoring(@RequestBody Map<String, String> params)
+            throws JsonMappingException, JsonProcessingException, InterruptedException {
+
     }
 
     @Async("AsyncExecutor")
