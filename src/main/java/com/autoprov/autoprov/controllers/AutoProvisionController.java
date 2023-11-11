@@ -561,7 +561,7 @@ public class AutoProvisionController {
             Map<String, String> response = new HashMap<>();
             response.put("status", "200");
             response.put("message", "All Clear. Proceed to Provisioning!");
-            response.put("body", responseBody);
+            response.put("body", checkingResponse);
             return ResponseEntity.status(HttpStatus.OK).body(response);
 
         }
@@ -580,7 +580,7 @@ public class AutoProvisionController {
             Map<String, String> response = new HashMap<>();
             response.put("status", "500");
             response.put("message", errors.toString());
-            response.put("body", responseBody);
+            response.put("body", checkingResponse);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 
