@@ -529,7 +529,7 @@ public class AutoProvisionController {
         System.out.println(responseBody);
         System.out.println("Checking job id" + jobId);
 
-        TimeUnit.SECONDS.sleep(15);
+        TimeUnit.SECONDS.sleep(30);
 
         ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
         requestEntity = new HttpEntity<>(requestBody, headers);
