@@ -616,7 +616,8 @@ public class AutoProvisionController {
 
         // Extract last job details
         JsonNode lastJob = jsonNode.get("summary_fields").get("last_job");
-        JsonNode lastJobId = lastJob.get("id");
+        JsonNode lastJobIdNode = lastJob.get("id");
+        String lastJobId = lastJobIdNode.asText();
         String lastJobStatus = lastJob.get("status").asText();
 
         // Print the results

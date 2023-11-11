@@ -9,7 +9,7 @@ import com.autoprov.autoprov.entity.inetDomain.PackageType;
 
 public interface PackageRepository extends CrudRepository<PackageType, Long> {
 
-    @Query(value = "SELECT * from packages where package_type_id=?1", nativeQuery = true)
+    @Query(value = "SELECT * from packages where id=?1", nativeQuery = true)
     Optional<PackageType> findBypackageId(String packageId);
 
     @Query(value = "SELECT * from packages where name=?1", nativeQuery = true)
