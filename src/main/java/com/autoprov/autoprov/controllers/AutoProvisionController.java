@@ -538,13 +538,14 @@ public class AutoProvisionController {
         responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
                 String.class);
         String checkingResponse = responseEntity.getBody().toString();
+        System.out.println(checkingResponse);
 
         String onuCheckString = "ONU exist in '" + oltIp + "'";
         String subscriberCheckString = "Subscriber '" + deviceName + "' is not yet onboarded";
         String ipAddressCheckString = "IP Address '" + ipAddress + " is not yet onboarded";
 
         String wrongOnuString = "Wrong OLT Selected";
-        String subscriberExistsString = "Subscriber " + deviceName + " already exist in Netbox";
+        String subscriberExistsString = "Subscriber '" + deviceName + "' already exist in Netbox";
         String ipAddressExistsString = "IP Address '" + ipAddress + "' already exist in Netbox";
 
         if (checkingResponse.contains(onuCheckString))
