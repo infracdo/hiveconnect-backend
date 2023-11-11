@@ -184,8 +184,14 @@ public class AutoProvisionController {
 
         System.out.println("HiveConnect: Ansible executed");
 
+        String jobId;
         if (response.getStatusCode() == HttpStatus.CREATED) {
             System.out.println("Request successful. Response: " + response.getBody());
+
+            String responseBody = response.getBody();
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(responseBody);
+            jobId = jsonNode.get("id").asText();
 
             Optional<Client> optionalClient = clientRepo.findClientBySerialNumber(serialNumber);
             if (optionalClient.isPresent()) {
@@ -200,7 +206,7 @@ public class AutoProvisionController {
         }
         TimeUnit.SECONDS.sleep(150);
 
-        ResponseEntity lastJobStatus = lastJobStatus(clientName);
+        ResponseEntity lastJobStatus = lastJobStatus(clientName, jobId);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
             ipAddRepo.associateIpAddressToAccountNumber(accountNo, onu_private_ip);
@@ -332,7 +338,7 @@ public class AutoProvisionController {
         String upstream = params.get("upstream");
         String downstream = params.get("downstream");
 
-        Optional<PackageType> optionalPackage = packageRepo.findBypackageName(packageType);
+        Optional<PackageType> optionalPackage = packageRepo.findBypackageId(packageType);
         if (optionalPackage.isPresent()) {
             PackageType packageT = optionalPackage.get();
             System.out.println(packageT.toString());
@@ -378,9 +384,14 @@ public class AutoProvisionController {
                 String.class);
 
         System.out.println("HiveConnect: Ansible executed");
-
+        String jobId;
         if (response.getStatusCode() == HttpStatus.CREATED) {
             System.out.println("Request successful. Response: " + response.getBody());
+
+            String responseBody = response.getBody();
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(responseBody);
+            jobId = jsonNode.get("id").asText();
 
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
@@ -388,7 +399,7 @@ public class AutoProvisionController {
         }
         TimeUnit.SECONDS.sleep(150);
 
-        ResponseEntity lastJobStatus = lastJobStatus(clientName);
+        ResponseEntity lastJobStatus = lastJobStatus(clientName, jobId);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
             // finalize and mark everything to be activated
@@ -407,6 +418,7 @@ public class AutoProvisionController {
                 client.setOnuMacAddress(macAddress);
                 client.setStatus("Activated");
                 client.setOltIp(oltIp);
+                client.setOltInterface(oltIp);
                 client.setIpAssigned(ipAddress);
                 client.setBackend("HiveConnect");
                 client.setSsidName(ssidName + " 2.4/5G");
@@ -457,7 +469,10 @@ public class AutoProvisionController {
 
     @Async("AsyncExecutor")
     @PostMapping("/preprovisionCheck")
-    public ResponseEntity<Map<String, String>> preprovisionCheck(@RequestBody Map<String, String> params) {
+    public ResponseEntity<Map<String, String>> preprovisionCheck(@RequestBody Map<String, String> params)
+            throws InterruptedException, JsonMappingException, JsonProcessingException {
+
+        String jobId;
 
         String accountNo = params.get("accountNo");
         String clientName = params.get("clientName");
@@ -490,7 +505,7 @@ public class AutoProvisionController {
                 "\\ndevice_name: " + deviceName +
                 "\\nmac_address: " + macAddress +
                 "\\nolt_ip: " + oltIp +
-                "\\naccount_number: null " + // TODO: add actual account number
+                "\\naccount_number: " + accountNo + // TODO: add actual account number
                 "\\nstatus: Activated " +
                 "\\nonu_private_ip: " + ipAddress +
                 "\\npackage_type: " + packageType +
@@ -507,19 +522,62 @@ public class AutoProvisionController {
                 String.class);
 
         String responseBody = responseEntity.getBody().toString();
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(responseBody);
+        jobId = jsonNode.get("id").asText();
 
-        Map<String, String> response = new HashMap<>();
-        response.put("status", "200");
-        response.put("message", "Provisioning and Monitoring Successful!");
-        response.put("body", responseBody);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        TimeUnit.SECONDS.sleep(15);
+
+        ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
+        requestEntity = new HttpEntity<>(requestBody, headers);
+
+        restTemplate = new RestTemplate();
+        responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+                String.class);
+        String checkingResponse = responseEntity.getBody().toString();
+
+        String onuCheckString = "ONU exist in '" + oltIp + "'";
+        String subscriberCheckString = "Subscriber '" + deviceName + "' is not yet onboarded";
+        String ipAddressCheckString = "IP Address '" + ipAddress + " is not yet onboarded";
+
+        String wrongOnuString = "Wrong OLT Selected";
+        String subscriberExistsString = "Subscriber " + deviceName + " already exist in Netbox";
+        String ipAddressExistsString = "IP Address '" + ipAddress + "' already exist in Netbox";
+
+        if (checkingResponse.contains(onuCheckString) && checkingResponse.contains(subscriberCheckString)
+                && checkingResponse.contains(ipAddressCheckString)) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "200");
+            response.put("message", "All Clear. Proceed to Provisioning!");
+            response.put("body", responseBody);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        }
+
+        else {
+            StringBuilder errors = new StringBuilder();
+            if (checkingResponse.contains(wrongOnuString))
+                errors.append("Wrong OLT Selected");
+
+            if (checkingResponse.contains(subscriberExistsString))
+                errors.append("Subscriber already exists!");
+
+            if (checkingResponse.contains(ipAddressExistsString))
+                errors.append("IpAddress already exists!");
+
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "500");
+            response.put("message", errors.toString());
+            response.put("body", responseBody);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
 
     }
 
     // Troubleshooting
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
-    public ResponseEntity<Map<String, String>> lastJobStatus(String clientName)
+    public ResponseEntity<Map<String, String>> lastJobStatus(String clientName, String jobId)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String ansibleApiUrl = playbookMonitoringApiUrl;
@@ -550,6 +608,15 @@ public class AutoProvisionController {
         // Print the results
         System.out.println("Job ID: " + lastJobId);
         System.out.println("Job Status: " + lastJobStatus);
+
+        if (!lastJobId.equals(jobId)) {
+            Map<String, String> response = new HashMap<>();
+            response.put("awx_job_id", lastJobId.toString());
+            response.put("status", "500");
+            response.put("message", "Job Mismatch!");
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
 
         if (lastJobStatus.contains("fail")) {
 
