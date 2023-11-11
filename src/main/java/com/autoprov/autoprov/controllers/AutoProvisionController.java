@@ -418,7 +418,7 @@ public class AutoProvisionController {
                 client.setOnuMacAddress(macAddress);
                 client.setStatus("Activated");
                 client.setOltIp(oltIp);
-                client.setOltInterface(oltIp);
+                client.setOltInterface(lastStdout(jobId));
                 client.setIpAssigned(ipAddress);
                 client.setBackend("HiveConnect");
                 client.setSsidName(ssidName + " 2.4/5G");
@@ -722,9 +722,9 @@ public class AutoProvisionController {
     // [[ ------------ TEST AREA --------------]]
     @Async("AsyncExecutor")
     @GetMapping("/lastStdout")
-    public String lastStdout() {
+    public String lastStdout(String jobId) {
 
-        String ansibleApiUrl = "" + playbookGetJobUrl + "1146" + "/stdout";
+        String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
         String error = "";
 
