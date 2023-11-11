@@ -547,6 +547,15 @@ public class AutoProvisionController {
         String subscriberExistsString = "Subscriber " + deviceName + " already exist in Netbox";
         String ipAddressExistsString = "IP Address '" + ipAddress + "' already exist in Netbox";
 
+        if (checkingResponse.contains(onuCheckString))
+            System.out.println("Onu OK");
+
+        if (checkingResponse.contains(subscriberCheckString))
+            System.out.println("subscriber OK");
+
+        if (checkingResponse.contains(ipAddressCheckString))
+            System.out.println("ip OK");
+
         if (checkingResponse.contains(onuCheckString) && checkingResponse.contains(subscriberCheckString)
                 && checkingResponse.contains(ipAddressCheckString)) {
             Map<String, String> response = new HashMap<>();
@@ -572,7 +581,7 @@ public class AutoProvisionController {
             response.put("status", "500");
             response.put("message", errors.toString());
             response.put("body", responseBody);
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 
     }
