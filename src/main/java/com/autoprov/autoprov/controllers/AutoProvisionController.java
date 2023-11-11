@@ -337,6 +337,7 @@ public class AutoProvisionController {
         String packageType = params.get("packageType");
         String upstream = params.get("upstream");
         String downstream = params.get("downstream");
+        String packageName = "";
 
         Optional<PackageType> optionalPackage = packageRepo.findBypackageId(packageType);
         if (optionalPackage.isPresent()) {
@@ -344,6 +345,8 @@ public class AutoProvisionController {
             System.out.println(packageT.toString());
             upstream = packageT.getUpstream();
             downstream = packageT.getDownstream();
+            packageName = packageT.getName();
+
         }
 
         String ansibleApiUrl = playbookMonitoringApiUrl + "launch/";
@@ -369,7 +372,7 @@ public class AutoProvisionController {
                 "\\nprovisioned_by: HiveConnect " +
                 "\\nvlan_690_ip: " + devicesRepo.getPublicIpBySerialNumber(serialNumber).get(0).getPublicIp() +
                 "\\nonu_private_ip: " + ipAddress +
-                "\\npackage_type: " + packageType +
+                "\\npackage_type: " + packageName +
                 "\\ndownstream: " + downstream +
                 "\\nupstream: " + upstream + "\""
                 +

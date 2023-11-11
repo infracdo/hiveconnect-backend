@@ -24,6 +24,9 @@ public class PackageType {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Column(name = "name", unique = true)
+    private String name;
+
     @Column(name = "package_type_id", unique = true)
     private String packageTypeId;
 
