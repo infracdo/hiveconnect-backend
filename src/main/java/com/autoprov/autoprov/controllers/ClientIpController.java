@@ -22,12 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autoprov.autoprov.services.ClientIpService;
 import com.autoprov.autoprov.services.IpListService;
-
-import com.autoprov.autoprov.domain.Client;
-import com.autoprov.autoprov.domain.IpAddress;
-
-import com.autoprov.autoprov.repositories.ClientRepository;
-import com.autoprov.autoprov.repositories.IpAddressRepository;
+import com.autoprov.autoprov.entity.inetDomain.Client;
+import com.autoprov.autoprov.entity.ipamDomain.IpAddress;
+import com.autoprov.autoprov.repositories.inetRepositories.ClientRepository;
+import com.autoprov.autoprov.repositories.ipamRepositories.IpAddressRepository;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -60,14 +58,17 @@ public class ClientIpController {
 
     @Async("asyncExecutor")
     @GetMapping("/getClients")
-
     public CompletableFuture<List<Client>> getClients() {
-        List<Client> Client = new ArrayList<>();
-        clientRepo.findAll().forEach(Client::add);
-
-        System.out.println("getClients invoked");
-        return CompletableFuture.completedFuture(Client);
+        return CompletableFuture.completedFuture(clientRepo.getNewClients());
     }
+
+    // public CompletableFuture<List<Client>> getClients() {
+    // List<Client> Client = new ArrayList<>();
+    // clientRepo.findAll().forEach(Client::add);
+
+    // System.out.println("getClients invoked");
+    // return CompletableFuture.completedFuture(Client);
+    // }
 
     @Async("asyncExecutor")
     @GetMapping("/getClientById/{id}")
@@ -92,7 +93,7 @@ public class ClientIpController {
             @RequestBody Map<String, String> params) {
         // Retrieve the entity object
         System.out.println("Update Client Invoked for " + params.get("serialNumber"));
-        String site = "CDO_1";
+        String site = "CDO_1"; // TODO: dynamic site
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)

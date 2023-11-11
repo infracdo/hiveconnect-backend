@@ -1,4 +1,4 @@
-package com.autoprov.autoprov.domain;
+package com.autoprov.autoprov.entity.inetDomain;
 
 import java.sql.Date;
 
@@ -27,32 +27,47 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "accountNumber")
+    @Column(name = "account_no")
     private String accountNumber; // related to subscriber "clients" table
 
-    @Column(name = "clientName")
+    @Column(name = "name")
     private String clientName;
 
-    @Column(name = "ipAssigned", unique = true)
+    @Column(name = "ip_assigned", unique = true)
     private String ipAssigned;
 
-    @Column(name = "onuSerialNumber", unique = true)
+    @Column(name = "onu_serial_number", unique = true)
     private String onuSerialNumber;
 
-    @Column(name = "site")
-    private String site;
+    @Column(name = "area_id")
+    private Integer site;
 
-    @Column(name = "oltIp")
+    @Column(name = "olt_ip")
     private String oltIp;
 
-    @Column(name = "onuMacAddress", unique = true)
+    @Column(name = "olt_interface")
+    private String oltInterface;
+
+    @Column(name = "modem_mac_address", unique = true)
     private String onuMacAddress;
 
-    @Column(name = "deviceName", unique = true)
+    @Column(name = "subscription_name", unique = true)
     private String onuDeviceName;
 
-    @Column(name = "packageTypeId")
+    @Column(name = "package_id")
     private String packageTypeId;
+
+    @Column(name = "backend")
+    private String backend;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "ssid_name")
+    private String ssidName;
+
+    @Column(name = "ssid_pw")
+    private String ssidPw;
 
     // public void assignIp(String ip) {
     // this.ip_assigned = ip;

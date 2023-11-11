@@ -3,10 +3,10 @@ package com.autoprov.autoprov.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.autoprov.autoprov.repositories.IpAddressRepository;
-import com.autoprov.autoprov.domain.Client;
-import com.autoprov.autoprov.domain.CidrBlock;
-import com.autoprov.autoprov.repositories.ClientRepository;
+import com.autoprov.autoprov.entity.inetDomain.Client;
+import com.autoprov.autoprov.entity.ipamDomain.CidrBlock;
+import com.autoprov.autoprov.repositories.inetRepositories.ClientRepository;
+import com.autoprov.autoprov.repositories.ipamRepositories.IpAddressRepository;
 
 @Service
 public class ClientIpService {

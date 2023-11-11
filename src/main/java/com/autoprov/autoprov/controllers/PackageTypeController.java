@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.autoprov.autoprov.repositories.PackageRepository;
-import com.autoprov.autoprov.domain.PackageType;
+import com.autoprov.autoprov.entity.inetDomain.PackageType;
+import com.autoprov.autoprov.repositories.inetRepositories.PackageRepository;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -26,7 +26,7 @@ public class PackageTypeController {
     public CompletableFuture<Optional<PackageType>> findByPackageTypeId(
             @PathVariable("packageTypeId") String package_type_id) {
 
-        return CompletableFuture.completedFuture(packageRepo.findBypackageTypeId(package_type_id));
+        return CompletableFuture.completedFuture(packageRepo.findBypackageId(package_type_id));
     }
 
 }

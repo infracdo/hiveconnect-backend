@@ -1,4 +1,4 @@
-package com.autoprov.autoprov.domain;
+package com.autoprov.autoprov.entity.inetDomain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,16 +16,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Entity // labels an entity that can be used for JPA
-@Table(name = "olt")
+@Table(name = "olts")
 public class Olt {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "olt_site", unique = true)
-    private String olt_site;
+    @Column(name = "name")
+    private String olt_name;
 
-    @Column(name = "olt_ip", unique = true)
+    @Column(name = "ip", unique = true)
     private String olt_ip;
 }

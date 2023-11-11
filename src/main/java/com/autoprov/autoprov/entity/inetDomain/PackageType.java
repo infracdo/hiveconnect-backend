@@ -1,4 +1,4 @@
-package com.autoprov.autoprov.domain;
+package com.autoprov.autoprov.entity.inetDomain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Entity // labels an entity that can be used for JPA
-@Table(name = "packageTypes")
+@Table(name = "packages")
 
 public class PackageType {
 
@@ -27,9 +27,9 @@ public class PackageType {
     @Column(name = "package_type_id", unique = true)
     private String packageTypeId;
 
-    @Column(name = "upstream")
+    @Column(name = "max_speed")
     private String upstream;
 
-    @Column(name = "downstream")
+    @Column(name = "cir")
     private String downstream;
 }

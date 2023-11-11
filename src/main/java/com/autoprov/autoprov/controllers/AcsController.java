@@ -1,11 +1,13 @@
 package com.autoprov.autoprov.controllers;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.apache.tomcat.util.json.JSONParser;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,32 +26,46 @@ import com.fasterxml.jackson.databind.util.JSONPObject;
 import io.micrometer.core.ipc.http.HttpSender.Response;
 import io.swagger.v3.core.util.Json;
 
+import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
+
+import com.autoprov.autoprov.entity.acsDomain.Device;
+
 @CrossOrigin(origins = "*")
 @RestController
 public class AcsController {
 
+    @Autowired
+    private DeviceRepository DeviceRepo;
+
+    private static String acsApiUrl = "http://172.91.0.136:7547/";
+
     // Exposed for HiveApp ----------------------------------------
     @Async("AsyncExecutor")
     @GetMapping("/getRogueDevices")
-    public static ResponseEntity<List> getRougeDevices() {
-        // TODO: Call to ACS to Disconnect Wan2
-        String apiUrl = "http://172.91.0.136:7547/getRogueDevices";
+    public CompletableFuture<List<Device>> getRougeDevices() {
 
-        RestTemplate restTemplate = new RestTemplate();
-        List response = restTemplate.getForObject(apiUrl, List.class);
+        List<Device> Device = new ArrayList<>();
+        DeviceRepo.findByGroup("unassigned").forEach(Device::add);
 
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return CompletableFuture.completedFuture(Device);
+
+        // String apiUrl = acsApiUrl + "getRogueDevices";
+
+        // RestTemplate restTemplate = new RestTemplate();
+        // List response = restTemplate.getForObject(apiUrl, List.class);
+
+        // return ResponseEntity.status(HttpStatus.OK).body(response);
 
     }
 
     // Exposed for HiveApp (end) ----------------------------------------
 
-    // -------------------Exposed APIs for Connect-Disconnect
+    // [[[[[[---------------Exposed APIs for Connect-Disconnect
     @Async("AsyncExecutor")
     @PostMapping("/temporaryDisconnectClient")
     public static ResponseEntity<Map<String, String>> disconnectClient(@RequestBody Map<String, String> params) {
         // TODO: Call to ACS to Disconnect Wan2
-        String apiUrl = "http://172.91.0.136:7547/toggleWan";
+        String apiUrl = acsApiUrl + "toggleWan";
 
         // Create headers with Content-Type set to application/json
         HttpHeaders headers = new HttpHeaders();
@@ -100,7 +116,7 @@ public class AcsController {
     @PostMapping("/reconnectClient")
     public static ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<String, String> params) {
         // TODO: Call to ACS to Disconnect Wan2
-        String apiUrl = "http://172.91.0.136:7547/toggleWan";
+        String apiUrl = acsApiUrl + "toggleWan";
 
         // Create headers with Content-Type set to application/json
         HttpHeaders headers = new HttpHeaders();
@@ -151,7 +167,7 @@ public class AcsController {
     public static ResponseEntity<Map<String, String>> permanentDisconnectClient(
             @RequestBody Map<String, String> params) {
         // TODO: Call to ACS to REMOVE WAN2
-        String apiUrl = "http://172.91.0.136:7547/deleteWanInstance";
+        String apiUrl = acsApiUrl + "deleteWanInstance";
 
         // Create headers with Content-Type set to application/json
         HttpHeaders headers = new HttpHeaders();
@@ -194,12 +210,14 @@ public class AcsController {
         }
     }
 
-    // ----------- Controller Functions ---- On ERRORS
+    // ]]]]]]---------------Exposed APIs for Connect-Disconnect
+
+    // [[[[[[-------------- Controller Functions ---- On ERRORS
 
     // Rollback WAN2, delete WAN2. Applicable after succeeding errors
 
     static String deleteWanInstance(String serialNumber) {
-        String apiUrl = "http://172.91.0.136:7547/deleteWanInstance";
+        String apiUrl = acsApiUrl + "deleteWanInstance";
 
         // Create headers with Content-Type set to application/json
         HttpHeaders headers = new HttpHeaders();
@@ -227,7 +245,7 @@ public class AcsController {
 
     // Rollback SSID, return to default. Applicable after succeeding erors
     public static String rollbackSsid(String serialNumber) {
-        String apiUrl = "http://172.91.0.136:7547/rollbackSsid";
+        String apiUrl = acsApiUrl + "rollbackSsid";
 
         // Create headers with Content-Type set to application/json
         HttpHeaders headers = new HttpHeaders();
@@ -252,10 +270,13 @@ public class AcsController {
         return "HiveConnect: ACS Server SSID Rollback pushed for " + serialNumber;
     }
 
-    // ----------- Controller Functions ---- On Success
+    // ]]]]]]-------------- Controller Functions ---- On ERRORS
+
+    // [[[[[[-------------- Controller Functions ---- On SUCCESS
+
     // Unrogue ONU on ACS
     public static String onuOnboarded(String serialNumber) {
-        String apiUrl = "http://172.91.0.136:7547/onuOnboarded";
+        String apiUrl = acsApiUrl + "onuOnboarded";
 
         // Create headers with Content-Type set to application/json
         HttpHeaders headers = new HttpHeaders();
@@ -282,7 +303,7 @@ public class AcsController {
 
     // Set inform interval for 600 seconds Post Successful Provisioning
     public static String setInformIntervalPostProv(String serialNumber) {
-        String apiUrl = "http://172.91.0.136:7547/setInformInterval";
+        String apiUrl = acsApiUrl + "setInformInterval";
 
         // Create headers with Content-Type set to application/json
         HttpHeaders headers = new HttpHeaders();
@@ -307,5 +328,16 @@ public class AcsController {
 
         return "Provisioning Complete";
     }
+    // ]]]]]]-------------- Controller Functions ---- On SUCCESS
+
+    // [[[[[[-------------- Database Interactions
+
+    public String setParent(String parent, String serialNumber) {
+
+        DeviceRepo.updateParentBySerialNumber(parent, serialNumber);
+        return "Successful";
+    }
+
+    // ]]]]]]-------------- Database Interactions
 
 }

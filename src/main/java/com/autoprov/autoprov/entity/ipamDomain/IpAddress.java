@@ -1,4 +1,4 @@
-package com.autoprov.autoprov.domain;
+package com.autoprov.autoprov.entity.ipamDomain;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,12 +29,12 @@ public class IpAddress {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "ipAddress", unique = true)
+    @Column(name = "ip_address", unique = true)
     private String ipAddress;
 
     private String status;
 
-    @Column(name = "accountNumber")
+    @Column(name = "account_no")
     private String accountNumber; // related to subscriber "clients" table
 
     private String type;
