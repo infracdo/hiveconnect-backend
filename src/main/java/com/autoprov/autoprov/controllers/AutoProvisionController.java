@@ -34,6 +34,7 @@ import com.autoprov.autoprov.controllers.AcsController;
 import com.autoprov.autoprov.entity.inetDomain.Client;
 import com.autoprov.autoprov.entity.inetDomain.PackageType;
 import com.autoprov.autoprov.entity.ipamDomain.IpAddress;
+import com.autoprov.autoprov.repositories.acsRepositories.DevicesRepository;
 import com.autoprov.autoprov.repositories.inetRepositories.ClientRepository;
 import com.autoprov.autoprov.repositories.inetRepositories.PackageRepository;
 import com.autoprov.autoprov.repositories.ipamRepositories.IpAddressRepository;
@@ -65,6 +66,9 @@ public class AutoProvisionController {
 
     @Autowired
     private PackageRepository packageRepo;
+
+    @Autowired
+    private DevicesRepository devicesRepo;
 
     // General Exposed Endpoints ----------------------------
     @Async("AsyncExecutor")
@@ -111,7 +115,7 @@ public class AutoProvisionController {
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         Integer vlanId = ipAddressData.get().getVlanId();
 
-        String acsPushResponse = executeHiveAutoProv(accountNo, clientName, serialNumber, defaultGateway,
+        String acsPushResponse = executeInetAutoProv(accountNo, clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
 
         if (acsPushResponse.contains("Successful")) { // TODO: revert to monitoring for INET
@@ -132,12 +136,124 @@ public class AutoProvisionController {
         // return acsPushResponse;
 
     }
+
+    public ResponseEntity<Map<String, String>> executeInetMonitoring(String accountNo, String serialNumber,
+            String macAddress,
+            String clientName,
+            String onu_private_ip, String packageType, String upstream, String downstream, String oltIp)
+            throws JsonMappingException, JsonProcessingException, InterruptedException {
+
+        if (packageType.equals("RES10mbps")) {
+            upstream = "15000";
+            downstream = "15000";
+        }
+
+        String ansibleApiUrl = playbookMonitoringApiUrl + "/launch";
+        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+
+        String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
+        System.out.println(deviceName);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String requestBody = "{\n" +
+                "\"job_template\": \"9\",\n" +
+                "\"ask_variables_on_launch\": \"true\",\n" +
+                "\"extra_vars\": \"---" +
+                "\\nserial_number: " + serialNumber +
+                "\\ndevice_name: " + deviceName +
+                "\\nmac_address: " + macAddress +
+                "\\nolt_ip: " + oltIp +
+                "\\naccount_number: " + accountNo + // TODO: add actual account number
+                "\\nstatus: Activated " +
+                "\\nonu_private_ip: " + onu_private_ip +
+                "\\npackage_type: " + packageType +
+                "\\ndownstream: " + downstream +
+                "\\nupstream: " + upstream + "\""
+                +
+                "}";
+        System.out.println(requestBody);
+
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(ansibleApiUrl, HttpMethod.POST, requestEntity,
+                String.class);
+
+        System.out.println("HiveConnect: Ansible executed");
+
+        if (response.getStatusCode() == HttpStatus.CREATED) {
+            System.out.println("Request successful. Response: " + response.getBody());
+
+            Optional<Client> optionalClient = clientRepo.findClientBySerialNumber(serialNumber);
+            if (optionalClient.isPresent()) {
+                Client client = optionalClient.get();
+                client.setOnuDeviceName(deviceName);
+                clientRepo.save(client);
+            }
+
+        } else {
+            System.out.println("Request failed. Response: " + response.getStatusCode());
+            return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        TimeUnit.SECONDS.sleep(150);
+
+        ResponseEntity lastJobStatus = lastJobStatus(clientName);
+
+        if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
+            ipAddRepo.associateIpAddressToAccountNumber(accountNo, onu_private_ip);
+            AcsController.setInformIntervalPostProv(serialNumber);
+            AcsController.onuOnboarded(serialNumber);
+            return lastJobStatus;
+        } else {
+            AcsController.deleteWanInstance(serialNumber);
+            AcsController.rollbackSsid(serialNumber);
+
+            return lastJobStatus;
+        }
+    }
+
+    public String executeInetAutoProv(String accountNumber, String clientName, String serialNumber,
+            String defaultGateway,
+            String ipAddress,
+            Integer vlanId) {
+        // Define the API URL
+        String apiUrl = acsApiUrl + "executeAutoConfig";
+
+        // Create headers with Content-Type set to application/json
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Create a JSON request body
+        StringBuilder jsonBody = new StringBuilder();
+
+        jsonBody.append("{");
+        jsonBody.append("\"clientName\":\"" + clientName + "\",");
+        jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
+        jsonBody.append("\"defaultGateway\":\"" + defaultGateway + "\",");
+        jsonBody.append("\"ipAddress\":\"" + ipAddress + "\",");
+        jsonBody.append("\"vlanId\":\"" + vlanId + "\"");
+        jsonBody.append("}");
+
+        String jsonRequestBody = jsonBody.toString();
+        System.out.println(jsonRequestBody);
+        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+
+        System.out.println("HiveConnect: ACS Push executed");
+        System.out.println("Response: " + jsonResponse);
+
+        return jsonResponse;
+    }
     // API for INET (end) ----------------------------------------------
 
     // APIs for HiveApp ----------------------------------------------
     @Async("AsyncExecutor")
     @PostMapping("/executeAutoConfig")
-    public ResponseEntity<Map<String, String>> executeAutoConfigAPI(@RequestBody Map<String, String> params)
+    public ResponseEntity<Map<String, String>> executeHiveAutoConfig(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String networkType = "";
@@ -173,7 +289,7 @@ public class AutoProvisionController {
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         Integer vlanId = ipAddressData.get().getVlanId();
 
-        String acsResponse = executeHiveAutoProv(accountNo, clientName, serialNumber, defaultGateway,
+        String acsResponse = executeInetAutoProv(accountNo, clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
 
         if (acsResponse.contains("Successful")) {
@@ -196,39 +312,6 @@ public class AutoProvisionController {
     // APIs for HiveApp (end) ----------------------------------------------
 
     // AutoProvisioning
-    public String executeHiveAutoProv(String accountNumber, String clientName, String serialNumber,
-            String defaultGateway,
-            String ipAddress,
-            Integer vlanId) {
-        // Define the API URL
-        String apiUrl = acsApiUrl + "executeAutoConfig";
-
-        // Create headers with Content-Type set to application/json
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        // Create a JSON request body
-        StringBuilder jsonBody = new StringBuilder();
-
-        jsonBody.append("{");
-        jsonBody.append("\"clientName\":\"" + clientName + "\",");
-        jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
-        jsonBody.append("\"defaultGateway\":\"" + defaultGateway + "\",");
-        jsonBody.append("\"ipAddress\":\"" + ipAddress + "\",");
-        jsonBody.append("\"vlanId\":\"" + vlanId + "\"");
-        jsonBody.append("}");
-
-        String jsonRequestBody = jsonBody.toString();
-        System.out.println(jsonRequestBody);
-        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
-
-        System.out.println("HiveConnect: ACS Push executed");
-        System.out.println("Response: " + jsonResponse);
-
-        return jsonResponse;
-    }
 
     @Async("AsyncExecutor")
     @PostMapping("/executeMonitoring")
@@ -277,6 +360,8 @@ public class AutoProvisionController {
                 "\\nolt_ip: " + oltIp +
                 "\\naccount_number: " + accountNo + // TODO: add actual account number
                 "\\nstatus: Activated " +
+                "\\nprovisioned_by: HiveConnect " +
+                "\\nvlan_690_ip: " + devicesRepo.getPublicIpBySerialNumber(serialNumber).get(0).getPublicIp() +
                 "\\nonu_private_ip: " + ipAddress +
                 "\\npackage_type: " + packageType +
                 "\\ndownstream: " + downstream +
@@ -285,55 +370,65 @@ public class AutoProvisionController {
                 "}";
         System.out.println(requestBody);
 
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(ansibleApiUrl,
+                HttpMethod.POST, requestEntity,
+                String.class);
+
+        System.out.println("HiveConnect: Ansible executed");
+
+        if (response.getStatusCode() == HttpStatus.CREATED) {
+            System.out.println("Request successful. Response: " + response.getBody());
+
+        } else {
+            System.out.println("Request failed. Response: " + response.getStatusCode());
+            return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        TimeUnit.SECONDS.sleep(150);
+
+        ResponseEntity lastJobStatus = lastJobStatus(clientName);
+
+        if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
+            // finalize and mark everything to be activated
+            ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
+            AcsController.setInformIntervalPostProv(serialNumber);
+            AcsController.onuOnboarded(serialNumber);
+
+            String ssidName = clientName.replace(" ", "_");
+            String password = "" + ssidName + "1234";
+
+            Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
+            if (optionalClient.isPresent()) {
+                Client client = optionalClient.get();
+                client.setOnuDeviceName(deviceName);
+                client.setOnuSerialNumber(serialNumber);
+                client.setOnuMacAddress(macAddress);
+                client.setStatus("Activated");
+                client.setOltIp(oltIp);
+                client.setIpAssigned(ipAddress);
+                client.setBackend("HiveConnect");
+                client.setSsidName(ssidName + " 2.4/5G");
+                client.setSsidPw(password);
+                clientRepo.save(client);
+            }
+
+            return lastJobStatus;
+        } else {
+            AcsController.deleteWanInstance(serialNumber);
+            AcsController.rollbackSsid(serialNumber);
+
+            return lastJobStatus;
+        }
+
         // [[[[[[[------ALL GREEN TEST------]]]]]]] ------------------------------
 
-        // HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
-
         // String ssidName = clientName.replace(" ", "_") + " 2.4/5G";
-        // String password = "" + clientName + "1234";
-
-        // Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
-        // if (optionalClient.isPresent()) {
-        // Client client = optionalClient.get();
-        // client.setOnuDeviceName(deviceName);
-        // client.setOnuSerialNumber(serialNumber);
-        // client.setOnuMacAddress(macAddress);
-        // client.setStatus("Activated");
-        // client.setOltIp(oltIp);
-        // client.setBackend("HiveConnect");
-        // client.setSsidName(ssidName);
-        // client.setSsidPw(password);
-        // clientRepo.save(client);
-        // }
-
-        // RestTemplate restTemplate = new RestTemplate();
-        // ResponseEntity<String> response = restTemplate.exchange(ansibleApiUrl,
-        // HttpMethod.POST, requestEntity,
-        // String.class);
-
-        // System.out.println("HiveConnect: Ansible executed");
-
-        // if (response.getStatusCode() == HttpStatus.CREATED) {
-        // System.out.println("Request successful. Response: " + response.getBody());
-
-        // } else {
-        // System.out.println("Request failed. Response: " + response.getStatusCode());
-        // return (ResponseEntity<Map<String, String>>)
-        // ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
-        // }
-        // TimeUnit.SECONDS.sleep(150);
-
-        // ResponseEntity lastJobStatus = lastJobStatus(clientName);
-
-        // if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
-        // // finalize and mark everything to be activated
-        // ipAddRepo.associateIpAddressToAccountNumber(accountNo, onu_private_ip);
-        // AcsController.setInformIntervalPostProv(serialNumber);
-        // AcsController.onuOnboarded(serialNumber);
-
-        // String ssidName = clientName.replace(" ", "_");
         // String password = "" + ssidName + "1234";
 
+        // ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
+
         // Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
         // if (optionalClient.isPresent()) {
         // Client client = optionalClient.get();
@@ -341,56 +436,23 @@ public class AutoProvisionController {
         // client.setOnuSerialNumber(serialNumber);
         // client.setOnuMacAddress(macAddress);
         // client.setStatus("Activated");
+        // client.setIpAssigned(ipAddress);
         // client.setOltIp(oltIp);
-        // client.setIpAssigned(onu_private_ip);
         // client.setBackend("HiveConnect");
         // client.setSsidName(ssidName + " 2.4/5G");
         // client.setSsidPw(password);
         // clientRepo.save(client);
         // }
 
-        // return lastJobStatus;
-        // } else {
-        // AcsController.deleteWanInstance(serialNumber);
-        // AcsController.rollbackSsid(serialNumber);
+        // Map<String, String> response = new HashMap<>();
+        // response.put("status", "200");
+        // response.put("message", "Provisioning and Monitoring Successful!");
+        // response.put("ssid_name", ssidName + " 2.4G/5G");
+        // response.put("ssid_pw", password);
 
-        // return lastJobStatus;
-        // }
+        // return ResponseEntity.status(HttpStatus.OK).body(response);
 
         // [[[[[[[------ALL GREEN TEST------]]]]]]] ------------------------------
-
-        String ssidName = clientName.replace(" ", "_") + " 2.4/5G";
-        String password = "" + ssidName + "1234";
-
-        ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
-
-        Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
-        if (optionalClient.isPresent()) {
-            Client client = optionalClient.get();
-            client.setOnuDeviceName(deviceName);
-            client.setOnuSerialNumber(serialNumber);
-            client.setOnuMacAddress(macAddress);
-            client.setStatus("Activated");
-            client.setIpAssigned(ipAddress);
-            client.setOltIp(oltIp);
-            client.setBackend("HiveConnect");
-            client.setSsidName(ssidName + " 2.4/5G");
-            client.setSsidPw(password);
-            clientRepo.save(client);
-        }
-
-        Map<String, String> response = new HashMap<>();
-        response.put("status", "200");
-        response.put("message", "Provisioning and Monitoring Successful!");
-        response.put("ssid_name", ssidName + " 2.4G/5G");
-        response.put("ssid_pw", password);
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-
-    public ResponseEntity<Map<String, String>> executeInetMonitoring(@RequestBody Map<String, String> params)
-            throws JsonMappingException, JsonProcessingException, InterruptedException {
-
     }
 
     @Async("AsyncExecutor")
