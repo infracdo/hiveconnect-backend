@@ -722,7 +722,7 @@ public class AutoProvisionController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    // [[ ------------ TEST AREA --------------]]
+    // Get OLT Interface
     @Async("AsyncExecutor")
     @GetMapping("/lastStdout")
     public String lastStdout(String jobId) {
@@ -761,6 +761,19 @@ public class AutoProvisionController {
             return "Match not found";
         }
 
+    }
+
+    // Simulate error
+    // Get OLT Interface
+    @Async("AsyncExecutor")
+    @PostMapping("/simulateHiveMonitoringError")
+    public ResponseEntity<Map<String, String>> simulateError(String jobId) {
+        Map<String, String> response = new HashMap<>();
+        response.put("awx_job_id", jobId);
+        response.put("status", "500");
+        response.put("message", "Error on Mac Address Filtering!");
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
 }
