@@ -526,6 +526,9 @@ public class AutoProvisionController {
         JsonNode jsonNode = objectMapper.readTree(responseBody);
         jobId = jsonNode.get("id").asText();
 
+        System.out.println(responseBody);
+        System.out.println("Checking job id" + jobId);
+
         TimeUnit.SECONDS.sleep(15);
 
         ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
