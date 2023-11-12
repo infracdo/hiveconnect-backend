@@ -132,13 +132,6 @@ public class ClientController {
     }
 
     @Async("asyncExecutor")
-    @DeleteMapping("/resetHiveDummy")
-    public String deleteClient() {
-        clientRepo.resetHiveDummy();
-        return "Hive Demo Dummies cleared!";
-    }
-
-    @Async("asyncExecutor")
     @DeleteMapping("/deleteClient/{id}")
     public String deleteClient(@PathVariable Long id) {
         clientIpService.deleteClientById(id);
