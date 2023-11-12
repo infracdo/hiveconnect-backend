@@ -338,6 +338,32 @@ public class AcsController {
         return "Successful";
     }
 
+    public static String getWan2MacAddress(String serialNumber) {
+        String apiUrl = acsApiUrl + "getWan2MacAddress";
+
+        // Create headers with Content-Type set to application/json
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Create a JSON request body
+        StringBuilder jsonBody = new StringBuilder();
+
+        jsonBody.append("{");
+        jsonBody.append("\"serialNumber\":\"" + serialNumber + "\"");
+        jsonBody.append("}");
+
+        String jsonRequestBody = jsonBody.toString();
+        System.out.println(jsonRequestBody);
+        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+
+        System.out.println("HiveConnect: Saving WAN2 Mac Address of  " + serialNumber);
+        System.out.println("Response: " + jsonResponse);
+
+        return "HiveConnect: Saving WAN2 Mac Address of " + serialNumber;
+    }
+
     // ]]]]]]-------------- Database Interactions
 
 }

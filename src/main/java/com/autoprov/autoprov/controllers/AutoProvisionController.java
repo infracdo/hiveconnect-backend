@@ -364,6 +364,10 @@ public class AutoProvisionController {
         headers.set("Authorization", "Bearer " + accessToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
+        TimeUnit.SECONDS.sleep(20);
+        AcsController.getWan2MacAddress(serialNumber);
+        TimeUnit.SECONDS.sleep(20);
+
         String requestBody = "{\n" +
                 "\"job_template\": \"15\",\n" +
                 "\"ask_variables_on_launch\": \"true\",\n" +
@@ -406,6 +410,7 @@ public class AutoProvisionController {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
         TimeUnit.SECONDS.sleep(180);
 
         ResponseEntity lastJobStatus = lastJobStatus(clientName, jobId);
