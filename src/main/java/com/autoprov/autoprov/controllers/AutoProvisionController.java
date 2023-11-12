@@ -23,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,6 +35,7 @@ import com.autoprov.autoprov.controllers.AcsController;
 import com.autoprov.autoprov.entity.inetDomain.Client;
 import com.autoprov.autoprov.entity.inetDomain.PackageType;
 import com.autoprov.autoprov.entity.ipamDomain.IpAddress;
+import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.acsRepositories.DevicesRepository;
 import com.autoprov.autoprov.repositories.inetRepositories.ClientRepository;
 import com.autoprov.autoprov.repositories.inetRepositories.PackageRepository;
@@ -69,6 +71,9 @@ public class AutoProvisionController {
 
     @Autowired
     private DevicesRepository devicesRepo;
+
+    @Autowired
+    private DeviceRepository deviceRepo;
 
     // General Exposed Endpoints ----------------------------
     @Async("AsyncExecutor")
@@ -427,6 +432,8 @@ public class AutoProvisionController {
                 client.setSsidName(ssidName + " 2.4/5G");
                 client.setSsidPw(password);
                 clientRepo.save(client);
+
+                deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
             }
 
             return lastJobStatus;
@@ -764,7 +771,6 @@ public class AutoProvisionController {
     }
 
     // Simulate error
-    // Get OLT Interface
     @Async("AsyncExecutor")
     @PostMapping("/simulateHiveMonitoringError")
     public ResponseEntity<Map<String, String>> simulateError(String jobId) {
@@ -774,6 +780,14 @@ public class AutoProvisionController {
         response.put("message", "Error on Mac Address Filtering!");
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @Async("asyncExecutor")
+    @DeleteMapping("/resetHiveDummy")
+    public String deleteClient() {
+        clientRepo.resetHiveDummy();
+        deviceRepo.resetHiveDummy();
+        return "Hive Demo Dummy Accounts cleared! Test Devices reverted to rogue!";
     }
 
 }

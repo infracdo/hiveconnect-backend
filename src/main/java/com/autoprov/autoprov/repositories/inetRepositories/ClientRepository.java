@@ -34,4 +34,7 @@ public interface ClientRepository extends CrudRepository<Client, Long> {
     @Query(value = "SELECT * from clients where backend = \'HiveConnect\' or backend = \'Hive Connect\' ", nativeQuery = true)
     List<Client> getHiveConnectClients();
 
+    @Query(value = "UPDATE clients SET modem_mac_address = NULL, ip_assigned = NULL, status = \'New\', subscription_name = NULL, backend = NULL, olt_interface = NULL, olt_ip = NULL, onu_serial_number = NULL, ssid_name = NULL, ssid_pw = NULL WHERE account_no LIKE HIVE%", nativeQuery = true)
+    void resetHiveDummy();
+
 }
