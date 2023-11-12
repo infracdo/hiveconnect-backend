@@ -4,6 +4,7 @@ import java.util.List;
 
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -27,6 +28,7 @@ public interface DeviceRepository extends CrudRepository<Device, Long> {
     @Query("update Device u set u.parent = ?1 where u.serial_number=?1")
     void updateParentBySerialNumber(String parent, String onuSerialNumber);
 
+    @Modifying
     @Query("update Device u set u.parent = \'unassigned\' where u.parent LIKE 'Hive%'")
     void resetHiveDummy();
 
