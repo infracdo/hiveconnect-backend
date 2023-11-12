@@ -29,7 +29,7 @@ public interface DeviceRepository extends CrudRepository<Device, Long> {
     void updateParentBySerialNumber(String parent, String onuSerialNumber);
 
     @Modifying
-    @Query("update Device u set u.parent = \'unassigned\' where u.parent LIKE 'Hive%'")
+    @Query("update Device u set u.parent = \'unassigned\' where u.parent LIKE \'Hive Test\'")
     void resetHiveDummy();
 
 }
