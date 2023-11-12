@@ -27,7 +27,7 @@ public interface DeviceRepository extends CrudRepository<Device, Long> {
     @Query("SELECT d FROM Device d WHERE d.serial_number=?1")
     Device getBySerialNum(String serial_number);
 
-    @Query("update Device u set u.parent = ?1 where u.serial_number=?1")
+    @Query("update Device u set u.parent = ?1 where u.serial_number=?2")
     void updateParentBySerialNumber(String parent, String onuSerialNumber);
 
     @Modifying
