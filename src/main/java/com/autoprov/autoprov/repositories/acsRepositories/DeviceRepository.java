@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 
 import com.autoprov.autoprov.entity.acsDomain.Device;
 
+import jakarta.transaction.Transactional;
+
 @Repository
 public interface DeviceRepository extends CrudRepository<Device, Long> {
     @Query("SELECT d FROM Device d WHERE d.serial_number=?1")
@@ -29,6 +31,7 @@ public interface DeviceRepository extends CrudRepository<Device, Long> {
     void updateParentBySerialNumber(String parent, String onuSerialNumber);
 
     @Modifying
+    @Transactional
     @Query("update Device u set u.parent = \'unassigned\' where u.parent LIKE \'Hive Test\'")
     void resetHiveDummy();
 
