@@ -783,7 +783,7 @@ public class AutoProvisionController {
     }
 
     @Async("asyncExecutor")
-    @DeleteMapping("/resetHiveDummy")
+    @PostMapping("/resetHiveDummy")
     public String deleteClient() {
         clientRepo.resetHiveDummy();
         deviceRepo.resetHiveDummy();
