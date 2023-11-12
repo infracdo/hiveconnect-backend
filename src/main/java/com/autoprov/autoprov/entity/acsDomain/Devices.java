@@ -21,4 +21,11 @@ public class Devices {
         return publicIp;
     }
 
+    @Column(name = "second_wan_mac")
+    private String secondWanMac;
+
+    public String getSecondWanMac() {
+        return secondWanMac;
+    }
+
 }

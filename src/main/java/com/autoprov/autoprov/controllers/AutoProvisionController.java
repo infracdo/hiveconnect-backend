@@ -375,7 +375,8 @@ public class AutoProvisionController {
                 "\\naccount_number: " + accountNo + // TODO: add actual account number
                 "\\nstatus: Activated " +
                 "\\nprovisioned_by: HiveConnect " +
-                "\\nvlan_690_ip: " + devicesRepo.getPublicIpBySerialNumber(serialNumber).get(0).getPublicIp() +
+                "\\nvlan_690_ip: " + devicesRepo.getOnuInfoBySerialNumber(serialNumber).get(0).getPublicIp() +
+                "\\nvlan_2010_mac: " + devicesRepo.getOnuInfoBySerialNumber(serialNumber).get(0).getSecondWanMac() +
                 "\\nonu_private_ip: " + ipAddress +
                 "\\npackage_type: " + packageName +
                 "\\ndownstream: " + downstream +
