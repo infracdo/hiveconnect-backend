@@ -131,7 +131,7 @@ public class AutoProvisionController {
             return responseEntity;
 
         } else {
-            AcsController.deleteWanInstance(serialNumber);
+            // AcsController.deleteWanInstance(serialNumber);
             AcsController.rollbackSsid(serialNumber);
             Map<String, String> response = new HashMap<>();
             response.put("Status", "500");
