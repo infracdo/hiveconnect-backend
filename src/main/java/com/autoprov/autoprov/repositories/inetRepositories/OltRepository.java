@@ -1,5 +1,6 @@
 package com.autoprov.autoprov.repositories.inetRepositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Query;
@@ -14,4 +15,8 @@ public interface OltRepository extends CrudRepository<Olt, Long> {
 
     @Query(value = "SELECT * from olts where ip=?1", nativeQuery = true)
     Optional<Olt> findByOlt_ip(String olt_ip);
+
+    @Query(value = "SELECT * from olts", nativeQuery = true)
+    List<Olt> getAllOlts();
+
 }

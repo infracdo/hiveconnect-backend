@@ -1,6 +1,7 @@
 package com.autoprov.autoprov.controllers;
 
 import java.util.Optional;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,12 @@ public class OltController {
             @PathVariable("oltIp") String oltIp) {
 
         return CompletableFuture.completedFuture(oltRepo.findByOlt_ip(oltIp));
+    }
+
+    @Async("asyncExecutor")
+    @GetMapping("/getAllOlts")
+    public CompletableFuture<List<Olt>> getAllOlts() {
+        return CompletableFuture.completedFuture(oltRepo.getAllOlts());
     }
 
     // @Async("asyncExecutor")

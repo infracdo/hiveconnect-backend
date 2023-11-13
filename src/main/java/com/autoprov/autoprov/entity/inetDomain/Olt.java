@@ -24,8 +24,11 @@ public class Olt {
     private Long id;
 
     @Column(name = "name")
-    private String olt_name;
+    private String oltName;
 
     @Column(name = "ip", unique = true)
-    private String olt_ip;
+    private String oltIp;
+
+    @Column(name = "node_id")
+    private String nodeId;
 }
