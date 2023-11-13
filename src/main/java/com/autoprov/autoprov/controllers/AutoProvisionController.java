@@ -550,7 +550,7 @@ public class AutoProvisionController {
         System.out.println(responseBody); // TODO: retrieve all string because limited string is printed
         System.out.println("Checking job id" + jobId);
 
-        TimeUnit.SECONDS.sleep(30);
+        TimeUnit.SECONDS.sleep(50);
 
         ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
         requestEntity = new HttpEntity<>(requestBody, headers);
