@@ -160,7 +160,17 @@ public class AutoProvisionController {
             downstream = "15000";
         }
 
-        String ansibleApiUrl = playbookMonitoringApiUrl + "/launch";
+        String packageName = "";
+        Optional<PackageType> optionalPackage = packageRepo.findBypackageId(packageType);
+        if (optionalPackage.isPresent()) {
+            PackageType packageT = optionalPackage.get();
+            System.out.println(packageT.toString());
+
+            packageName = packageT.getName();
+
+        }
+
+        String ansibleApiUrl = playbookMonitoringApiUrl + "launch/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
@@ -169,6 +179,7 @@ public class AutoProvisionController {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
+
         TimeUnit.SECONDS.sleep(20);
         AcsController.getWan2MacAddress(serialNumber);
         TimeUnit.SECONDS.sleep(20);
@@ -187,7 +198,7 @@ public class AutoProvisionController {
                 "\\nvlan_690_ip: " + devicesRepo.getOnuInfoBySerialNumber(serialNumber).get(0).getPublicIp() +
                 "\\nvlan_2010_mac: " + devicesRepo.getOnuInfoBySerialNumber(serialNumber).get(0).getSecondWanMac() +
                 "\\nonu_private_ip: " + onu_private_ip +
-                "\\npackage_type: " + packageType +
+                "\\npackage_type: " + packageName +
                 "\\ndownstream: " + downstream +
                 "\\nupstream: " + upstream + "\""
                 +
@@ -197,11 +208,11 @@ public class AutoProvisionController {
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> response = restTemplate.exchange(ansibleApiUrl, HttpMethod.POST, requestEntity,
+        ResponseEntity<String> response = restTemplate.exchange(ansibleApiUrl,
+                HttpMethod.POST, requestEntity,
                 String.class);
 
         System.out.println("HiveConnect: Ansible executed");
-
         String jobId;
         if (response.getStatusCode() == HttpStatus.CREATED) {
             System.out.println("Request successful. Response: " + response.getBody());
@@ -211,25 +222,41 @@ public class AutoProvisionController {
             JsonNode jsonNode = objectMapper.readTree(responseBody);
             jobId = jsonNode.get("id").asText();
 
-            Optional<Client> optionalClient = clientRepo.findClientBySerialNumber(serialNumber);
-            if (optionalClient.isPresent()) {
-                Client client = optionalClient.get();
-                client.setOnuDeviceName(deviceName);
-                clientRepo.save(client);
-            }
-
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        TimeUnit.SECONDS.sleep(150);
 
         ResponseEntity lastJobStatus = lastJobStatus(clientName, jobId);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
+            // finalize and mark everything to be activated
             ipAddRepo.associateIpAddressToAccountNumber(accountNo, onu_private_ip);
             AcsController.setInformIntervalPostProv(serialNumber);
             AcsController.onuOnboarded(serialNumber);
+
+            String ssidName = clientName.replace(" ", "_");
+
+            String oltInterface = getOltInterface(jobId);
+
+            Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
+            if (optionalClient.isPresent()) {
+                Client client = optionalClient.get();
+                client.setOnuDeviceName(deviceName);
+                client.setOnuMacAddress(macAddress);
+                client.setStatus("Activated");
+                client.setIpAssigned(onu_private_ip);
+                client.setBucketId("100");
+                clientRepo.save(client);
+
+                HiveClientService.addHiveNewClient(accountNo, client.getClientName(), serialNumber, deviceName,
+                        macAddress, oltIp, oltInterface,
+                        onu_private_ip,
+                        ssidName, packageType);
+
+                deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
+            }
+
             return lastJobStatus;
         } else {
             AcsController.deleteWanInstance(serialNumber);
@@ -570,7 +597,7 @@ public class AutoProvisionController {
 
             checkingResponse = responseEntity.getBody();
 
-            if (checkingResponse == null) {
+            if (checkingResponse == null || !checkingResponse.contains("PLAY RECAP")) {
                 System.out.println("Retrying Get Job " + jobId);
                 continue;
             }
@@ -665,7 +692,7 @@ public class AutoProvisionController {
 
             responseBody = responseEntity.getBody();
 
-            if (responseBody == null) {
+            if (responseBody == null || !responseBody.contains("PLAY RECAP")) {
                 System.out.println("Retrying Get Job " + jobId);
                 continue;
             }
