@@ -780,7 +780,8 @@ public class AutoProvisionController {
         }
 
         Pattern vsolInterfaceBindPattern = Pattern
-                .compile("<span class=\"ansi32\">ok: \\[netbox\\] =&gt; {([\\s\\S]*?)}</span>");
+                .compile("<span class=\"ansi32\">ok: \\[netbox\\] =&gt; \\{([\\s\\S]*?)}</span>");
+
         Pattern stdoutPattern = Pattern.compile("<span class=\"ansi32\">stdout: ([\\s\\S]*?)</span>");
 
         // Create Matchers
