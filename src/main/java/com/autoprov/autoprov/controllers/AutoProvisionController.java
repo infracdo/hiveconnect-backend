@@ -761,22 +761,47 @@ public class AutoProvisionController {
 
         String responseBody = responseEntity.getBody();
 
-        // Define the pattern
-        Pattern pattern = Pattern.compile("\"olt_interface_bind\\.stdout\"\\s*:\\s*\"([^\"]+)\"");
+        // ------------Guangda OLT Interface Check
+        System.out.println("OLT Interface Check: Guangda");
+        Pattern guangdaInterfaceBindPattern = Pattern.compile("\"olt_interface_bind\\.stdout\"\\s*:\\s*\"([^\"]+)\"");
 
         // Create a matcher
-        Matcher matcher = pattern.matcher(responseBody);
+        Matcher guangdaMatcher = guangdaInterfaceBindPattern.matcher(responseBody);
 
         // Find the match
-        if (matcher.find()) {
+        if (guangdaMatcher.find()) {
             // Extract the desired value
-            String oltInterfaceBind = matcher.group(1);
-            System.out.println("olt_interface_bind.stdout: " + oltInterfaceBind);
-            return oltInterfaceBind;
+            String guangdaOltInterface = guangdaMatcher.group(1);
+            System.out.println("Guangda olt_interface_bind.stdout: " + guangdaOltInterface);
+            return guangdaOltInterface;
         } else {
-            System.out.println("Match not found");
-            return "Match not found";
+            System.out.println("OLT Interface Check: Guangda OLT Interface Match not found");
         }
+
+        Pattern vsolInterfaceBindPattern = Pattern
+                .compile("<span class=\"ansi32\">ok: \\[netbox\\] =&gt; {([\\s\\S]*?)}</span>");
+        Pattern stdoutPattern = Pattern.compile("<span class=\"ansi32\">stdout: ([\\s\\S]*?)</span>");
+
+        // Create Matchers
+        Matcher oltInterfaceBindObjectMatcher = vsolInterfaceBindPattern.matcher(responseBody);
+        Matcher stdoutMatcher = stdoutPattern.matcher(responseBody);
+
+        // Find olt_interface_bind
+        if (oltInterfaceBindObjectMatcher.find()) {
+            String oltInterfaceBindObject = oltInterfaceBindObjectMatcher.group(1).trim();
+
+            if (stdoutMatcher.find()) {
+                String vsolOltInterface = stdoutMatcher.group(1).trim();
+                System.out.println("VSOL olt_interface_bind:stdout: " + vsolOltInterface);
+                return vsolOltInterface;
+            } else {
+                System.out.println("OLT Interface Check: VSOL OLT Interface Match not found");
+            }
+        } else {
+            System.out.println("olt_interface_bind not found");
+        }
+
+        return "olt_interface_bind not found";
 
     }
 
