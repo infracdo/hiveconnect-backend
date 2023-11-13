@@ -552,7 +552,7 @@ public class AutoProvisionController {
 
         TimeUnit.SECONDS.sleep(50);
 
-        ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
+        ansibleApiUrl = "" + playbookGetJobUrl + "1306" + "/stdout";
         requestEntity = new HttpEntity<>(requestBody, headers);
 
         restTemplate = new RestTemplate();
