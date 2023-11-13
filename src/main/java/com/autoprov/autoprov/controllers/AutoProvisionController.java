@@ -670,7 +670,7 @@ public class AutoProvisionController {
     public ResponseEntity<Map<String, String>> lastJobStatus(String clientName, String jobId)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
-        String ansibleApiUrl = playbookGetJobUrl + "/" + jobId + "/job-events";
+        String ansibleApiUrl = playbookGetJobUrl + jobId;
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
 
         HttpHeaders headers = new HttpHeaders();
