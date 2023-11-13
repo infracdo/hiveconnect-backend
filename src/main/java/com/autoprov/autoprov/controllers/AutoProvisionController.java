@@ -572,34 +572,69 @@ public class AutoProvisionController {
         StringBuilder errors = new StringBuilder();
         Boolean errorExisting = false;
 
-        Pattern onuExistPattern = Pattern.compile("ONU exist in '(.*?)'");
-        Pattern subscriberNotOnboardedPattern = Pattern.compile("Subscriber '(.*?)' is not yet onboarded");
-        Pattern ipAddressNotOnboardedPattern = Pattern.compile("IP Address '(.*?)' is not yet onboarded");
+        // Pattern onuExistPattern = Pattern.compile("ONU exist in '(.*?)'");
+        // Pattern subscriberNotOnboardedPattern = Pattern.compile("Subscriber '(.*?)'
+        // is not yet onboarded");
+        // Pattern ipAddressNotOnboardedPattern = Pattern.compile("IP Address '(.*?)' is
+        // not yet onboarded");
 
-        // Use Matcher to find matches
-        Matcher onuExistMatcher = onuExistPattern.matcher(responseBody);
-        Matcher subscriberNotOnboardedMatcher = subscriberNotOnboardedPattern.matcher(responseBody);
-        Matcher ipAddressNotOnboardedMatcher = ipAddressNotOnboardedPattern.matcher(responseBody);
+        // // Use Matcher to find matches
+        // Matcher onuExistMatcher = onuExistPattern.matcher(responseBody);
+        // Matcher subscriberNotOnboardedMatcher =
+        // subscriberNotOnboardedPattern.matcher(responseBody);
+        // Matcher ipAddressNotOnboardedMatcher =
+        // ipAddressNotOnboardedPattern.matcher(responseBody);
 
-        // Print results
-        if (onuExistMatcher.find()) {
-            System.out.println("ONU exists in: " + onuExistMatcher.group(1));
-        } else {
+        // // Print results
+        // if (onuExistMatcher.find()) {
+        // System.out.println("ONU exists in: " + onuExistMatcher.group(1));
+        // } else {
+        // errors.append("Wrong OLT selected.");
+        // errorExisting = true;
+        // }
+
+        // if (subscriberNotOnboardedMatcher.find()) {
+        // System.out.println("Subscriber not onboarded: " +
+        // subscriberNotOnboardedMatcher.group(1));
+        // } else {
+        // errors.append("Subscriber already exists.");
+        // errorExisting = true;
+        // }
+
+        // if (ipAddressNotOnboardedMatcher.find()) {
+        // System.out.println("IP Address not onboarded: " +
+        // ipAddressNotOnboardedMatcher.group(1));
+        // } else {
+        // errors.append("IpAddress already exists!");
+        // errorExisting = true;
+        // }
+
+        String onuCheckString = "ONU exist in '" + oltIp + "'";
+        String subscriberCheckString = "Subscriber '" + deviceName + "' is not yet onboarded";
+        String ipAddressCheckString = "IP Address '" + ipAddress + "' is not yet onboarded";
+
+        String wrongOnuString = "Wrong OLT Selected";
+        String subscriberExistsString = "Subscriber '" + deviceName + "' already exist in Netbox";
+        String ipAddressExistsString = "IP Address '" + ipAddress + " ' already exist in Netbox";
+
+        if (checkingResponse.contains(onuCheckString))
+            System.out.println("Onu OK");
+        else {
             errors.append("Wrong OLT selected.");
             errorExisting = true;
         }
 
-        if (subscriberNotOnboardedMatcher.find()) {
-            System.out.println("Subscriber not onboarded: " + subscriberNotOnboardedMatcher.group(1));
-        } else {
-            errors.append("Subscriber already exists.");
+        if (checkingResponse.contains(subscriberCheckString))
+            System.out.println("subscriber OK");
+        else {
+            errors.append("Subscriber Exists.");
             errorExisting = true;
         }
 
-        if (ipAddressNotOnboardedMatcher.find()) {
-            System.out.println("IP Address not onboarded: " + ipAddressNotOnboardedMatcher.group(1));
-        } else {
-            errors.append("IpAddress already exists!");
+        if (checkingResponse.contains(ipAddressCheckString))
+            System.out.println("ip OK");
+        else {
+            errors.append("IP Address conflict.");
             errorExisting = true;
         }
 
@@ -620,28 +655,6 @@ public class AutoProvisionController {
             response.put("body", checkingResponse);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-
-        // String onuCheckString = "ONU exist in '" + oltIp + "'";
-        // String onuCheckString = "ONU exist in '" + oltIp + "'";
-        // String subscriberCheckString = "Subscriber '" + deviceName + "' is not yet
-        // onboarded";
-        // String ipAddressCheckString = "IP Address '" + ipAddress + "' is not yet
-        // onboarded";
-
-        // String wrongOnuString = "Wrong OLT Selected";
-        // String subscriberExistsString = "Subscriber '" + deviceName + "' already
-        // exist in Netbox";
-        // String ipAddressExistsString = "IP Address '" + ipAddress + " ' already exist
-        // in Netbox";
-
-        // if (checkingResponse.contains(onuCheckString))
-        // System.out.println("Onu OK");
-
-        // if (checkingResponse.contains(subscriberCheckString))
-        // System.out.println("subscriber OK");
-
-        // if (checkingResponse.contains(ipAddressCheckString))
-        // System.out.println("ip OK");
 
     }
 
