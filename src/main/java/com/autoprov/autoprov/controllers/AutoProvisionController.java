@@ -689,6 +689,11 @@ public class AutoProvisionController {
             responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
                     String.class);
 
+            if (responseEntity.getStatusCode() == HttpStatus.NOT_FOUND) {
+                System.out.println("Retrying Get Job " + jobId);
+                continue;
+            }
+
             responseBody = responseEntity.getBody();
 
             if (responseBody == null || !responseBody.contains("PLAY RECAP")) {
