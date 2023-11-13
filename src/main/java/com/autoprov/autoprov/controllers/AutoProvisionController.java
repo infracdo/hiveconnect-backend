@@ -25,6 +25,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -437,7 +438,7 @@ public class AutoProvisionController {
                 client.setOnuMacAddress(macAddress);
                 client.setStatus("Activated");
                 client.setOltIp(oltIp);
-                client.setOltInterface(lastStdout(jobId));
+                client.setOltInterface(getOltInterface(jobId));
                 client.setIpAssigned(ipAddress);
                 client.setBackend("HiveConnect");
                 client.setSsidName(ssidName + " 2.4/5G");
@@ -741,8 +742,8 @@ public class AutoProvisionController {
 
     // Get OLT Interface
     @Async("AsyncExecutor")
-    @GetMapping("/lastStdout")
-    public String lastStdout(String jobId) {
+    @GetMapping("/getOltInterface")
+    public String getOltInterface(String jobId) {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
@@ -825,4 +826,11 @@ public class AutoProvisionController {
         return "Hive Demo Dummy Accounts cleared! Test Devices reverted to rogue!";
     }
 
+    // ------------------------- TEST AREA ------------------------
+
+    @Async("AsyncExecutor")
+    @GetMapping("/getOltInterface/{jobId}")
+    public String testGetOltInterface(@PathVariable("jobId") String jobId) {
+        return getOltInterface(jobId);
+    }
 }
