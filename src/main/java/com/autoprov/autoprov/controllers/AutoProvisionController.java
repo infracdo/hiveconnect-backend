@@ -559,102 +559,74 @@ public class AutoProvisionController {
         System.out.println(responseBody); // TODO: retrieve all string because limited string is printed
         System.out.println("Checking job id" + jobId);
 
-        TimeUnit.SECONDS.sleep(50);
-
         ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
         requestEntity = new HttpEntity<>(requestBody, headers);
 
         restTemplate = new RestTemplate();
-        responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
-                String.class);
-        String checkingResponse = responseEntity.getBody();
-        System.out.println(checkingResponse);
-        StringBuilder errors = new StringBuilder();
-        Boolean errorExisting = false;
+        String checkingResponse = null;
 
-        // Pattern onuExistPattern = Pattern.compile("ONU exist in '(.*?)'");
-        // Pattern subscriberNotOnboardedPattern = Pattern.compile("Subscriber '(.*?)'
-        // is not yet onboarded");
-        // Pattern ipAddressNotOnboardedPattern = Pattern.compile("IP Address '(.*?)' is
-        // not yet onboarded");
+        while (checkingResponse == null || !checkingResponse.contains("PLAY RECAP")) {
+            responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+                    String.class);
+            checkingResponse = responseEntity.getBody();
 
-        // // Use Matcher to find matches
-        // Matcher onuExistMatcher = onuExistPattern.matcher(responseBody);
-        // Matcher subscriberNotOnboardedMatcher =
-        // subscriberNotOnboardedPattern.matcher(responseBody);
-        // Matcher ipAddressNotOnboardedMatcher =
-        // ipAddressNotOnboardedPattern.matcher(responseBody);
+            System.out.println(checkingResponse);
+            StringBuilder errors = new StringBuilder();
+            Boolean errorExisting = false;
 
-        // // Print results
-        // if (onuExistMatcher.find()) {
-        // System.out.println("ONU exists in: " + onuExistMatcher.group(1));
-        // } else {
-        // errors.append("Wrong OLT selected.");
-        // errorExisting = true;
-        // }
+            String onuCheckString = "ONU exist in '" + oltIp + "'";
+            String subscriberCheckString = "Subscriber '" + deviceName + "' is not yet onboarded";
+            String ipAddressCheckString = "IP Address '" + ipAddress + "' is not yet onboarded";
 
-        // if (subscriberNotOnboardedMatcher.find()) {
-        // System.out.println("Subscriber not onboarded: " +
-        // subscriberNotOnboardedMatcher.group(1));
-        // } else {
-        // errors.append("Subscriber already exists.");
-        // errorExisting = true;
-        // }
+            String wrongOnuString = "Wrong OLT Selected";
+            String subscriberExistsString = "Subscriber '" + deviceName + "' already exist in Netbox";
+            String ipAddressExistsString = "IP Address '" + ipAddress + " ' already exist in Netbox";
 
-        // if (ipAddressNotOnboardedMatcher.find()) {
-        // System.out.println("IP Address not onboarded: " +
-        // ipAddressNotOnboardedMatcher.group(1));
-        // } else {
-        // errors.append("IpAddress already exists!");
-        // errorExisting = true;
-        // }
+            if (checkingResponse.contains(onuCheckString))
+                System.out.println("Onu OK");
+            else {
+                errors.append("Wrong OLT selected.");
+                errorExisting = true;
+            }
 
-        String onuCheckString = "ONU exist in '" + oltIp + "'";
-        String subscriberCheckString = "Subscriber '" + deviceName + "' is not yet onboarded";
-        String ipAddressCheckString = "IP Address '" + ipAddress + "' is not yet onboarded";
+            if (checkingResponse.contains(subscriberCheckString))
+                System.out.println("subscriber OK");
+            else {
+                errors.append("Subscriber Exists.");
+                errorExisting = true;
+            }
 
-        String wrongOnuString = "Wrong OLT Selected";
-        String subscriberExistsString = "Subscriber '" + deviceName + "' already exist in Netbox";
-        String ipAddressExistsString = "IP Address '" + ipAddress + " ' already exist in Netbox";
+            if (checkingResponse.contains(ipAddressCheckString))
+                System.out.println("ip OK");
+            else {
+                errors.append("IP Address conflict.");
+                errorExisting = true;
+            }
 
-        if (checkingResponse.contains(onuCheckString))
-            System.out.println("Onu OK");
-        else {
-            errors.append("Wrong OLT selected.");
-            errorExisting = true;
+            if (!errorExisting) {
+                Map<String, String> response = new HashMap<>();
+                response.put("status", "200");
+                response.put("message", "All Clear. Proceed to Provisioning!");
+                response.put("body", checkingResponse);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+
+            }
+
+            else {
+
+                Map<String, String> response = new HashMap<>();
+                response.put("status", "500");
+                response.put("message", errors.toString());
+                response.put("body", checkingResponse);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
         }
 
-        if (checkingResponse.contains(subscriberCheckString))
-            System.out.println("subscriber OK");
-        else {
-            errors.append("Subscriber Exists.");
-            errorExisting = true;
-        }
-
-        if (checkingResponse.contains(ipAddressCheckString))
-            System.out.println("ip OK");
-        else {
-            errors.append("IP Address conflict.");
-            errorExisting = true;
-        }
-
-        if (!errorExisting) {
-            Map<String, String> response = new HashMap<>();
-            response.put("status", "200");
-            response.put("message", "All Clear. Proceed to Provisioning!");
-            response.put("body", checkingResponse);
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-
-        }
-
-        else {
-
-            Map<String, String> response = new HashMap<>();
-            response.put("status", "500");
-            response.put("message", errors.toString());
-            response.put("body", checkingResponse);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "500");
+        response.put("message", "No Result");
+        response.put("body", checkingResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
 
     }
 
