@@ -30,22 +30,6 @@ public class ClientIpService {
 
     }
 
-    public static String addNewClient(String accountNumber, String clientName, String packageTypeId,
-            String onuSerialNumber,
-            String onuMacAddress, String oltIp) {
-        Client newClient = Client.builder()
-                .accountNumber(accountNumber)
-                .clientName(clientName)
-                .onuSerialNumber(onuSerialNumber)
-                .onuMacAddress(onuMacAddress)
-                .oltIp(oltIp)
-                .packageTypeId(packageTypeId)
-                .build();
-        clientRepo.save(newClient);
-
-        return "Successful";
-    }
-
     public String deleteClientById(Long id) {
         try {
             clientRepo.deleteById(id);

@@ -1,4 +1,4 @@
-package com.autoprov.autoprov.repositories.inetRepositories;
+package com.autoprov.autoprov.repositories.hiveRepositories;
 
 import java.util.List;
 import java.util.Optional;
@@ -7,15 +7,15 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
-import com.autoprov.autoprov.entity.inetDomain.Client;
+import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 
 import jakarta.transaction.Transactional;
 
-public interface ClientRepository extends CrudRepository<Client, Long> {
+public interface HiveClientRepository extends CrudRepository<HiveClient, Long> {
 
-    List<Client> findAll();
+    List<HiveClient> findAll();
 
-    Optional<Client> findByAccountNumber(String accountNumber);
+    Optional<HiveClient> findByAccountNumber(String accountNumber);
 
     @Modifying
     @Query("update Client u set u.ipAssigned = ?1, u.onuSerialNumber = ?2 where u.id = ?3")
@@ -26,17 +26,17 @@ public interface ClientRepository extends CrudRepository<Client, Long> {
     void updateClientByOnuSerialNum(String ipAssigned, String onuSerialNumber);
 
     @Query(value = "SELECT * from clients where onu_serial_number LIKE ?1%", nativeQuery = true)
-    Optional<Client> findClientBySerialNumber(String onuSerialNumber);
+    Optional<HiveClient> findClientBySerialNumber(String onuSerialNumber);
 
     @Query(value = "SELECT * from clients where status = \'New\'", nativeQuery = true)
-    List<Client> getNewClients();
+    List<HiveClient> getNewClients();
 
-    @Query(value = "SELECT * from clients where bucket_id = 100", nativeQuery = true)
-    List<Client> getHiveConnectClients();
+    @Query(value = "SELECT * from clients where backend = \'HiveConnect\' or backend = \'Hive Connect\' ", nativeQuery = true)
+    List<HiveClient> getHiveConnectClients();
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE clients SET modem_mac_address = NULL, ip_assigned = NULL, status = \'New\', subscription_name = NULL, WHERE location LIKE \'Hive Test\'", nativeQuery = true)
+    @Query(value = "UPDATE clients SET modem_mac_address = NULL, ip_assigned = NULL, status = \'New\', subscription_name = NULL, backend = NULL, olt_interface = NULL, olt_ip = NULL, onu_serial_number = NULL, ssid_name = NULL, ssid_pw = NULL WHERE location LIKE \'Hive Test\'", nativeQuery = true)
     void resetHiveDummy();
 
 }

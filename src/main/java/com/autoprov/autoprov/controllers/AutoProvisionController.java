@@ -33,14 +33,17 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.autoprov.autoprov.controllers.AcsController;
+import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.inetDomain.Client;
 import com.autoprov.autoprov.entity.inetDomain.PackageType;
 import com.autoprov.autoprov.entity.ipamDomain.IpAddress;
 import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.acsRepositories.DevicesRepository;
+import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.repositories.inetRepositories.ClientRepository;
 import com.autoprov.autoprov.repositories.inetRepositories.PackageRepository;
 import com.autoprov.autoprov.repositories.ipamRepositories.IpAddressRepository;
+import com.autoprov.autoprov.services.HiveClientService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -66,6 +69,9 @@ public class AutoProvisionController {
 
     @Autowired
     private ClientRepository clientRepo;
+
+    @Autowired
+    private HiveClientRepository hiveClientRepo;
 
     @Autowired
     private PackageRepository packageRepo;
@@ -430,19 +436,20 @@ public class AutoProvisionController {
 
             String ssidName = clientName.replace(" ", "_");
 
+            String oltInterface = getOltInterface(jobId);
+
             Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
             if (optionalClient.isPresent()) {
                 Client client = optionalClient.get();
                 client.setOnuDeviceName(deviceName);
-                client.setOnuSerialNumber(serialNumber);
                 client.setOnuMacAddress(macAddress);
                 client.setStatus("Activated");
-                client.setOltIp(oltIp);
-                client.setOltInterface(getOltInterface(jobId));
                 client.setIpAssigned(ipAddress);
-                client.setBackend("HiveConnect");
-                client.setSsidName(ssidName + " 2.4/5G");
+                client.setBucketId("100");
                 clientRepo.save(client);
+
+                HiveClientService.addHiveNewClient(serialNumber, deviceName, macAddress, oltIp, oltInterface, ipAddress,
+                        ssidName, packageType);
 
                 deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
             }
@@ -852,5 +859,48 @@ public class AutoProvisionController {
     @GetMapping("/getOltInterface/{jobId}")
     public String testGetOltInterface(@PathVariable("jobId") String jobId) {
         return getOltInterface(jobId);
+    }
+
+    @Async("asyncExecutor")
+    @GetMapping("/testExecuteMonitoring")
+    public String testExecuteMonitoring(@RequestBody Map<String, String> params) {
+
+        String accountNo = params.get("accountNo");
+        String clientName = params.get("clientName");
+        String serialNumber = params.get("serialNumber");
+        String macAddress = params.get("macAddress");
+        String ipAddress = ipAddRepo
+                .getOneAvailableIpAddressUnderSite("CDO_1", "Private")
+                .get(0)
+                .getIpAddress();
+        String oltIp = params.get("olt");
+        String packageType = params.get("packageType");
+        String upstream = params.get("upstream");
+        String downstream = params.get("downstream");
+
+        String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
+
+        String ssidName = clientName.replace(" ", "_");
+
+        String oltInterface = getOltInterface("1295");
+
+        Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
+        if (optionalClient.isPresent()) {
+            Client client = optionalClient.get();
+            client.setOnuDeviceName(deviceName);
+            client.setOnuMacAddress(macAddress);
+            client.setStatus("Activated");
+            client.setIpAssigned(ipAddress);
+            client.setBucketId("100");
+            clientRepo.save(client);
+
+            HiveClientService.addHiveNewClient(serialNumber, deviceName, macAddress, oltIp, oltInterface, ipAddress,
+                    ssidName, packageType);
+
+            deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
+        }
+
+        return "Check database";
+
     }
 }

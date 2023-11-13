@@ -1,4 +1,4 @@
-package com.autoprov.autoprov.entity.inetDomain;
+package com.autoprov.autoprov.entity.hiveDomain;
 
 import java.sql.Date;
 
@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity // labels an entity that can be used for JPA
 @Table(name = "clients")
-public class Client {
+public class HiveClient {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -42,6 +42,12 @@ public class Client {
     @Column(name = "area_id")
     private Integer site;
 
+    @Column(name = "olt_ip")
+    private String oltIp;
+
+    @Column(name = "olt_interface")
+    private String oltInterface;
+
     @Column(name = "modem_mac_address", unique = true)
     private String onuMacAddress;
 
@@ -51,11 +57,14 @@ public class Client {
     @Column(name = "package_id")
     private String packageTypeId;
 
-    @Column(name = "bucket_id")
-    private String bucketId;
+    @Column(name = "backend")
+    private String backend;
 
     @Column(name = "status")
     private String status;
+
+    @Column(name = "ssid_name")
+    private String ssidName;
 
     // public void assignIp(String ip) {
     // this.ip_assigned = ip;
