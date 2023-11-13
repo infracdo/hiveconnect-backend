@@ -34,7 +34,7 @@ public interface DeviceRepository extends CrudRepository<Device, Long> {
 
     @Modifying
     @Transactional
-    @Query("update device u set u.parent = \'unassigned\' where u.parent LIKE \'Hive Test\'")
+    @Query("update Device u set u.parent = \'unassigned\' where u.parent LIKE \'Hive Test\'")
     void resetHiveDummy();
 
 }
