@@ -16,12 +16,14 @@ public class HiveClientService {
         HiveClientService.hiveClientRepo = hiveClientRepo;
     }
 
-    public static String addHiveNewClient(String accountNo, String serialNumber, String deviceName, String macAddress,
+    public static String addHiveNewClient(String accountNo, String clientName, String serialNumber, String deviceName,
+            String macAddress,
             String oltIp,
             String oltInterface, String ipAddress, String ssidName, String packageTypeId) {
 
         HiveClient newHiveClient = HiveClient.builder()
                 .accountNumber(accountNo)
+                .clientName(clientName)
                 .onuSerialNumber(serialNumber)
                 .onuDeviceName(deviceName)
                 .onuMacAddress(macAddress).status("Activated")

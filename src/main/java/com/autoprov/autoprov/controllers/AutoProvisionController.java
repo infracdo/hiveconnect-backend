@@ -448,7 +448,8 @@ public class AutoProvisionController {
                 client.setBucketId("100");
                 clientRepo.save(client);
 
-                HiveClientService.addHiveNewClient(accountNo, serialNumber, deviceName, macAddress, oltIp, oltInterface,
+                HiveClientService.addHiveNewClient(accountNo, client.getClientName(), serialNumber, deviceName,
+                        macAddress, oltIp, oltInterface,
                         ipAddress,
                         ssidName, packageType);
 
@@ -895,7 +896,8 @@ public class AutoProvisionController {
             client.setBucketId("100");
             clientRepo.save(client);
 
-            HiveClientService.addHiveNewClient(accountNo, serialNumber, deviceName, macAddress, oltIp, oltInterface,
+            HiveClientService.addHiveNewClient(accountNo, client.getClientName(), serialNumber, deviceName, macAddress,
+                    oltIp, oltInterface,
                     ipAddress,
                     ssidName, packageType);
 
