@@ -566,9 +566,14 @@ public class AutoProvisionController {
         String checkingResponse = null;
 
         while (checkingResponse == null || !checkingResponse.contains("PLAY RECAP")) {
+            TimeUnit.SECONDS.sleep(10);
             responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
                     String.class);
+
             checkingResponse = responseEntity.getBody();
+
+            if (checkingResponse == null)
+                continue;
 
             System.out.println(checkingResponse);
             StringBuilder errors = new StringBuilder();
