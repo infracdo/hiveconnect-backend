@@ -684,7 +684,7 @@ public class AutoProvisionController {
         ResponseEntity<String> responseEntity = null;
         String responseBody = null;
 
-        while (responseBody == null || !responseBody.contains("PLAY RECAP")) {
+        while (responseBody == null || responseBody.contains("\"finished\": null")) {
             TimeUnit.SECONDS.sleep(10);
             responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
                     String.class);
@@ -696,7 +696,7 @@ public class AutoProvisionController {
 
             responseBody = responseEntity.getBody();
 
-            if (responseBody == null || !responseBody.contains("PLAY RECAP")) {
+            if (responseBody == null || responseBody.contains("\"finished\": null")) {
                 System.out.println("Retrying Get Job " + jobId);
                 continue;
             }
@@ -706,27 +706,15 @@ public class AutoProvisionController {
         JsonNode jsonNode = objectMapper.readTree(responseBody);
 
         // Extract last job details
-        JsonNode lastJob = jsonNode.get("summary_fields").get("last_job");
-        JsonNode lastJobIdNode = lastJob.get("id");
-        String lastJobId = lastJobIdNode.asText();
-        String lastJobStatus = lastJob.get("status").asText();
+        String lastJobStatus = jsonNode.get("status").asText();
 
         // Print the results
-        System.out.println("Job ID: " + lastJobId);
+        System.out.println("Job ID: " + jobId);
         System.out.println("Job Status: " + lastJobStatus);
-
-        if (!lastJobId.equals(jobId)) {
-            Map<String, String> response = new HashMap<>();
-            response.put("awx_job_id", jobId);
-            response.put("status", "500");
-            response.put("message", "Job Mismatch!");
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
 
         if (lastJobStatus.contains("fail")) {
 
-            ansibleApiUrl = "" + playbookGetJobUrl + lastJobId + "/job_events/?failed=True";
+            ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/job_events/?failed=True";
             requestEntity = new HttpEntity<>(requestBody, headers);
 
             restTemplate = new RestTemplate();
@@ -765,7 +753,7 @@ public class AutoProvisionController {
                 Map<String, String> response = new HashMap<>();
                 response.put("status", "500");
                 response.put("message", error.toString());
-                response.put("awx_job_id: ", lastJobId.toString());
+                response.put("awx_job_id: ", jobId.toString());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 
             }
@@ -777,7 +765,7 @@ public class AutoProvisionController {
             }
         }
 
-        ansibleApiUrl = "" + playbookGetJobUrl + lastJobId + "/stdout";
+        ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
         requestEntity = new HttpEntity<>(requestBody, headers);
 
         restTemplate = new RestTemplate();
@@ -804,9 +792,9 @@ public class AutoProvisionController {
         String newSsid = clientName.replace(" ", "_");
         String password = "" + clientName + "1234";
 
-        // return ("Job ID: " + lastJobId + "\nStatus: " + lastJobStatus + error);
+        // return ("Job ID: " + jobId + "\nStatus: " + lastJobStatus + error);
         Map<String, String> response = new HashMap<>();
-        response.put("awx_job_id", lastJobId.toString());
+        response.put("awx_job_id", jobId);
         response.put("status", "200");
         response.put("message", "Provisioning and Monitoring Successful!");
         response.put("ssid_name", newSsid + "2.4G/5G");
