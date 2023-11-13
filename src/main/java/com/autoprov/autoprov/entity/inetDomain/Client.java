@@ -66,9 +66,6 @@ public class Client {
     @Column(name = "ssid_name")
     private String ssidName;
 
-    @Column(name = "ssid_pw")
-    private String ssidPw;
-
     // public void assignIp(String ip) {
     // this.ip_assigned = ip;
     // }

@@ -428,7 +428,6 @@ public class AutoProvisionController {
             AcsController.onuOnboarded(serialNumber);
 
             String ssidName = clientName.replace(" ", "_");
-            String password = "" + ssidName + "1234";
 
             Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
             if (optionalClient.isPresent()) {
@@ -442,7 +441,6 @@ public class AutoProvisionController {
                 client.setIpAssigned(ipAddress);
                 client.setBackend("HiveConnect");
                 client.setSsidName(ssidName + " 2.4/5G");
-                client.setSsidPw(password);
                 clientRepo.save(client);
 
                 deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
