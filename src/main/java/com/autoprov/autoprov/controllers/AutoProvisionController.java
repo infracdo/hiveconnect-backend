@@ -572,8 +572,10 @@ public class AutoProvisionController {
 
             checkingResponse = responseEntity.getBody();
 
-            if (checkingResponse == null)
+            if (checkingResponse == null) {
+                System.out.println("Retrying Get Job " + jobId);
                 continue;
+            }
 
             System.out.println(checkingResponse);
             StringBuilder errors = new StringBuilder();
@@ -587,43 +589,45 @@ public class AutoProvisionController {
             String subscriberExistsString = "Subscriber '" + deviceName + "' already exist in Netbox";
             String ipAddressExistsString = "IP Address '" + ipAddress + " ' already exist in Netbox";
 
-            if (checkingResponse.contains(onuCheckString))
-                System.out.println("Onu OK");
-            else {
-                errors.append("Wrong OLT selected.");
-                errorExisting = true;
-            }
+            if (checkingResponse.contains("PLAY RECAP")) {
+                if (checkingResponse.contains(onuCheckString))
+                    System.out.println("Onu OK");
+                else {
+                    errors.append("Wrong OLT selected.");
+                    errorExisting = true;
+                }
 
-            if (checkingResponse.contains(subscriberCheckString))
-                System.out.println("subscriber OK");
-            else {
-                errors.append("Subscriber Exists.");
-                errorExisting = true;
-            }
+                if (checkingResponse.contains(subscriberCheckString))
+                    System.out.println("subscriber OK");
+                else {
+                    errors.append("Subscriber Exists.");
+                    errorExisting = true;
+                }
 
-            if (checkingResponse.contains(ipAddressCheckString))
-                System.out.println("ip OK");
-            else {
-                errors.append("IP Address conflict.");
-                errorExisting = true;
-            }
+                if (checkingResponse.contains(ipAddressCheckString))
+                    System.out.println("ip OK");
+                else {
+                    errors.append("IP Address conflict.");
+                    errorExisting = true;
+                }
 
-            if (!errorExisting) {
-                Map<String, String> response = new HashMap<>();
-                response.put("status", "200");
-                response.put("message", "All Clear. Proceed to Provisioning!");
-                response.put("body", checkingResponse);
-                return ResponseEntity.status(HttpStatus.OK).body(response);
+                if (!errorExisting) {
+                    Map<String, String> response = new HashMap<>();
+                    response.put("status", "200");
+                    response.put("message", "All Clear. Proceed to Provisioning!");
+                    response.put("body", checkingResponse);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
 
-            }
+                }
 
-            else {
+                else {
 
-                Map<String, String> response = new HashMap<>();
-                response.put("status", "500");
-                response.put("message", errors.toString());
-                response.put("body", checkingResponse);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+                    Map<String, String> response = new HashMap<>();
+                    response.put("status", "500");
+                    response.put("message", errors.toString());
+                    response.put("body", checkingResponse);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+                }
             }
         }
 
