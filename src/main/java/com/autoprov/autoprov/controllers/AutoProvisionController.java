@@ -562,13 +562,13 @@ public class AutoProvisionController {
         System.out.println(checkingResponse);
 
         // String onuCheckString = "ONU exist in '" + oltIp + "'";
-        String onuCheckString = "ONU exist in &#x27;" + oltIp + "&#x27;";
-        String subscriberCheckString = "Subscriber  &#x27;" + deviceName + "&#x27; is not yet onboarded";
-        String ipAddressCheckString = "IP Address  &#x27;" + ipAddress + "&#x27; is not yet onboarded";
+        String onuCheckString = "ONU exist in '" + oltIp + "'";
+        String subscriberCheckString = "Subscriber  '" + deviceName + "' is not yet onboarded";
+        String ipAddressCheckString = "IP Address  '" + ipAddress + "' is not yet onboarded";
 
         String wrongOnuString = "Wrong OLT Selected";
-        String subscriberExistsString = "Subscriber  &#x27;" + deviceName + "&#x27; already exist in Netbox";
-        String ipAddressExistsString = "IP Address  &#x27;" + ipAddress + " &#x27; already exist in Netbox";
+        String subscriberExistsString = "Subscriber  '" + deviceName + "' already exist in Netbox";
+        String ipAddressExistsString = "IP Address  '" + ipAddress + " ' already exist in Netbox";
 
         if (checkingResponse.contains(onuCheckString))
             System.out.println("Onu OK");
@@ -780,31 +780,22 @@ public class AutoProvisionController {
         }
 
         System.out.println(responseBody);
-        Pattern vsolInterfaceBindPattern = Pattern
-                .compile("<span class=\"ansi32\">ok: \\[netbox\\] =&gt; \\{([\\s\\S]*?)}</span>");
+        Pattern pattern = Pattern.compile("\"stdout\": \"(.*?)\"");
 
-        Pattern stdoutPattern = Pattern.compile("<span class=\"ansi32\">stdout: ([\\s\\S]*?)</span>");
+        // Create a matcher with the input string
+        Matcher matcher = pattern.matcher(responseBody);
 
-        // Create Matchers
-        Matcher oltInterfaceBindObjectMatcher = vsolInterfaceBindPattern.matcher(responseBody);
-        Matcher stdoutMatcher = stdoutPattern.matcher(responseBody);
-
-        // Find olt_interface_bind
-        if (oltInterfaceBindObjectMatcher.find()) {
-            String oltInterfaceBindObject = oltInterfaceBindObjectMatcher.group(1).trim();
-
-            if (stdoutMatcher.find()) {
-                String vsolOltInterface = stdoutMatcher.group(1).trim();
-                System.out.println("VSOL olt_interface_bind:stdout: " + vsolOltInterface);
-                return vsolOltInterface;
-            } else {
-                System.out.println("OLT Interface Check: VSOL OLT Interface Match not found");
-            }
+        // Find the first match
+        if (matcher.find()) {
+            // Extract the EPON value
+            String vsolOltInterface = matcher.group(1);
+            System.out.println("EPON Value: " + vsolOltInterface);
+            return vsolOltInterface;
         } else {
-            System.out.println("olt_interface_bind not found");
+            System.out.println("OLT Interface Check: VSOL OLT Interface Match not found");
         }
 
-        return "olt_interface_bind not found";
+        return "No OLT Interface found";
 
     }
 
