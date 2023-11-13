@@ -672,7 +672,6 @@ public class AutoProvisionController {
 
         String ansibleApiUrl = playbookMonitoringApiUrl;
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
-        String error = "";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -731,32 +730,36 @@ public class AutoProvisionController {
             String stderr = responseEntity.getBody().toString();
 
             System.out.println(responseBody);
+            StringBuilder error = new StringBuilder();
 
             try {
 
                 if (stderr.contains("Pseudo-terminal will not be allocated because stdin is not a terminal"))
-                    error = "Bad OLT-IP";
+                    error.append("Bad OLT-IP.");
 
                 if (stderr.contains("name: OLT Vendor"))
-                    error = "Bad OLT-IP; OLT-IP not live";
+                    error.append("Bad OLT-IP; OLT-IP not live.");
 
                 if (stderr.contains("Host with the same visible name"))
-                    error = "Client's device is already provisioned";
+                    error.append("Client's device is already provisioned.");
+
+                if (stderr.contains("UnboundLocalError: local variable 'name' referenced before assignment"))
+                    error.append("Device on the OLT Interface already provisioned.");
 
                 if (stderr.contains("Duplicate termination found"))
-                    error = "IP Address already assigned to someone";
+                    error.append("IP Address already assigned to someone.");
 
                 if (stderr.contains("[prometheus]: UNREACHABLE! =>"))
-                    error = "Monitoring platform Prometheus is unreachable. Try again later";
+                    error.append("Monitoring platform Prometheus is unreachable. Try again later.");
 
                 if (stderr.contains("FAILED!") && stderr.contains("mac-address-table"))
-                    error = "Error on MAC Address Filtering";
+                    error.append("Error on MAC Address Filtering.");
 
                 System.out.println("stderr: " + stderr);
 
                 Map<String, String> response = new HashMap<>();
                 response.put("status", "500");
-                response.put("message", error);
+                response.put("message", error.toString());
                 response.put("awx_job_id: ", lastJobId.toString());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 
