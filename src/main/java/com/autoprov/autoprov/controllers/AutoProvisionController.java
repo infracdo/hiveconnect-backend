@@ -779,6 +779,7 @@ public class AutoProvisionController {
             System.out.println("OLT Interface Check: Guangda OLT Interface Match not found");
         }
 
+        System.out.println(responseBody);
         Pattern vsolInterfaceBindPattern = Pattern
                 .compile("<span class=\"ansi32\">ok: \\[netbox\\] =&gt; \\{([\\s\\S]*?)}</span>");
 
