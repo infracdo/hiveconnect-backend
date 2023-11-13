@@ -29,12 +29,12 @@ public interface DeviceRepository extends CrudRepository<Device, Long> {
 
     @Modifying
     @Transactional
-    @Query(value = "update Device set parent = ?1 where serial_number=?2", nativeQuery = true)
+    @Query(value = "update device set parent = ?1 where serial_number=?2", nativeQuery = true)
     void updateParentBySerialNumber(String parent, String onuSerialNumber);
 
     @Modifying
     @Transactional
-    @Query("update Device u set u.parent = \'unassigned\' where u.parent LIKE \'Hive Test\'")
+    @Query("update device u set u.parent = \'unassigned\' where u.parent LIKE \'Hive Test\'")
     void resetHiveDummy();
 
 }
