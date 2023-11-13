@@ -693,7 +693,7 @@ public class AutoProvisionController {
                 System.out.println("Retrying Get Job " + jobId);
                 continue;
             }
-
+            System.out.println(responseBody);
             responseBody = responseEntity.getBody();
 
             if (responseBody == null || responseBody.contains("\"finished\": null")) {
