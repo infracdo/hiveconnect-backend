@@ -18,11 +18,11 @@ public interface HiveClientRepository extends CrudRepository<HiveClient, Long> {
     Optional<HiveClient> findByAccountNumber(String accountNumber);
 
     @Modifying
-    @Query("update Client u set u.ipAssigned = ?1, u.onuSerialNumber = ?2 where u.id = ?3")
+    @Query("update HiveClient u set u.ipAssigned = ?1, u.onuSerialNumber = ?2 where u.id = ?3")
     void updateClientById(String ipAssigned, String onuSerialNumber, Integer id);
 
     @Modifying
-    @Query("update Client u set u.ipAssigned = ?1 where u.onuSerialNumber = ?2")
+    @Query("update HiveClient u set u.ipAssigned = ?1 where u.onuSerialNumber = ?2")
     void updateClientByOnuSerialNum(String ipAssigned, String onuSerialNumber);
 
     @Query(value = "SELECT * from clients where onu_serial_number LIKE ?1%", nativeQuery = true)
