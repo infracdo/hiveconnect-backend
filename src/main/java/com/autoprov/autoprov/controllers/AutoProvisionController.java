@@ -563,15 +563,9 @@ public class AutoProvisionController {
         StringBuilder errors = new StringBuilder();
         Boolean errorExisting = false;
 
-        Pattern onuExistPattern = Pattern.compile("ONU exist in '10.10.0.58'");
-        Pattern subscriberNotOnboardedPattern = Pattern.compile("Subscriber 'Dual_Lepa_bw1' is not yet onboarded");
-        Pattern ipAddressNotOnboardedPattern = Pattern.compile("IP Address '100.126.0.5' is not yet onboarded");
-
-        // Pattern onuDoesNotExistPattern = Pattern.compile("Wrong OLT Selected");
-        // Pattern subscriberOnboardedPattern = Pattern.compile("Subscriber '" +
-        // deviceName + "' already exist in Netbox");
-        // Pattern ipAddressOnboardedPattern = Pattern.compile("IP Address '" +
-        // ipAddress + "' already exist in Netbox");
+        Pattern onuExistPattern = Pattern.compile("ONU exist in '(.*?)'");
+        Pattern subscriberNotOnboardedPattern = Pattern.compile("Subscriber '(.*?)' is not yet onboarded");
+        Pattern ipAddressNotOnboardedPattern = Pattern.compile("IP Address '(.*?)' is not yet onboarded");
 
         // Use Matcher to find matches
         Matcher onuExistMatcher = onuExistPattern.matcher(responseBody);
@@ -600,6 +594,24 @@ public class AutoProvisionController {
             errorExisting = true;
         }
 
+        if (!errorExisting) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "200");
+            response.put("message", "All Clear. Proceed to Provisioning!");
+            response.put("body", checkingResponse);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        }
+
+        else {
+
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "500");
+            response.put("message", errors.toString());
+            response.put("body", checkingResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+
         // String onuCheckString = "ONU exist in '" + oltIp + "'";
         // String onuCheckString = "ONU exist in '" + oltIp + "'";
         // String subscriberCheckString = "Subscriber '" + deviceName + "' is not yet
@@ -621,24 +633,6 @@ public class AutoProvisionController {
 
         // if (checkingResponse.contains(ipAddressCheckString))
         // System.out.println("ip OK");
-
-        if (!errorExisting) {
-            Map<String, String> response = new HashMap<>();
-            response.put("status", "200");
-            response.put("message", "All Clear. Proceed to Provisioning!");
-            response.put("body", checkingResponse);
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-
-        }
-
-        else {
-
-            Map<String, String> response = new HashMap<>();
-            response.put("status", "500");
-            response.put("message", errors.toString());
-            response.put("body", checkingResponse);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
 
     }
 
