@@ -22,7 +22,7 @@ public class PackageTypeController {
     private PackageRepository packageRepo;
 
     @Async("asyncExecutor")
-    @GetMapping("/checkPackageBandwidth/{packageTypeId}")
+    @GetMapping("/checkPackageDetails/{packageTypeId}")
     public CompletableFuture<Optional<PackageType>> findByPackageTypeId(
             @PathVariable("packageTypeId") String package_type_id) {
 
