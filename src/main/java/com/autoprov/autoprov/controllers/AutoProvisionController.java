@@ -424,8 +424,6 @@ public class AutoProvisionController {
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        TimeUnit.SECONDS.sleep(180);
-
         ResponseEntity lastJobStatus = lastJobStatus(clientName, jobId);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
@@ -576,58 +574,58 @@ public class AutoProvisionController {
                 System.out.println("Retrying Get Job " + jobId);
                 continue;
             }
+        }
 
-            System.out.println(checkingResponse);
-            StringBuilder errors = new StringBuilder();
-            Boolean errorExisting = false;
+        System.out.println(checkingResponse);
+        StringBuilder errors = new StringBuilder();
+        Boolean errorExisting = false;
 
-            String onuCheckString = "ONU exist in '" + oltIp + "'";
-            String subscriberCheckString = "Subscriber '" + deviceName + "' is not yet onboarded";
-            String ipAddressCheckString = "IP Address '" + ipAddress + "' is not yet onboarded";
+        String onuCheckString = "ONU exist in '" + oltIp + "'";
+        String subscriberCheckString = "Subscriber '" + deviceName + "' is not yet onboarded";
+        String ipAddressCheckString = "IP Address '" + ipAddress + "' is not yet onboarded";
 
-            String wrongOnuString = "Wrong OLT Selected";
-            String subscriberExistsString = "Subscriber '" + deviceName + "' already exist in Netbox";
-            String ipAddressExistsString = "IP Address '" + ipAddress + " ' already exist in Netbox";
+        String wrongOnuString = "Wrong OLT Selected";
+        String subscriberExistsString = "Subscriber '" + deviceName + "' already exist in Netbox";
+        String ipAddressExistsString = "IP Address '" + ipAddress + " ' already exist in Netbox";
 
-            if (checkingResponse.contains("PLAY RECAP")) {
-                if (checkingResponse.contains(onuCheckString))
-                    System.out.println("Onu OK");
-                else {
-                    errors.append("Wrong OLT selected.");
-                    errorExisting = true;
-                }
+        if (checkingResponse.contains("PLAY RECAP")) {
+            if (checkingResponse.contains(onuCheckString))
+                System.out.println("Onu OK");
+            else {
+                errors.append("Wrong OLT selected.");
+                errorExisting = true;
+            }
 
-                if (checkingResponse.contains(subscriberCheckString))
-                    System.out.println("subscriber OK");
-                else {
-                    errors.append("Subscriber Exists.");
-                    errorExisting = true;
-                }
+            if (checkingResponse.contains(subscriberCheckString))
+                System.out.println("subscriber OK");
+            else {
+                errors.append("Subscriber Exists.");
+                errorExisting = true;
+            }
 
-                if (checkingResponse.contains(ipAddressCheckString))
-                    System.out.println("ip OK");
-                else {
-                    errors.append("IP Address conflict.");
-                    errorExisting = true;
-                }
+            if (checkingResponse.contains(ipAddressCheckString))
+                System.out.println("ip OK");
+            else {
+                errors.append("IP Address conflict.");
+                errorExisting = true;
+            }
 
-                if (!errorExisting) {
-                    Map<String, String> response = new HashMap<>();
-                    response.put("status", "200");
-                    response.put("message", "All Clear. Proceed to Provisioning!");
-                    response.put("body", checkingResponse);
-                    return ResponseEntity.status(HttpStatus.OK).body(response);
+            if (!errorExisting) {
+                Map<String, String> response = new HashMap<>();
+                response.put("status", "200");
+                response.put("message", "All Clear. Proceed to Provisioning!");
+                response.put("body", checkingResponse);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
 
-                }
+            }
 
-                else {
+            else {
 
-                    Map<String, String> response = new HashMap<>();
-                    response.put("status", "500");
-                    response.put("message", errors.toString());
-                    response.put("body", checkingResponse);
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-                }
+                Map<String, String> response = new HashMap<>();
+                response.put("status", "500");
+                response.put("message", errors.toString());
+                response.put("body", checkingResponse);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
         }
 
@@ -657,10 +655,21 @@ public class AutoProvisionController {
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
-                String.class);
+        ResponseEntity<String> responseEntity = null;
+        String responseBody = null;
 
-        String responseBody = responseEntity.getBody();
+        while (responseBody == null || !responseBody.contains("PLAY RECAP")) {
+            TimeUnit.SECONDS.sleep(10);
+            responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+                    String.class);
+
+            responseBody = responseEntity.getBody();
+
+            if (responseBody == null) {
+                System.out.println("Retrying Get Job " + jobId);
+                continue;
+            }
+        }
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(responseBody);
