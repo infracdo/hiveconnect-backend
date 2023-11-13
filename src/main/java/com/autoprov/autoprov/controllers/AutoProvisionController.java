@@ -162,9 +162,12 @@ public class AutoProvisionController {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
+        TimeUnit.SECONDS.sleep(20);
+        AcsController.getWan2MacAddress(serialNumber);
+        TimeUnit.SECONDS.sleep(20);
 
         String requestBody = "{\n" +
-                "\"job_template\": \"9\",\n" +
+                "\"job_template\": \"15\",\n" +
                 "\"ask_variables_on_launch\": \"true\",\n" +
                 "\"extra_vars\": \"---" +
                 "\\nserial_number: " + serialNumber +
@@ -173,6 +176,9 @@ public class AutoProvisionController {
                 "\\nolt_ip: " + oltIp +
                 "\\naccount_number: " + accountNo + // TODO: add actual account number
                 "\\nstatus: Activated " +
+                "\\nprovisioned_by: HiveConnect " +
+                "\\nvlan_690_ip: " + devicesRepo.getOnuInfoBySerialNumber(serialNumber).get(0).getPublicIp() +
+                "\\nvlan_2010_mac: " + devicesRepo.getOnuInfoBySerialNumber(serialNumber).get(0).getSecondWanMac() +
                 "\\nonu_private_ip: " + onu_private_ip +
                 "\\npackage_type: " + packageType +
                 "\\ndownstream: " + downstream +
