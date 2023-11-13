@@ -684,7 +684,7 @@ public class AutoProvisionController {
         ResponseEntity<String> responseEntity = null;
         String responseBody = null;
 
-        while (responseBody == null || responseBody.contains("\"finished\": null")) {
+        while (responseBody == null || responseBody.contains("\"finished\":null")) {
             TimeUnit.SECONDS.sleep(10);
             responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
                     String.class);
@@ -693,10 +693,8 @@ public class AutoProvisionController {
                 System.out.println("Retrying Get Job " + jobId);
                 continue;
             }
-
             responseBody = responseEntity.getBody();
-
-            if (responseBody == null || responseBody.contains("\"finished\": null")) {
+            if (responseBody == null || responseBody.contains("\"finished\":null")) {
                 System.out.println("Retrying Get Job " + jobId);
                 continue;
             }
