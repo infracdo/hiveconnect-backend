@@ -22,8 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autoprov.autoprov.services.ClientIpService;
 import com.autoprov.autoprov.services.IpListService;
+import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.inetDomain.Client;
 import com.autoprov.autoprov.entity.ipamDomain.IpAddress;
+import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.repositories.inetRepositories.ClientRepository;
 import com.autoprov.autoprov.repositories.ipamRepositories.IpAddressRepository;
 
@@ -39,6 +41,9 @@ public class ClientController {
 
     @Autowired
     private ClientIpService clientIpService;
+
+    @Autowired
+    private HiveClientRepository hiveClientRepo;
 
     // @Async("asyncExecutor")
     // @PostMapping("/addNewClient")
@@ -65,8 +70,8 @@ public class ClientController {
 
     @Async("asyncExecutor")
     @GetMapping("/getHiveClients")
-    public CompletableFuture<List<Client>> getHiveClients() {
-        return CompletableFuture.completedFuture(clientRepo.getHiveConnectClients());
+    public CompletableFuture<List<HiveClient>> getHiveClients() {
+        return CompletableFuture.completedFuture(hiveClientRepo.getHiveConnectClients());
     }
 
     // public CompletableFuture<List<Client>> getClients() {
