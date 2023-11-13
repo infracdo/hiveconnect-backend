@@ -550,7 +550,7 @@ public class AutoProvisionController {
         System.out.println(responseBody); // TODO: retrieve all string because limited string is printed
         System.out.println("Checking job id" + jobId);
 
-        TimeUnit.SECONDS.sleep(50);
+        // TimeUnit.SECONDS.sleep(50);
 
         ansibleApiUrl = "" + playbookGetJobUrl + "1306" + "/stdout";
         requestEntity = new HttpEntity<>(requestBody, headers);
@@ -563,9 +563,9 @@ public class AutoProvisionController {
         StringBuilder errors = new StringBuilder();
         Boolean errorExisting = false;
 
-        Pattern onuExistPattern = Pattern.compile("ONU exist in '" + oltIp + "'");
-        Pattern subscriberNotOnboardedPattern = Pattern.compile("Subscriber '" + deviceName + "' is not yet onboarded");
-        Pattern ipAddressNotOnboardedPattern = Pattern.compile("IP Address '" + ipAddress + "' is not yet onboarded");
+        Pattern onuExistPattern = Pattern.compile("ONU exist in '10.10.0.58'");
+        Pattern subscriberNotOnboardedPattern = Pattern.compile("Subscriber 'Dual_Lepa_bw1' is not yet onboarded");
+        Pattern ipAddressNotOnboardedPattern = Pattern.compile("IP Address '100.126.0.5' is not yet onboarded");
 
         // Pattern onuDoesNotExistPattern = Pattern.compile("Wrong OLT Selected");
         // Pattern subscriberOnboardedPattern = Pattern.compile("Subscriber '" +
