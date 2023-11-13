@@ -539,10 +539,10 @@ public class AutoProvisionController {
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.POST, requestEntity,
+        ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.POST, requestEntity,
                 String.class);
 
-        String responseBody = responseEntity.getBody().toString();
+        String responseBody = responseEntity.getBody();
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(responseBody);
         jobId = jsonNode.get("id").asText();
@@ -558,7 +558,7 @@ public class AutoProvisionController {
         restTemplate = new RestTemplate();
         responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
                 String.class);
-        String checkingResponse = responseEntity.getBody().toString();
+        String checkingResponse = responseEntity.getBody();
         System.out.println(checkingResponse);
 
         // String onuCheckString = "ONU exist in '" + oltIp + "'";
