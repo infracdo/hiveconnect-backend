@@ -58,7 +58,6 @@ public class PackageTypeController {
         // Pattern pattern = Pattern.compile("(\\d+)(\\s*\\w*)",
         // Pattern.CASE_INSENSITIVE);
         Pattern pattern = Pattern.compile("(\\d+)(\\s*[kmg]?\\s*bps?)", Pattern.CASE_INSENSITIVE);
-
         Matcher matcher = pattern.matcher(speed);
 
         if (matcher.matches()) {
@@ -70,6 +69,9 @@ public class PackageTypeController {
                     return speed;
                 case "mbps":
                     value *= 1000; // Convert to kbps
+                    return value + " kbps";
+                case "gbps":
+                    value *= 1000000; // Convert to kbps
                     return value + " kbps";
                 case "":
                     return value + " kbps"; // Assume default is kbps
