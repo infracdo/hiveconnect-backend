@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Entity // labels an entity that can be used for JPA
-@Table(name = "client_detail")
+@Table(name = "client_details")
 public class ClientDetail {
 
     @Id
@@ -36,6 +36,8 @@ public class ClientDetail {
     @Column(name = "inst_remarks")
     private String remarks;
 
+    @Column(name = "otc")
+    private String otc;
     // public void assignIp(String ip) {
     // this.ip_assigned = ip;
     // }

@@ -26,9 +26,11 @@ import com.autoprov.autoprov.services.ClientIpService;
 import com.autoprov.autoprov.services.IpListService;
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.inetDomain.Client;
+import com.autoprov.autoprov.entity.inetDomain.ClientDetail;
 import com.autoprov.autoprov.entity.ipamDomain.IpAddress;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.repositories.inetRepositories.ClientRepository;
+import com.autoprov.autoprov.repositories.inetRepositories.ClientDetailRepository;
 import com.autoprov.autoprov.repositories.ipamRepositories.IpAddressRepository;
 
 @CrossOrigin(origins = "*")
@@ -46,6 +48,9 @@ public class ClientController {
 
     @Autowired
     private HiveClientRepository hiveClientRepo;
+
+    @Autowired
+    private ClientDetailRepository clientDetailRepo;
 
     // @Async("asyncExecutor")
     // @PostMapping("/addNewClient")
@@ -90,6 +95,18 @@ public class ClientController {
 
         System.out.println("getClients {" + id.toString() + "} invoked");
         return CompletableFuture.completedFuture(hiveClientRepo.findById(id));
+    }
+
+    @Async("asyncExecutor")
+    @GetMapping("/getOtcStatus/{id}")
+    public CompletableFuture<String> getOtcStatus(@PathVariable("id") Long id) {
+
+        Optional<HiveClient> hiveClient = hiveClientRepo.findById(id);
+        Optional<ClientDetail> otcStatusRepo = clientDetailRepo
+                .findByAccountNumber(hiveClient.get().getAccountNumber());
+        String otcStatus = otcStatusRepo.get().getStatus();
+
+        return CompletableFuture.completedFuture(otcStatus);
     }
 
     @Async("asyncExecutor")
