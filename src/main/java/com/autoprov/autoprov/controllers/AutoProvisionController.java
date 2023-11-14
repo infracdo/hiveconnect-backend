@@ -59,6 +59,8 @@ import io.micrometer.core.ipc.http.HttpSender.Response;
 public class AutoProvisionController {
     // Insert playbook invokes here
 
+    private Boolean showBody = false;
+
     private static String playbookMonitoringApiUrl = "http://172.91.10.189/api/v2/job_templates/15/";
     private static String playbookPreProvUrl = "http://172.91.10.189/api/v2/job_templates/18/";
     private static String playbookGetJobUrl = "http://172.91.10.189/api/v2/jobs/";
@@ -98,7 +100,7 @@ public class AutoProvisionController {
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String networkType = "";
-        System.out.println("HiveService: Provision executed");
+        System.out.println(">>> HiveService: Provision executed");
 
         // Prepare RequestBody Values
         String accountNo = params.get("accountNo");
@@ -164,7 +166,9 @@ public class AutoProvisionController {
         Optional<PackageType> optionalPackage = packageRepo.findBypackageId(packageType);
         if (optionalPackage.isPresent()) {
             PackageType packageT = optionalPackage.get();
-            System.out.println(packageT.toString());
+
+            if (showBody)
+                System.out.println(packageT.toString());
 
             packageName = packageT.getName();
 
@@ -174,7 +178,9 @@ public class AutoProvisionController {
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
-        System.out.println(deviceName);
+
+        if (showBody)
+            System.out.println(deviceName);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -203,7 +209,8 @@ public class AutoProvisionController {
                 "\\nupstream: " + upstream + "\""
                 +
                 "}";
-        System.out.println(requestBody);
+        if (showBody)
+            System.out.println(requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -212,10 +219,12 @@ public class AutoProvisionController {
                 HttpMethod.POST, requestEntity,
                 String.class);
 
-        System.out.println("HiveConnect: Ansible executed");
+        System.out.println(">>> HiveConnect: Ansible executed");
         String jobId;
         if (response.getStatusCode() == HttpStatus.CREATED) {
-            System.out.println("Request successful. Response: " + response.getBody());
+            System.out.println("Request successful.");
+            if (showBody)
+                System.out.println(response.getBody());
 
             String responseBody = response.getBody();
             ObjectMapper objectMapper = new ObjectMapper();
@@ -224,6 +233,8 @@ public class AutoProvisionController {
 
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
+            if (showBody)
+                System.out.println(response.getBody());
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -289,12 +300,13 @@ public class AutoProvisionController {
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
-        System.out.println(jsonRequestBody);
+        if (showBody)
+            System.out.println(jsonRequestBody);
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
 
-        System.out.println("HiveConnect: ACS Push executed");
+        System.out.println(">>> HiveConnect: ACS Push executed");
         System.out.println("Response: " + jsonResponse);
 
         return jsonResponse;
@@ -308,7 +320,7 @@ public class AutoProvisionController {
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String networkType = "";
-        System.out.println("HiveService: Provision executed");
+        System.out.println(">>> HiveService: Provision executed from HiveApp");
 
         // Prepare RequestBody Values
         String accountNo = params.get("accountNo");
@@ -376,8 +388,10 @@ public class AutoProvisionController {
                 .getOneAvailableIpAddressUnderSite("CDO_1", "Private")
                 .get(0)
                 .getIpAddress();
-        System.out.println(ipAddRepo
-                .getOneAvailableIpAddressUnderSite("CDO_1", "Private"));
+
+        if (showBody)
+            System.out.println(ipAddRepo
+                    .getOneAvailableIpAddressUnderSite("CDO_1", "Private"));
         String oltIp = params.get("olt");
         String packageType = params.get("packageType");
         String upstream = params.get("upstream");
@@ -387,7 +401,8 @@ public class AutoProvisionController {
         Optional<PackageType> optionalPackage = packageRepo.findBypackageId(packageType);
         if (optionalPackage.isPresent()) {
             PackageType packageT = optionalPackage.get();
-            System.out.println(packageT.toString());
+            if (showBody)
+                System.out.println(packageT.toString());
             upstream = packageT.getUpstream();
             downstream = packageT.getDownstream();
             packageName = packageT.getName();
@@ -398,7 +413,8 @@ public class AutoProvisionController {
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
-        System.out.println(deviceName);
+        if (showBody)
+            System.out.println(deviceName);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -427,7 +443,8 @@ public class AutoProvisionController {
                 "\\nupstream: " + upstream + "\""
                 +
                 "}";
-        System.out.println(requestBody);
+        if (showBody)
+            System.out.println(requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -436,10 +453,12 @@ public class AutoProvisionController {
                 HttpMethod.POST, requestEntity,
                 String.class);
 
-        System.out.println("HiveConnect: Ansible executed");
+        System.out.println(">>> HiveConnect: Ansible executed");
         String jobId;
         if (response.getStatusCode() == HttpStatus.CREATED) {
-            System.out.println("Request successful. Response: " + response.getBody());
+            System.out.println("Request successful.");
+            if (showBody)
+                System.out.println(response.getBody());
 
             String responseBody = response.getBody();
             ObjectMapper objectMapper = new ObjectMapper();
@@ -448,6 +467,8 @@ public class AutoProvisionController {
 
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
+            if (showBody)
+                System.out.println(response.getBody());
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -529,7 +550,7 @@ public class AutoProvisionController {
 
         String jobId;
 
-        System.out.println("HiveService: Pre-Provision Check Initialized");
+        System.out.println(">>> HiveService: Pre-Provision Check Initialized");
 
         String accountNo = params.get("accountNo");
         String clientName = params.get("clientName");
@@ -548,7 +569,9 @@ public class AutoProvisionController {
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
-        System.out.println(deviceName);
+
+        if (showBody)
+            System.out.println(deviceName);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -570,7 +593,8 @@ public class AutoProvisionController {
                 "\\nupstream: " + upstream + "\""
                 +
                 "}";
-        System.out.println(requestBody);
+        if (showBody)
+            System.out.println(requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -583,8 +607,9 @@ public class AutoProvisionController {
         JsonNode jsonNode = objectMapper.readTree(responseBody);
         jobId = jsonNode.get("id").asText();
 
-        System.out.println(responseBody); // TODO: retrieve all string because limited string is printed
-        System.out.println("Checking job id" + jobId);
+        if (showBody)
+            System.out.println(responseBody); // TODO: retrieve all string because limited string is printed
+        System.out.println("Checking Job Id " + jobId);
 
         ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
         requestEntity = new HttpEntity<>(requestBody, headers);
@@ -592,6 +617,7 @@ public class AutoProvisionController {
         restTemplate = new RestTemplate();
         String checkingResponse = null;
         StringBuilder tries = new StringBuilder();
+        System.out.println("Trying Get Job " + jobId);
         while (checkingResponse == null || !checkingResponse.contains("PLAY RECAP")) {
 
             TimeUnit.SECONDS.sleep(10);
@@ -601,14 +627,15 @@ public class AutoProvisionController {
             checkingResponse = responseEntity.getBody();
 
             if (checkingResponse == null || !checkingResponse.contains("PLAY RECAP")) {
-                System.out.println("Retrying Get Job " + jobId);
+
                 tries.append("|");
                 System.out.println(tries.toString());
                 continue;
             }
         }
 
-        System.out.println(checkingResponse);
+        if (showBody)
+            System.out.println(checkingResponse);
         StringBuilder errors = new StringBuilder();
         Boolean errorExisting = false;
 
@@ -691,25 +718,28 @@ public class AutoProvisionController {
 
         StringBuilder tries = new StringBuilder();
 
+        System.out.println("Trying Get Job " + jobId);
         while (responseBody == null || responseBody.contains("\"finished\":null")) {
             TimeUnit.SECONDS.sleep(10);
             responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
                     String.class);
 
             if (responseEntity.getStatusCode() == HttpStatus.NOT_FOUND) {
-                System.out.println("Retrying Get Job " + jobId);
+
                 tries.append("|");
                 System.out.println(tries.toString());
                 continue;
             }
             responseBody = responseEntity.getBody();
             if (responseBody == null || responseBody.contains("\"finished\":null")) {
-                System.out.println("Retrying Get Job " + jobId);
+                tries.append("|");
+                System.out.println(tries.toString());
                 continue;
             }
         }
 
-        System.out.println(responseBody);
+        if (showBody)
+            System.out.println(responseBody);
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(responseBody);
 
@@ -730,7 +760,8 @@ public class AutoProvisionController {
                     String.class);
             String stderr = responseEntity.getBody().toString();
 
-            System.out.println(responseBody);
+            if (showBody)
+                System.out.println(responseBody);
             StringBuilder error = new StringBuilder();
 
             try {
@@ -756,7 +787,7 @@ public class AutoProvisionController {
                 if (stderr.contains("FAILED!") && stderr.contains("mac-address-table"))
                     error.append("Error on MAC Address Filtering.");
 
-                System.out.println("stderr: " + stderr);
+                System.out.println("Errors: " + stderr);
 
                 Map<String, String> response = new HashMap<>();
                 response.put("status", "500");
