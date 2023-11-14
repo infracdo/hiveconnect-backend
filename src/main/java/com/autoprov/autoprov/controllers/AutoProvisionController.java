@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -640,6 +642,7 @@ public class AutoProvisionController {
         Boolean errorExisting = false;
 
         String onuCheckString = "ONU exist in " + oltIp + "";
+        String onuCheckStringAlt = "ONU exist in '" + oltIp + "'";
         String subscriberCheckString = "Subscriber '" + deviceName + "' is not yet onboarded";
         String ipAddressCheckString = "IP Address '" + ipAddress + "' is not yet onboarded";
 
@@ -648,7 +651,7 @@ public class AutoProvisionController {
         String ipAddressExistsString = "IP Address '" + ipAddress + " ' already exist in Netbox";
 
         if (checkingResponse.contains("PLAY RECAP")) {
-            if (checkingResponse.contains(onuCheckString))
+            if (checkingResponse.contains(onuCheckString) || checkingResponse.contains(onuCheckStringAlt))
                 System.out.println("Onu OK");
             else {
                 errors.append("Wrong OLT selected.");
@@ -920,6 +923,13 @@ public class AutoProvisionController {
         return "Hive Demo Dummy Accounts cleared! Test Devices reverted to rogue!";
     }
 
+    // --------- OTHER FUNCTIONS ------------
+    public String getDate() {
+        LocalDate currentDate = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String formattedDate = currentDate.format(formatter);
+        return formattedDate;
+    }
     // ------------------------- TEST AREA ------------------------
 
     @Async("AsyncExecutor")
