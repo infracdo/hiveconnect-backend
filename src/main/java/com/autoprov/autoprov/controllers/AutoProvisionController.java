@@ -125,7 +125,7 @@ public class AutoProvisionController {
 
         // ACS Processes
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
-        Integer vlanId = ipAddressData.get().getVlanId();
+        String vlanId = ipAddressData.get().getVlanId();
 
         String acsPushResponse = executeInetAutoProv(accountNo, clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
@@ -269,7 +269,7 @@ public class AutoProvisionController {
     public String executeInetAutoProv(String accountNumber, String clientName, String serialNumber,
             String defaultGateway,
             String ipAddress,
-            Integer vlanId) {
+            String vlanId) {
         // Define the API URL
         String apiUrl = acsApiUrl + "executeAutoConfig";
 
@@ -338,7 +338,7 @@ public class AutoProvisionController {
 
         // ACS Processes
         Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
-        Integer vlanId = ipAddressData.get().getVlanId();
+        String vlanId = ipAddressData.get().getVlanId();
 
         String acsResponse = executeInetAutoProv(accountNo, clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);

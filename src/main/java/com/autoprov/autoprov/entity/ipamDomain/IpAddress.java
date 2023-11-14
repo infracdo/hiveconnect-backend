@@ -38,7 +38,7 @@ public class IpAddress {
     private String accountNumber; // related to subscriber "clients" table
 
     private String type;
-    private Integer vlanId;
+    private String vlanId;
     private Boolean assignable;
     private String notes;
 

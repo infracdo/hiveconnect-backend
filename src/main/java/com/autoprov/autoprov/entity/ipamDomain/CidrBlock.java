@@ -38,7 +38,7 @@ public class CidrBlock {
     private String type;
     private String site;
     private String size;
-    private Integer vlanId;
+    private String vlanId;
     private String notes;
 
 }
