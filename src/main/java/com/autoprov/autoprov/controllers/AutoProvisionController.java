@@ -903,6 +903,50 @@ public class AutoProvisionController {
 
     }
 
+    @Async("AsyncExecutor")
+    @GetMapping("/getOltBandwidth")
+    public String[] getOltBandwidth(String jobId) {
+
+        String ansibleApiUrl = "" + playbookGetJobUrl + "1424" + "/stdout";
+        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+        String error = "";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String requestBody = "";
+        HttpEntity requestEntity = new HttpEntity<>(requestBody, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+                String.class);
+
+        String responseBody = responseEntity.getBody();
+
+        String upstreamValue = "";
+        String downstreamValue = "";
+
+        // ------------Guangda OLT Interface Check
+        Pattern pattern = Pattern.compile("\"Upstream\": \"(\\d+\\.\\d+)\".*\"Downstream\": \"(\\d+\\.\\d+)\"");
+        Matcher matcher = pattern.matcher(responseBody);
+
+        while (matcher.find()) {
+            upstreamValue = matcher.group(1);
+            downstreamValue = matcher.group(2);
+
+            System.out.println("Upstream: " + upstreamValue);
+            System.out.println("Downstream: " + downstreamValue);
+        }
+
+        String[] bandwidth = new String[2];
+        bandwidth[0] = upstreamValue;
+        bandwidth[1] = downstreamValue;
+
+        return bandwidth;
+
+    }
+
     // Simulate error
     @Async("AsyncExecutor")
     @PostMapping("/simulateHiveMonitoringError")
