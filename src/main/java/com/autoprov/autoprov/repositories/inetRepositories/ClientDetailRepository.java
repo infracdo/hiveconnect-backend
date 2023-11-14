@@ -18,5 +18,5 @@ public interface ClientDetailRepository extends CrudRepository<ClientDetail, Lon
     @Query(value = "UPDATE clients SET modem_mac_address = NULL, ip_assigned = NULL, status = \'New\', subscription_name = NULL, WHERE location = \'Hive Test\'", nativeQuery = true)
     void resetHiveDummy();
 
-    Optional<ClientDetail> findByAccountNumber(String accountNumber);
+    // Optional<ClientDetail> findByAccountNumber(String accountNumber);
 }
