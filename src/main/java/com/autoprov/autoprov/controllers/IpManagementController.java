@@ -1,5 +1,6 @@
 package com.autoprov.autoprov.controllers;
 
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,7 @@ public class IpManagementController {
 
     @Async("asyncExecutor")
     @PostMapping("/addCidrBlock")
-    public CompletableFuture<String> addCidrBlock(@RequestBody Map<String, String> params) {
+    public CompletableFuture<String> addCidrBlock(@RequestBody Map<String, String> params) throws UnknownHostException {
         String response = IpListService.addCidrBlock(params.get("CidrBlock"), params.get("AccountNumber"),
                 params.get("InternetGatewayHost"), params.get("OltIpHost"),
                 (params.get("VlanID")), params.get("Site"), params.get("Type"), params.get("Status"),
