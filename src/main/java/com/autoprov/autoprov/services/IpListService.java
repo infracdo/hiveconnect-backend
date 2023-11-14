@@ -1,6 +1,8 @@
 package com.autoprov.autoprov.services;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,7 +30,7 @@ public class IpListService {
 
     // Functions and Services
     public static String populateIpBycidrBlock(String cidrBlock, String internetGateway, Integer maskBits,
-            String oltIp, String type, String vlanId) {
+            String oltIp, String type, String vlanId) throws UnknownHostException {
 
         Integer hostRangeA = 0;
         Integer hostRangeB = 0;
@@ -68,7 +70,7 @@ public class IpListService {
         else
             oltIpHost = -1;
 
-        if (hostRangeB == 0) {
+        if (hostRangeB == getThirdOctet(ipAddress)) {
             while (hostA <= hostRangeA) {
 
                 ipAddress = cidrBlock.substring(0, (cidrBlock.indexOf(".", cidrBlock.indexOf(".") + 1) + 1))
@@ -153,7 +155,7 @@ public class IpListService {
 
     public static String addCidrBlock(String cidrBlock, String accountNumber, String internetGateway,
             String oltIp, String vlanId, String site,
-            String type, String status, String notes) {
+            String type, String status, String notes) throws UnknownHostException {
 
         Integer maskBits = Integer.parseInt(cidrBlock.substring((cidrBlock.lastIndexOf("/") + 1)));
         System.out.println(maskBits);
@@ -180,6 +182,19 @@ public class IpListService {
         // }
 
         return "Successful";
+    }
+
+    public static int getThirdOctet(String ipAddress) throws UnknownHostException {
+        InetAddress inetAddress = InetAddress.getByName(ipAddress);
+        byte[] octets = inetAddress.getAddress();
+
+        // Ensure the IP address is IPv4
+        if (octets.length == 4) {
+            // Extract the third octet (index 2 in a 0-based array)
+            return octets[2] & 0xFF; // Use bitwise AND to convert byte to unsigned int
+        } else {
+            throw new UnknownHostException("Not an IPv4 address: " + ipAddress);
+        }
     }
 
     // public static String[] defaultRemarks(Integer host, Integer hostRange,
