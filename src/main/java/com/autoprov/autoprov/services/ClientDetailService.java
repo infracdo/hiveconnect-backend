@@ -13,8 +13,4 @@ public class ClientDetailService {
         ClientDetailService.clientDetailRepo = clientDetailRepo;
     }
 
-    public void updateClientDetail(){
-        ClientDetail updateClient = clientDetailRepo.builder().
-
-    }
 }
