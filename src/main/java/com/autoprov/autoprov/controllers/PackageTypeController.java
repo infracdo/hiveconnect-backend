@@ -55,7 +55,10 @@ public class PackageTypeController {
     }
 
     public static String convertToKbps(String speed) {
-        Pattern pattern = Pattern.compile("(\\d+)(\\s*\\w*)", Pattern.CASE_INSENSITIVE);
+        // Pattern pattern = Pattern.compile("(\\d+)(\\s*\\w*)",
+        // Pattern.CASE_INSENSITIVE);
+        Pattern pattern = Pattern.compile("(\\d+)(\\s*[kmg]?\\s*bps?)", Pattern.CASE_INSENSITIVE);
+
         Matcher matcher = pattern.matcher(speed);
 
         if (matcher.matches()) {
