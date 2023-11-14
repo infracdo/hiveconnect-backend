@@ -19,7 +19,8 @@ public class HiveClientService {
     public static String addHiveNewClient(String accountNo, String clientName, String serialNumber, String deviceName,
             String macAddress,
             String oltIp,
-            String oltInterface, String ipAddress, String ssidName, String packageTypeId) {
+            String oltInterface, String ipAddress, String ssidName, String packageTypeId, String upstream,
+            String downstream) {
 
         HiveClient newHiveClient = HiveClient.builder()
                 .accountNumber(accountNo)
@@ -33,6 +34,8 @@ public class HiveClientService {
                 .backend("HiveConnect")
                 .ssidName(ssidName)
                 .packageTypeId(packageTypeId)
+                .oltReportedUpstream(upstream)
+                .oltReportedDownstream(downstream)
                 .build();
         hiveClientRepo.save(newHiveClient);
 

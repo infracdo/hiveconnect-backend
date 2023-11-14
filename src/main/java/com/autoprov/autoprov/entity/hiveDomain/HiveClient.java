@@ -57,6 +57,12 @@ public class HiveClient {
     @Column(name = "package_id")
     private String packageTypeId;
 
+    @Column(name = "olt_upstream")
+    private String oltReportedUpstream;
+
+    @Column(name = "olt_downstream")
+    private String oltReportedDownstream;
+
     @Column(name = "backend")
     private String backend;
 

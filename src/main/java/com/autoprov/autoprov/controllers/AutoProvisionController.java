@@ -252,6 +252,8 @@ public class AutoProvisionController {
 
             String oltInterface = getOltInterface(jobId);
 
+            String[] bandwidth = getOltBandwidth(jobId);
+
             Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
             if (optionalClient.isPresent()) {
                 Client client = optionalClient.get();
@@ -265,7 +267,7 @@ public class AutoProvisionController {
                 HiveClientService.addHiveNewClient(accountNo, client.getClientName(), serialNumber, deviceName,
                         macAddress, oltIp, oltInterface,
                         ipAddress,
-                        ssidName, packageType);
+                        ssidName, packageType, bandwidth[0], bandwidth[1]);
 
                 deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
             }
@@ -485,6 +487,7 @@ public class AutoProvisionController {
             String ssidName = clientName.replace(" ", "_");
 
             String oltInterface = getOltInterface(jobId);
+            String[] bandwidth = getOltBandwidth(jobId);
 
             Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
             if (optionalClient.isPresent()) {
@@ -499,7 +502,7 @@ public class AutoProvisionController {
                 HiveClientService.addHiveNewClient(accountNo, client.getClientName(), serialNumber, deviceName,
                         macAddress, oltIp, oltInterface,
                         ipAddress,
-                        ssidName, packageType);
+                        ssidName, packageType, bandwidth[0], bandwidth[1]);
 
                 deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
             }
@@ -1023,7 +1026,9 @@ public class AutoProvisionController {
 
         String ssidName = clientName.replace(" ", "_");
 
-        String oltInterface = getOltInterface("1295");
+        String oltInterface = getOltInterface("1424");
+
+        String[] bandwidth = getOltBandwidth("1424");
 
         Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
         if (optionalClient.isPresent()) {
@@ -1038,7 +1043,7 @@ public class AutoProvisionController {
             HiveClientService.addHiveNewClient(accountNo, client.getClientName(), serialNumber, deviceName, macAddress,
                     oltIp, oltInterface,
                     ipAddress,
-                    ssidName, packageType);
+                    ssidName, packageType, bandwidth[0], bandwidth[1]);
 
             deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
         }
