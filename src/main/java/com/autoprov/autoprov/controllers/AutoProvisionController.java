@@ -923,6 +923,7 @@ public class AutoProvisionController {
                 String.class);
 
         String responseBody = responseEntity.getBody();
+        System.out.println(responseBody);
 
         String upstreamValue = "";
         String downstreamValue = "";
