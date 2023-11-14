@@ -36,7 +36,7 @@ public class Client {
     @Column(name = "ip_assigned", unique = true)
     private String ipAssigned;
 
-    @Column(name = "onu_serial_number", unique = true)
+    @Column(name = "onu_serial_number")
     private String onuSerialNumber;
 
     @Column(name = "area_id")
