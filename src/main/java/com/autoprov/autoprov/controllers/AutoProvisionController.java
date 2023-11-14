@@ -593,6 +593,7 @@ public class AutoProvisionController {
         String checkingResponse = null;
 
         while (checkingResponse == null || !checkingResponse.contains("PLAY RECAP")) {
+            StringBuilder tries = new StringBuilder();
             TimeUnit.SECONDS.sleep(10);
             responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
                     String.class);
@@ -601,6 +602,8 @@ public class AutoProvisionController {
 
             if (checkingResponse == null || !checkingResponse.contains("PLAY RECAP")) {
                 System.out.println("Retrying Get Job " + jobId);
+                tries.append("|");
+                System.out.println(tries.toString());
                 continue;
             }
         }
