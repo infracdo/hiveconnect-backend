@@ -57,27 +57,34 @@ public class PackageTypeController {
     public static String convertToKbps(String speed) {
         // Pattern pattern = Pattern.compile("(\\d+)(\\s*\\w*)",
         // Pattern.CASE_INSENSITIVE);
-        Pattern pattern = Pattern.compile("(\\d+)(\\s*[kmg]?\\s*bps?)", Pattern.CASE_INSENSITIVE);
+        Pattern pattern = Pattern.compile("(\\d+)\\s*([kmgKMG]?)(b?p?s?)", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(speed);
 
         if (matcher.matches()) {
             int value = Integer.parseInt(matcher.group(1));
-            String unit = matcher.group(2).trim().toLowerCase();
+            String unit = matcher.group(2).toLowerCase();
+            String suffix = matcher.group(3).toLowerCase();
 
-            switch (unit) {
+            switch (suffix) {
                 case "kbps":
                     return speed;
                 case "mbps":
                     value *= 1000; // Convert to kbps
-                    return value + " kbps";
+                    break;
                 case "gbps":
                     value *= 1000000; // Convert to kbps
-                    return value + " kbps";
+                    break;
+                case "bps":
+                    // Do nothing, already in bps
+                    break;
                 case "":
-                    return value + " kbps"; // Assume default is kbps
+                    // If no suffix, assume kbps
+                    break;
                 default:
-                    throw new IllegalArgumentException("Unsupported unit: " + unit);
+                    throw new IllegalArgumentException("Unsupported unit: " + suffix);
             }
+
+            return value + " kbps";
         } else {
             throw new IllegalArgumentException("Invalid speed format: " + speed);
         }
