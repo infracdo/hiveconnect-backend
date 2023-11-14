@@ -36,7 +36,7 @@ public class HiveClient {
     @Column(name = "ip_assigned", unique = true)
     private String ipAssigned;
 
-    @Column(name = "onu_serial_number", unique = true)
+    @Column(name = "onu_serial_number")
     private String onuSerialNumber;
 
     @Column(name = "area_id")
@@ -48,10 +48,10 @@ public class HiveClient {
     @Column(name = "olt_interface")
     private String oltInterface;
 
-    @Column(name = "modem_mac_address", unique = true)
+    @Column(name = "modem_mac_address")
     private String onuMacAddress;
 
-    @Column(name = "subscription_name", unique = true)
+    @Column(name = "subscription_name")
     private String onuDeviceName;
 
     @Column(name = "package_id")

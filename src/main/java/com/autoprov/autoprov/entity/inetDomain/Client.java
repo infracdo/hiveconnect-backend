@@ -42,10 +42,10 @@ public class Client {
     @Column(name = "area_id")
     private Integer site;
 
-    @Column(name = "modem_mac_address", unique = true)
+    @Column(name = "modem_mac_address")
     private String onuMacAddress;
 
-    @Column(name = "subscription_name", unique = true)
+    @Column(name = "subscription_name")
     private String onuDeviceName;
 
     @Column(name = "package_id")
