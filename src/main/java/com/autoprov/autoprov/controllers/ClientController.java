@@ -102,8 +102,7 @@ public class ClientController {
     public CompletableFuture<String> getOtcStatus(@PathVariable("id") Long id) {
 
         Optional<HiveClient> hiveClient = hiveClientRepo.findById(id);
-        Optional<ClientDetail> otcStatusRepo = clientDetailRepo
-                .findByAccountNumber(hiveClient.get().getAccountNumber());
+        Optional<Client> otcStatusRepo = clientRepo.findByAccountNumber(hiveClient.get().getAccountNumber());
         String otcStatus = otcStatusRepo.get().getStatus();
 
         return CompletableFuture.completedFuture(otcStatus);
