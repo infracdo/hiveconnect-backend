@@ -53,7 +53,7 @@ public class IpManagementController {
     public CompletableFuture<String> addCidrBlock(@RequestBody Map<String, String> params) {
         String response = IpListService.addCidrBlock(params.get("CidrBlock"), params.get("AccountNumber"),
                 params.get("InternetGatewayHost"), params.get("OltIpHost"),
-                Integer.parseInt(params.get("VlanID")), params.get("Site"), params.get("Type"), params.get("Status"),
+                (params.get("VlanID")), params.get("Site"), params.get("Type"), params.get("Status"),
                 params.get("Notes"));
         return CompletableFuture.completedFuture(response);
     }
@@ -150,7 +150,7 @@ public class IpManagementController {
             networkAdd.setNotes(params.get("Notes"));
             networkAdd.setSite(params.get("Site"));
             networkAdd.setType(params.get("Type"));
-            networkAdd.setVlanId(Integer.parseInt(params.get("VlanID")));
+            networkAdd.setVlanId(params.get("VlanID"));
 
             // Save the entity
             return CompletableFuture

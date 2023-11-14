@@ -28,7 +28,7 @@ public class IpListService {
 
     // Functions and Services
     public static String populateIpBycidrBlock(String cidrBlock, String internetGateway, Integer maskBits,
-            String oltIp, String type, Integer vlanId) {
+            String oltIp, String type, String vlanId) {
 
         Integer hostRangeA = 0;
         Integer hostRangeB = 0;
@@ -152,7 +152,7 @@ public class IpListService {
     }
 
     public static String addCidrBlock(String cidrBlock, String accountNumber, String internetGateway,
-            String oltIp, Integer vlanId, String site,
+            String oltIp, String vlanId, String site,
             String type, String status, String notes) {
 
         Integer maskBits = Integer.parseInt(cidrBlock.substring((cidrBlock.lastIndexOf("/") + 1)));
