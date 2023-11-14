@@ -591,9 +591,9 @@ public class AutoProvisionController {
 
         restTemplate = new RestTemplate();
         String checkingResponse = null;
-
+        StringBuilder tries = new StringBuilder();
         while (checkingResponse == null || !checkingResponse.contains("PLAY RECAP")) {
-            StringBuilder tries = new StringBuilder();
+
             TimeUnit.SECONDS.sleep(10);
             responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
                     String.class);
