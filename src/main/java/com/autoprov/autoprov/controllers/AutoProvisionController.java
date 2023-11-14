@@ -529,6 +529,8 @@ public class AutoProvisionController {
 
         String jobId;
 
+        System.out.println("HiveService: Pre-Provision Check Initialized");
+
         String accountNo = params.get("accountNo");
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
