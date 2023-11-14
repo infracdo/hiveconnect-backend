@@ -928,7 +928,7 @@ public class AutoProvisionController {
         String downstreamValue = "";
 
         // ------------Guangda OLT Interface Check
-        Pattern pattern = Pattern.compile("\"Upstream\": \"(\\d+\\.\\d+)\".*\"Downstream\": \"(\\d+\\.\\d+)\"");
+        Pattern pattern = Pattern.compile("\"msg\".*?\"Upstream\": \"(\\d+\\.\\d+)\".*?\"Downstream\": \"(\\d+\\.\\d+)\"");
         Matcher matcher = pattern.matcher(responseBody);
 
         while (matcher.find()) {
