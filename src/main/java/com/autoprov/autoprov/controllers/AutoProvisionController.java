@@ -941,27 +941,11 @@ public class AutoProvisionController {
         // }
         ObjectMapper objectMapper = new ObjectMapper();
 
-        try {
-            JsonNode rootNode = objectMapper.readTree(responseBody);
+        upstreamValue = parseValue(responseBody, "Upstream");
+        downstreamValue = parseValue(responseBody, "Downstream");
 
-            JsonNode msgNode = rootNode.path("msg");
-            for (JsonNode entryNode : msgNode) {
-                JsonNode upstreamNode = entryNode.path("Upstream");
-                JsonNode downstreamNode = entryNode.path("Downstream");
-
-                if (!upstreamNode.isMissingNode()) {
-                    upstreamValue = upstreamNode.asText();
-                    System.out.println("Upstream: " + upstreamValue);
-                }
-
-                if (!downstreamNode.isMissingNode()) {
-                    downstreamValue = downstreamNode.asText();
-                    System.out.println("Downstream: " + downstreamValue);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        System.out.println("Upstream Value: " + upstreamValue);
+        System.out.println("Downstream Value: " + downstreamValue);
 
         String[] bandwidth = new String[2];
         bandwidth[0] = upstreamValue;
@@ -997,6 +981,18 @@ public class AutoProvisionController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String formattedDate = currentDate.format(formatter);
         return formattedDate;
+    }
+
+    private String parseValue(String input, String keyword) {
+        String patternString = keyword + "\": \"([^\"]+)\"";
+        Pattern pattern = Pattern.compile(patternString);
+        Matcher matcher = pattern.matcher(input);
+
+        if (matcher.find()) {
+            return matcher.group(1);
+        } else {
+            return "Value not found";
+        }
     }
     // ------------------------- TEST AREA ------------------------
 
