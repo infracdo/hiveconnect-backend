@@ -36,7 +36,7 @@ public interface ClientRepository extends CrudRepository<Client, Long> {
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE clients SET modem_mac_address = NULL, ip_assigned = NULL, status = \'New\', subscription_name = NULL, WHERE location LIKE \'Hive Test\'", nativeQuery = true)
+    @Query(value = "UPDATE clients SET modem_mac_address = NULL, ip_assigned = NULL, status = \'New\', subscription_name = NULL, WHERE location = \'Hive Test\'", nativeQuery = true)
     void resetHiveDummy();
 
 }

@@ -152,7 +152,7 @@ public class AutoProvisionController {
     public ResponseEntity<Map<String, String>> executeInetMonitoring(String accountNo, String serialNumber,
             String macAddress,
             String clientName,
-            String onu_private_ip, String packageType, String upstream, String downstream, String oltIp)
+            String ipAddress, String packageType, String upstream, String downstream, String oltIp)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         if (packageType.equals("RES10mbps")) {
@@ -197,7 +197,7 @@ public class AutoProvisionController {
                 "\\nprovisioned_by: HiveConnect " +
                 "\\nvlan_690_ip: " + devicesRepo.getOnuInfoBySerialNumber(serialNumber).get(0).getPublicIp() +
                 "\\nvlan_2010_mac: " + devicesRepo.getOnuInfoBySerialNumber(serialNumber).get(0).getSecondWanMac() +
-                "\\nonu_private_ip: " + onu_private_ip +
+                "\\nonu_private_ip: " + ipAddress +
                 "\\npackage_type: " + packageName +
                 "\\ndownstream: " + downstream +
                 "\\nupstream: " + upstream + "\""
@@ -231,7 +231,7 @@ public class AutoProvisionController {
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
             // finalize and mark everything to be activated
-            ipAddRepo.associateIpAddressToAccountNumber(accountNo, onu_private_ip);
+            ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
             AcsController.setInformIntervalPostProv(serialNumber);
             AcsController.onuOnboarded(serialNumber);
 
@@ -245,13 +245,13 @@ public class AutoProvisionController {
                 client.setOnuDeviceName(deviceName);
                 client.setOnuMacAddress(macAddress);
                 client.setStatus("Activated");
-                client.setIpAssigned(onu_private_ip);
+                client.setIpAssigned(ipAddress);
                 client.setBucketId("100");
                 clientRepo.save(client);
 
                 HiveClientService.addHiveNewClient(accountNo, client.getClientName(), serialNumber, deviceName,
                         macAddress, oltIp, oltInterface,
-                        onu_private_ip,
+                        ipAddress,
                         ssidName, packageType);
 
                 deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
