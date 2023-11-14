@@ -612,7 +612,7 @@ public class AutoProvisionController {
         StringBuilder errors = new StringBuilder();
         Boolean errorExisting = false;
 
-        String onuCheckString = "ONU exist in '" + oltIp + "'";
+        String onuCheckString = "ONU exist in " + oltIp + "";
         String subscriberCheckString = "Subscriber '" + deviceName + "' is not yet onboarded";
         String ipAddressCheckString = "IP Address '" + ipAddress + "' is not yet onboarded";
 
