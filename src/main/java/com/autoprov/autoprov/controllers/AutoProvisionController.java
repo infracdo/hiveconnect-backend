@@ -927,16 +927,39 @@ public class AutoProvisionController {
         String upstreamValue = "";
         String downstreamValue = "";
 
-        // ------------Guangda OLT Interface Check
-        Pattern pattern = Pattern.compile("\"msg\".*?\"Upstream\": \"(\\d+\\.\\d+)\".*?\"Downstream\": \"(\\d+\\.\\d+)\"");
-        Matcher matcher = pattern.matcher(responseBody);
+        // Pattern pattern = Pattern.compile("\"msg\".*?\"Upstream\":
+        // \"(\\d+\\.\\d+)\".*?\"Downstream\": \"(\\d+\\.\\d+)\"");
+        // Matcher matcher = pattern.matcher(responseBody);
 
-        while (matcher.find()) {
-            upstreamValue = matcher.group(1);
-            downstreamValue = matcher.group(2);
+        // while (matcher.find()) {
+        // upstreamValue = matcher.group(1);
+        // downstreamValue = matcher.group(2);
 
-            System.out.println("Upstream: " + upstreamValue);
-            System.out.println("Downstream: " + downstreamValue);
+        // System.out.println("Upstream: " + upstreamValue);
+        // System.out.println("Downstream: " + downstreamValue);
+        // }
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            JsonNode rootNode = objectMapper.readTree(responseBody);
+
+            JsonNode msgNode = rootNode.path("msg");
+            for (JsonNode entryNode : msgNode) {
+                JsonNode upstreamNode = entryNode.path("Upstream");
+                JsonNode downstreamNode = entryNode.path("Downstream");
+
+                if (!upstreamNode.isMissingNode()) {
+                    upstreamValue = upstreamNode.asText();
+                    System.out.println("Upstream: " + upstreamValue);
+                }
+
+                if (!downstreamNode.isMissingNode()) {
+                    downstreamValue = downstreamNode.asText();
+                    System.out.println("Downstream: " + downstreamValue);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         String[] bandwidth = new String[2];
