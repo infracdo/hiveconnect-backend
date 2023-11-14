@@ -689,6 +689,8 @@ public class AutoProvisionController {
         ResponseEntity<String> responseEntity = null;
         String responseBody = null;
 
+        StringBuilder tries = new StringBuilder();
+
         while (responseBody == null || responseBody.contains("\"finished\":null")) {
             TimeUnit.SECONDS.sleep(10);
             responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
@@ -696,6 +698,8 @@ public class AutoProvisionController {
 
             if (responseEntity.getStatusCode() == HttpStatus.NOT_FOUND) {
                 System.out.println("Retrying Get Job " + jobId);
+                tries.append("|");
+                System.out.println(tries.toString());
                 continue;
             }
             responseBody = responseEntity.getBody();
