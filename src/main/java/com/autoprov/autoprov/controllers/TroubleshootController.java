@@ -52,11 +52,13 @@ public class TroubleshootController {
             String value = valueNode.asText();
             System.out.println("Value: " + value);
 
-            if (value.equals("1")) {
-                return "Online";
-            } else {
-                return "Offline";
-            }
+            // if (value.equals("1")) {
+            // return "Online";
+            // } else {
+            // return "Offline";
+            // }
+
+            return value;
         } catch (Exception e) {
             e.printStackTrace();
         }
