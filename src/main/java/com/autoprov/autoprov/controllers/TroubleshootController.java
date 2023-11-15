@@ -30,7 +30,7 @@ public class TroubleshootController {
         HttpEntity requestEntity = new HttpEntity("", headers);
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.exchange(prometheusUrl, HttpMethod.GET, requestEntity,
-                String.class);
+                String.class, device_name);
 
         String responseBody = response.getBody();
         System.out.println(responseBody);
