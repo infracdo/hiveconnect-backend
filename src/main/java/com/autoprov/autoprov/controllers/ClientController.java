@@ -91,7 +91,15 @@ public class ClientController {
 
     @Async("asyncExecutor")
     @GetMapping("/getClientById/{id}")
-    public CompletableFuture<Optional<HiveClient>> getClientById(@PathVariable("id") Long id) {
+    public CompletableFuture<Optional<Client>> getClientById(@PathVariable("id") Long id) {
+
+        System.out.println("getClients {" + id.toString() + "} invoked");
+        return CompletableFuture.completedFuture(clientRepo.findById(id));
+    }
+
+    @Async("asyncExecutor")
+    @GetMapping("/getHiveClientById/{id}")
+    public CompletableFuture<Optional<HiveClient>> getHiveClientById(@PathVariable("id") Long id) {
 
         System.out.println("getClients {" + id.toString() + "} invoked");
         return CompletableFuture.completedFuture(hiveClientRepo.findById(id));
