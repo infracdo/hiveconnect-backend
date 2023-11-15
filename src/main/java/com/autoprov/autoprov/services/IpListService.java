@@ -34,6 +34,8 @@ public class IpListService {
     public static String populateIpBycidrBlock(String cidrBlock, String internetGateway, Integer maskBits,
             String oltIp, String type, String vlanId) throws UnknownHostException {
 
+        Integer thirdOctet = Integer.parseInt(getThirdOctet(cidrBlock));
+
         Integer hostRangeA = 0;
         Integer hostRangeB = 0;
         Integer hostA = 0;
@@ -46,12 +48,14 @@ public class IpListService {
         if (maskBits == 22) {
             hostRangeA = 255;
             hostRangeB = 3;
+            hostB = thirdOctet;
         }
         if (maskBits == 24) {
             hostRangeA = 255;
         }
         if (maskBits == 29) {
             hostRangeA = 8;
+            hostB = thirdOctet;
         }
 
         // switch (maskBits) {
@@ -75,8 +79,6 @@ public class IpListService {
             oltIpHost = Integer.parseInt(oltIp);
         else
             oltIpHost = -1;
-
-        Integer thirdOctet = Integer.parseInt(getThirdOctet(cidrBlock));
 
         if (hostA == hostRangeB) {
             while (hostA <= hostRangeA) {
@@ -119,7 +121,7 @@ public class IpListService {
         } else {
             // str.indexOf(ch, str.indexOf(ch) + 1)
 
-            while ((thirdOctet + hostRangeB) <= hostRangeB) {
+            while (hostB <= (thirdOctet + hostRangeB)) {
                 while (hostA <= hostRangeA) {
 
                     ipAddress = cidrBlock.substring(0, (cidrBlock.indexOf(".", cidrBlock.indexOf(".") + 1) + 1))
