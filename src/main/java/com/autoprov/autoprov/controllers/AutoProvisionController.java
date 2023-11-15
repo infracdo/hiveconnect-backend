@@ -509,12 +509,13 @@ public class AutoProvisionController {
                         ipAddress,
                         ssidName, packageType, bandwidth[0], bandwidth[1]);
 
-                Optional<ClientDetail> optionalClientDetail = clientDetailRepo.findByClientId(client.getId());
-                if (optionalClientDetail.isPresent()) {
-                    ClientDetail clientDetail = optionalClientDetail.get();
-                    clientDetail.setStatus("finished");
+                // Optional<ClientDetail> optionalClientDetail =
+                // clientDetailRepo.findByClientId(client.getId());
+                // if (optionalClientDetail.isPresent()) {
+                // ClientDetail clientDetail = optionalClientDetail.get();
+                // clientDetail.setStatus("finished");
 
-                }
+                // }
 
                 deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
             }
@@ -1057,12 +1058,13 @@ public class AutoProvisionController {
                     ipAddress,
                     ssidName, packageType, bandwidth[0], bandwidth[1]);
 
-            Optional<ClientDetail> optionalClientDetail = clientDetailRepo.findByClientId(client.getId());
-            if (optionalClientDetail.isPresent()) {
-                ClientDetail clientDetail = optionalClientDetail.get();
-                clientDetail.setStatus("finished");
+            // Optional<ClientDetail> optionalClientDetail =
+            // clientDetailRepo.findByClientId(client.getId());
+            // if (optionalClientDetail.isPresent()) {
+            // ClientDetail clientDetail = optionalClientDetail.get();
+            // clientDetail.setStatus("finished");
 
-            }
+            // }
 
         }
         return "Check database";
