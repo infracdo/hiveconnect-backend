@@ -20,7 +20,7 @@ public class TroubleshootController {
     @GetMapping("/getStatus/{device}")
     public String getOnuStatus(@PathVariable("device") String device) {
 
-        String device_name = "{job=%22ip_address%22,site_tenant=%22DCTECH%22,device_name=\""
+        String device_name = "{job=\"ip_address\",site_tenant=\"DCTECH\",device_name=\""
                 + device + "\"}";
         String prometheusUrl = "https://dctech-prometheus.apolloglobal.net/api/v1/query?query=lo_status{device_name}";
 
