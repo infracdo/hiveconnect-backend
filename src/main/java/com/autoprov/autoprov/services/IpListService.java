@@ -76,7 +76,7 @@ public class IpListService {
         else
             oltIpHost = -1;
 
-        if (hostRangeB == Integer.parseInt(getThirdOctet(ipAddress))) {
+        if (hostRangeB == Integer.parseInt(getThirdOctet(cidrBlock))) {
             while (hostA <= hostRangeA) {
 
                 ipAddress = cidrBlock.substring(0, (cidrBlock.indexOf(".", cidrBlock.indexOf(".") + 1) + 1))
