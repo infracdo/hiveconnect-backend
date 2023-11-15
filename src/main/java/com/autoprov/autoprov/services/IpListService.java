@@ -157,6 +157,8 @@ public class IpListService {
                     hostA++;
                 }
                 hostB++;
+                System.out.println(hostB);
+                System.out.println(hostB <= (thirdOctet + hostRangeB));
                 hostA = 0;
             }
         }
