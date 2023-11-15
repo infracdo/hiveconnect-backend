@@ -120,7 +120,8 @@ public class IpListService {
             }
         } else {
             // str.indexOf(ch, str.indexOf(ch) + 1)
-
+            System.out.println(hostB);
+            System.out.println((thirdOctet + hostRangeB));
             while (hostB <= (thirdOctet + hostRangeB)) {
                 while (hostA <= hostRangeA) {
 
