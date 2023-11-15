@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @CrossOrigin(origins = "*")
 @RestController
 public class TroubleshootController {
@@ -34,6 +37,29 @@ public class TroubleshootController {
 
         String responseBody = response.getBody();
         System.out.println(responseBody);
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(responseBody);
+
+            JsonNode valueNode = jsonNode
+                    .path("data")
+                    .path("result")
+                    .get(0)
+                    .path("value")
+                    .get(1);
+
+            String value = valueNode.asText();
+            System.out.println("Value: " + value);
+
+            if (value.equals("1")) {
+                return "Online";
+            } else {
+                return "Offline";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return responseBody;
 
