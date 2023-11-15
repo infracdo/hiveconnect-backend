@@ -132,7 +132,7 @@ public class IpListService {
                         status = "Not Available";
                         assignable = false;
                         notes = "Internet Gateway";
-                    } else if (hostA == 0 && hostB == thirdOctet) {
+                    } else if (hostA == 0 && hostB.equals(thirdOctet)) {
                         status = "Not Available";
                         assignable = false;
                         notes = "Network Address";
