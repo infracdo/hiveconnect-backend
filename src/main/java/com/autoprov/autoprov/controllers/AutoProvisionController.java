@@ -923,7 +923,7 @@ public class AutoProvisionController {
     @GetMapping("/getOltBandwidth")
     public String[] getOltBandwidth(String jobId) {
 
-        String ansibleApiUrl = "" + playbookGetJobUrl + "1424" + "/stdout";
+        String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
         String error = "";
 
