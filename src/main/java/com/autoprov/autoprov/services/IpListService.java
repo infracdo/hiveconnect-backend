@@ -3,6 +3,8 @@ package com.autoprov.autoprov.services;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -74,7 +76,7 @@ public class IpListService {
         else
             oltIpHost = -1;
 
-        if (hostRangeB == getThirdOctet(ipAddress)) {
+        if (hostRangeB == Integer.parseInt(getThirdOctet(ipAddress))) {
             while (hostA <= hostRangeA) {
 
                 ipAddress = cidrBlock.substring(0, (cidrBlock.indexOf(".", cidrBlock.indexOf(".") + 1) + 1))
@@ -115,7 +117,7 @@ public class IpListService {
         } else {
             // str.indexOf(ch, str.indexOf(ch) + 1)
 
-            while (hostB <= hostRangeB) {
+            while ((hostB + hostRangeB) <= hostRangeB) {
                 while (hostA <= hostRangeA) {
 
                     ipAddress = cidrBlock.substring(0, (cidrBlock.indexOf(".", cidrBlock.indexOf(".") + 1) + 1))
@@ -165,10 +167,10 @@ public class IpListService {
         System.out.println(maskBits);
         Integer hostRange = 0;
 
-        if (maskBits == 24 || maskBits == 29 || maskBits == 16)
+        if (maskBits == 22 || maskBits == 24 || maskBits == 29 || maskBits == 16)
             System.out.println("Populating...");
         else
-            return "CIDR not supported. Only supports /16, /24 and /29";
+            return "CIDR not supported. Only supports /16, /22, /24 and /29";
 
         CidrBlock networkAdd = CidrBlock.builder()
                 .cidrBlock(cidrBlock)
@@ -188,16 +190,18 @@ public class IpListService {
         return "Successful";
     }
 
-    public static int getThirdOctet(String ipAddress) throws UnknownHostException {
-        InetAddress inetAddress = InetAddress.getByName(ipAddress);
-        byte[] octets = inetAddress.getAddress();
+    public static String getThirdOctet(String ipAddress) throws UnknownHostException {
+        String pattern = "(\\d+).(\\d+).(\\d+).(\\d+)/(\\d+)"; // Regular expression for matching IP address
 
-        // Ensure the IP address is IPv4
-        if (octets.length == 4) {
-            // Extract the third octet (index 2 in a 0-based array)
-            return octets[2] & 0xFF; // Use bitwise AND to convert byte to unsigned int
+        Pattern ipPattern = Pattern.compile(pattern);
+        Matcher matcher = ipPattern.matcher(ipAddress);
+
+        if (matcher.matches()) {
+            String thirdOctet = matcher.group(3);
+            return thirdOctet;
         } else {
-            throw new UnknownHostException("Not an IPv4 address: " + ipAddress);
+            System.out.println("Invalid IP address format");
+            return "Invalid IP address format";
         }
     }
 
