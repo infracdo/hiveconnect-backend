@@ -82,7 +82,7 @@ public class IpListService {
             while (hostA <= hostRangeA) {
 
                 ipAddress = cidrBlock.substring(0, (cidrBlock.indexOf(".", cidrBlock.indexOf(".") + 1) + 1))
-                        + hostB.toString() + "." + hostA.toString();
+                        + thirdOctet + "." + hostA.toString();
 
                 if (ipAddress.equals(internetGateway)) {
                     status = "Not Available";
