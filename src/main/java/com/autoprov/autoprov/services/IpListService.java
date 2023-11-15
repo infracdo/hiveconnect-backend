@@ -41,6 +41,10 @@ public class IpListService {
             hostRangeA = 255;
             hostRangeB = 255;
         }
+        if (maskBits == 22) {
+            hostRangeA = 255;
+            hostRangeB = 3;
+        }
         if (maskBits == 24) {
             hostRangeA = 255;
         }

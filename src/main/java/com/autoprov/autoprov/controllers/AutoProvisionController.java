@@ -37,11 +37,13 @@ import org.springframework.web.client.RestTemplate;
 import com.autoprov.autoprov.controllers.AcsController;
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.inetDomain.Client;
+import com.autoprov.autoprov.entity.inetDomain.ClientDetail;
 import com.autoprov.autoprov.entity.inetDomain.PackageType;
 import com.autoprov.autoprov.entity.ipamDomain.IpAddress;
 import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.acsRepositories.DevicesRepository;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
+import com.autoprov.autoprov.repositories.inetRepositories.ClientDetailRepository;
 import com.autoprov.autoprov.repositories.inetRepositories.ClientRepository;
 import com.autoprov.autoprov.repositories.inetRepositories.PackageRepository;
 import com.autoprov.autoprov.repositories.ipamRepositories.IpAddressRepository;
@@ -73,6 +75,9 @@ public class AutoProvisionController {
 
     @Autowired
     private ClientRepository clientRepo;
+
+    @Autowired
+    private ClientDetailRepository clientDetailRepo;
 
     @Autowired
     private HiveClientRepository hiveClientRepo;
@@ -503,6 +508,13 @@ public class AutoProvisionController {
                         macAddress, oltIp, oltInterface,
                         ipAddress,
                         ssidName, packageType, bandwidth[0], bandwidth[1]);
+
+                Optional<ClientDetail> optionalClientDetail = clientDetailRepo.findByClientId(client.getId());
+                if (optionalClientDetail.isPresent()) {
+                    ClientDetail clientDetail = optionalClientDetail.get();
+                    clientDetail.setStatus("finished");
+
+                }
 
                 deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
             }
@@ -1040,16 +1052,20 @@ public class AutoProvisionController {
             client.setBucketId("100");
             clientRepo.save(client);
 
-            HiveClientService.addHiveNewClient(accountNo, client.getClientName(), serialNumber, deviceName, macAddress,
-                    oltIp, oltInterface,
+            HiveClientService.addHiveNewClient(accountNo, client.getClientName(), serialNumber, deviceName,
+                    macAddress, oltIp, oltInterface,
                     ipAddress,
                     ssidName, packageType, bandwidth[0], bandwidth[1]);
 
-            deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
+            Optional<ClientDetail> optionalClientDetail = clientDetailRepo.findByClientId(client.getId());
+            if (optionalClientDetail.isPresent()) {
+                ClientDetail clientDetail = optionalClientDetail.get();
+                clientDetail.setStatus("finished");
+
+            }
+
         }
-
         return "Check database";
-
     }
 
 }

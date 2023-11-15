@@ -38,6 +38,10 @@ public class ClientDetail {
 
     @Column(name = "otc")
     private String otc;
+
+    @Column(name = "date_activated")
+    private String date_activated;
+
     // public void assignIp(String ip) {
     // this.ip_assigned = ip;
     // }
