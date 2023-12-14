@@ -46,7 +46,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class AutoProvisionController {
     // Insert playbook invokes here
 
-    private Boolean showBody = true;
+    private Boolean showBody = false;
 
     private static String playbookMonitoringApiUrl = "https://dctech-awx.apolloglobal.net/api/v2/job_templates/15/";
     private static String playbookPreProvUrl = "https://dctech-awx.apolloglobal.net/api/v2/job_templates/18/";
@@ -831,7 +831,7 @@ public class AutoProvisionController {
         }
 
         String newSsid = clientName.replace(" ", "_");
-        String password = "" + clientName + "1234";
+        String password = "" + newSsid + "1234";
 
         // return ("Job ID: " + jobId + "\nStatus: " + lastJobStatus + error);
         Map<String, String> response = new HashMap<>();
