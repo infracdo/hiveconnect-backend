@@ -1,20 +1,13 @@
 package com.autoprov.autoprov.controllers;
 
-import java.io.BufferedReader;
-import java.io.IOError;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -25,19 +18,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import com.autoprov.autoprov.controllers.AcsController;
-import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.inetDomain.Client;
-import com.autoprov.autoprov.entity.inetDomain.ClientDetail;
 import com.autoprov.autoprov.entity.inetDomain.PackageType;
 import com.autoprov.autoprov.entity.ipamDomain.IpAddress;
 import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
@@ -52,11 +40,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jcraft.jsch.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import io.micrometer.core.ipc.http.HttpSender.Response;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -65,9 +48,9 @@ public class AutoProvisionController {
 
     private Boolean showBody = false;
 
-    private static String playbookMonitoringApiUrl = "http://172.91.10.189/api/v2/job_templates/15/";
-    private static String playbookPreProvUrl = "http://172.91.10.189/api/v2/job_templates/18/";
-    private static String playbookGetJobUrl = "http://172.91.10.189/api/v2/jobs/";
+    private static String playbookMonitoringApiUrl = "https://dctech-awx.apolloglobal.net/api/v2/job_templates/15/";
+    private static String playbookPreProvUrl = "https://dctech-awx.apolloglobal.net/api/v2/job_templates/18/";
+    private static String playbookGetJobUrl = "https://dctech-awx.apolloglobal.net/api/v2/jobs/";
     private static String acsApiUrl = "http://172.91.0.136:7547/";
 
     @Autowired
