@@ -46,7 +46,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class AutoProvisionController {
     // Insert playbook invokes here
 
-    private Boolean showBody = false;
+    private Boolean showBody = true;
 
     private static String playbookMonitoringApiUrl = "https://dctech-awx.apolloglobal.net/api/v2/job_templates/15/";
     private static String playbookPreProvUrl = "https://dctech-awx.apolloglobal.net/api/v2/job_templates/18/";
