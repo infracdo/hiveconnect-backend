@@ -25,16 +25,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import com.autoprov.autoprov.entity.inetDomain.Client;
-import com.autoprov.autoprov.entity.inetDomain.PackageType;
-import com.autoprov.autoprov.entity.ipamDomain.IpAddress;
+import com.autoprov.autoprov.entity.ipamDomain.CidrIpAddress;
+import com.autoprov.autoprov.entity.subscriberDomain.PackageTypeEntity;
+import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.acsRepositories.DevicesRepository;
-import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
-import com.autoprov.autoprov.repositories.inetRepositories.ClientDetailRepository;
-import com.autoprov.autoprov.repositories.inetRepositories.ClientRepository;
-import com.autoprov.autoprov.repositories.inetRepositories.PackageRepository;
-import com.autoprov.autoprov.repositories.ipamRepositories.IpAddressRepository;
+import com.autoprov.autoprov.repositories.ipamRepositories.CidrIpAddressRepository;
+import com.autoprov.autoprov.repositories.oltRepositories.oltRepository;
+import com.autoprov.autoprov.repositories.subscriberRepositories.PackageRepository;
+import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
 import com.autoprov.autoprov.services.HiveClientService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -54,19 +53,21 @@ public class AutoProvisionController {
     private static String acsApiUrl = "http://172.91.0.136:7547/";
 
     @Autowired
-    private IpAddressRepository ipAddRepo;
+    private CidrIpAddressRepository ipAddRepo;
 
     @Autowired
-    private ClientRepository clientRepo;
+    private subscriberRepository clientRepo;
 
     @Autowired
-    private ClientDetailRepository clientDetailRepo;
+    private oltRepository oltRepo;
+    // @Autowired
+    // private ClientDetailRepository clientDetailRepo;
 
-    @Autowired
-    private HiveClientRepository hiveClientRepo;
+    // @Autowired
+    // private HiveClientRepository hiveClientRepo;
 
-    @Autowired
-    private PackageRepository packageRepo;
+     @Autowired
+     private PackageRepository packageRepo;
 
     @Autowired
     private DevicesRepository devicesRepo;
@@ -98,15 +99,22 @@ public class AutoProvisionController {
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
         // String cidr = params.get("cidr"); // Cidr block of site
-        String site = params.get("site"); // To determine IPAM site
+        // String site = params.get("networkName"); // To determine IPAM site
         String oltIp = params.get("olt");
+        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         // String wanMode = params.get("wanMode"); // Bridged or Routed
+        
         String packageType = params.get("packageType");
         String upstream = params.get("upstream");
         String downstream = params.get("downstream");
+        // String packageType = "PLAN999";
+        // String upstream = "1000";
+        // String downstream = "10000";
+
 
         // TODO: Dynamic Site, get actual IP Address according to Site
-        site = "CDO_1";
+    
+        //site = "CDO_3";
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
@@ -116,7 +124,7 @@ public class AutoProvisionController {
                 (ipAddress.lastIndexOf("."))));
 
         // ACS Processes
-        Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
+        Optional<CidrIpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         String vlanId = ipAddressData.get().getVlanId();
 
         String acsPushResponse = executeInetAutoProv(accountNo, clientName, serialNumber, defaultGateway,
@@ -153,14 +161,17 @@ public class AutoProvisionController {
         }
 
         String packageName = "";
-        Optional<PackageType> optionalPackage = packageRepo.findBypackageId(packageType);
+
+        Optional<PackageTypeEntity> optionalPackage = packageRepo.findBypackageId(packageType);
         if (optionalPackage.isPresent()) {
-            PackageType packageT = optionalPackage.get();
+            PackageTypeEntity packageT = optionalPackage.get();
 
             if (showBody)
                 System.out.println(packageT.toString());
 
-            packageName = packageT.getName();
+            packageName = packageT.getPackageType();
+            upstream = packageT.getUpstream();
+            downstream = packageT.getDownstream();
 
         }
 
@@ -242,17 +253,25 @@ public class AutoProvisionController {
 
             String[] bandwidth = getOltBandwidth(jobId);
 
-            Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
+            Optional<subscriberEntity> optionalClient = clientRepo.findBySubscriberAccountNumber(accountNo);
             if (optionalClient.isPresent()) {
-                Client client = optionalClient.get();
+                subscriberEntity client = optionalClient.get();
                 client.setOnuDeviceName(deviceName);
                 client.setOnuMacAddress(macAddress);
-                client.setStatus("Activated");
                 client.setIpAssigned(ipAddress);
+                client.setSubsStatus("ACTIVE");
                 client.setBucketId("100");
+                client.setOltReportedUpstream(upstream);
+                client.setOltReportedDownstream(downstream);
+                client.setOnuSerialNumber(serialNumber);
+                client.setOltIp(oltIp);
+                client.setPackageType(packageType);
+                client.setSsidName(ssidName);
+                //client.setSite(site);
+                client.setProvision("HiveConnect");
                 clientRepo.save(client);
 
-                HiveClientService.addHiveNewClient(accountNo, client.getClientName(), serialNumber, deviceName,
+                HiveClientService.addHiveNewClient(accountNo, client.getSubscriberName(), serialNumber, deviceName,
                         macAddress, oltIp, oltInterface,
                         ipAddress,
                         ssidName, packageType, bandwidth[0], bandwidth[1]);
@@ -319,19 +338,22 @@ public class AutoProvisionController {
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
-        String site = params.get("site"); // To determine IPAM site
+        //String site = params.get("site"); // To determine IPAM site
         String oltIp = params.get("olt");
+        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         // String wanMode = params.get("wanMode"); // Bridged or Routed
+
         String packageType = params.get("packageType");
-        String upstream = params.get("upstream");
-        String downstream = params.get("downstream");
+        // String upstream = params.get("upstream");
+        // String downstream = params.get("downstream");
+        String upstream = packageRepo.findBypackageId(packageType).get().getUpstream();
+        String downstream = packageRepo.findBypackageId(packageType).get().getDownstream();
+        // String packageType = "PLAN999";
+        // String upstream = "1000";
+        // String downstream = "10000";
 
-        site = "CDO_1";
-        // String ipAddress = ipAddRepo
-        // .getOneAvailableIpAddressUnderSite(site, "Private")
-        // .get(0)
-        // .getIpAddress();
 
+       // site = "CDO_3";
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
@@ -341,7 +363,7 @@ public class AutoProvisionController {
                 (ipAddress.lastIndexOf("."))));
 
         // ACS Processes
-        Optional<IpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
+        Optional<CidrIpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         String vlanId = ipAddressData.get().getVlanId();
 
         String acsResponse = executeInetAutoProv(accountNo, clientName, serialNumber, defaultGateway,
@@ -376,28 +398,37 @@ public class AutoProvisionController {
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
+        String oltIp = params.get("olt");
+        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         String ipAddress = ipAddRepo
-                .getOneAvailableIpAddressUnderSite("CDO_1", "Private")
+                .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
                 .getIpAddress();
 
         if (showBody)
             System.out.println(ipAddRepo
-                    .getOneAvailableIpAddressUnderSite("CDO_1", "Private"));
-        String oltIp = params.get("olt");
+                    .getOneAvailableIpAddressUnderSite(site, "Private"));
+        
+        
         String packageType = params.get("packageType");
-        String upstream = params.get("upstream");
-        String downstream = params.get("downstream");
+        // String upstream = params.get("upstream");
+        // String downstream = params.get("downstream");
+        String upstream = packageRepo.findBypackageId(packageType).get().getUpstream();
+        String downstream = packageRepo.findBypackageId(packageType).get().getDownstream();
+        // String packageType = "PLAN999";
+        // String upstream = "1000";
+        // String downstream = "10000";
+
         String packageName = "";
 
-        Optional<PackageType> optionalPackage = packageRepo.findBypackageId(packageType);
+        Optional<PackageTypeEntity> optionalPackage = packageRepo.findBypackageId(packageType);
         if (optionalPackage.isPresent()) {
-            PackageType packageT = optionalPackage.get();
+            PackageTypeEntity packageT = optionalPackage.get();
             if (showBody)
                 System.out.println(packageT.toString());
             upstream = packageT.getUpstream();
             downstream = packageT.getDownstream();
-            packageName = packageT.getName();
+            packageName = packageT.getPackageType();
 
         }
 
@@ -477,17 +508,25 @@ public class AutoProvisionController {
             String oltInterface = getOltInterface(jobId);
             String[] bandwidth = getOltBandwidth(jobId);
 
-            Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
+            Optional<subscriberEntity> optionalClient = clientRepo.findBySubscriberAccountNumber(accountNo);
             if (optionalClient.isPresent()) {
-                Client client = optionalClient.get();
+                subscriberEntity client = optionalClient.get();
                 client.setOnuDeviceName(deviceName);
                 client.setOnuMacAddress(macAddress);
-                client.setStatus("Activated");
+                client.setSubsStatus("ACTIVE");
                 client.setIpAssigned(ipAddress);
                 client.setBucketId("100");
+                client.setOltReportedUpstream(upstream);
+                client.setOltReportedDownstream(downstream);
+                client.setOnuSerialNumber(serialNumber);
+                client.setOltIp(oltIp);
+                client.setPackageType(packageType);
+                client.setSsidName(ssidName);
+                client.setSite(site);
+                client.setProvision("HiveConnect");
                 clientRepo.save(client);
 
-                HiveClientService.addHiveNewClient(accountNo, client.getClientName(), serialNumber, deviceName,
+                HiveClientService.addHiveNewClient(accountNo, client.getSubscriberName(), serialNumber, deviceName,
                         macAddress, oltIp, oltInterface,
                         ipAddress,
                         ssidName, packageType, bandwidth[0], bandwidth[1]);
@@ -551,20 +590,24 @@ public class AutoProvisionController {
 
         String jobId;
 
-        System.out.println(">>> HiveService: Pre-Provision Check Initialized");
+        System.out.println(">>> HiveService: Pre-Provision Check Initialized" );
 
         String accountNo = params.get("accountNo");
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
+        String oltIp = params.get("olt");
+        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         String ipAddress = ipAddRepo
-                .getOneAvailableIpAddressUnderSite("CDO_1", "Private")
+                .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
                 .getIpAddress();
-        String oltIp = params.get("olt");
+        
         String packageType = params.get("packageType");
-        String upstream = params.get("upstream");
-        String downstream = params.get("downstream");
+        // String upstream = params.get("upstream");
+        // String downstream = params.get("downstream");
+         String upstream = packageRepo.findBypackageId(packageType).get().getUpstream();
+         String downstream = packageRepo.findBypackageId(packageType).get().getDownstream();
 
         String ansibleApiUrl = playbookPreProvUrl + "launch/";
         String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
@@ -966,13 +1009,15 @@ public class AutoProvisionController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    @Async("asyncExecutor")
-    @PostMapping("/resetHiveDummy")
-    public String deleteClient() {
-        clientRepo.resetHiveDummy();
-        deviceRepo.resetHiveDummy();
-        return "Hive Demo Dummy Accounts cleared! Test Devices reverted to rogue!";
-    }
+    //------7-24-24
+    // @Async("asyncExecutor")
+    // @PostMapping("/resetHiveDummy")
+    // public String deleteClient() {
+    //     clientRepo.resetHiveDummy();
+    //     deviceRepo.resetHiveDummy();
+    //     return "Hive Demo Dummy Accounts cleared! Test Devices reverted to rogue!";
+    // }
+    //---------
 
     // --------- OTHER FUNCTIONS ------------
     public String getDate() {
@@ -1009,14 +1054,19 @@ public class AutoProvisionController {
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
+        String oltIp = params.get("olt");
+        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         String ipAddress = ipAddRepo
-                .getOneAvailableIpAddressUnderSite("CDO_1", "Private")
+                .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
                 .getIpAddress();
-        String oltIp = params.get("olt");
+       
         String packageType = params.get("packageType");
         String upstream = params.get("upstream");
         String downstream = params.get("downstream");
+        // String packageType = "PLAN999";
+        // String upstream = "1000";
+        // String downstream = "10000";
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
 
@@ -1026,17 +1076,25 @@ public class AutoProvisionController {
 
         String[] bandwidth = getOltBandwidth("1424");
 
-        Optional<Client> optionalClient = clientRepo.findByAccountNumber(accountNo);
+        Optional<subscriberEntity> optionalClient = clientRepo.findBySubscriberAccountNumber(accountNo);
         if (optionalClient.isPresent()) {
-            Client client = optionalClient.get();
+            subscriberEntity client = optionalClient.get();
             client.setOnuDeviceName(deviceName);
             client.setOnuMacAddress(macAddress);
-            client.setStatus("Activated");
+            client.setSubsStatus("ACTIVE");
             client.setIpAssigned(ipAddress);
             client.setBucketId("100");
+            client.setOltReportedUpstream(upstream);
+            client.setOltReportedDownstream(downstream);
+            client.setOnuSerialNumber(serialNumber);
+            client.setOltIp(oltIp);
+            client.setPackageType(packageType);
+            client.setSsidName(ssidName);
+            client.setSite(site);
+            client.setProvision("HiveConnect");
             clientRepo.save(client);
 
-            HiveClientService.addHiveNewClient(accountNo, client.getClientName(), serialNumber, deviceName,
+            HiveClientService.addHiveNewClient(accountNo, client.getSubscriberName(), serialNumber, deviceName,
                     macAddress, oltIp, oltInterface,
                     ipAddress,
                     ssidName, packageType, bandwidth[0], bandwidth[1]);

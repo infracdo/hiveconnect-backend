@@ -1,9 +1,5 @@
 package com.autoprov.autoprov.entity.hiveDomain;
 
-import java.sql.Date;
-
-import org.springframework.stereotype.Indexed;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,24 +9,24 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
+
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 @Builder
-@Entity // labels an entity that can be used for JPA
-@Table(name = "clients")
+@Entity
+@Table(name = "hive_clients")
 public class HiveClient {
-
+   
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @Column(name = "account_no")
-    private String accountNumber; // related to subscriber "clients" table
+    private String subscriberAccountNumber;
 
-    @Column(name = "name")
+    @Column(name = "client_name")
     private String clientName;
 
     @Column(name = "ip_assigned", unique = true)
@@ -39,7 +35,7 @@ public class HiveClient {
     @Column(name = "onu_serial_number")
     private String onuSerialNumber;
 
-    @Column(name = "area_id")
+    @Column(name = "area_id_site")
     private Integer site;
 
     @Column(name = "olt_ip")
@@ -54,8 +50,8 @@ public class HiveClient {
     @Column(name = "subscription_name")
     private String onuDeviceName;
 
-    @Column(name = "package_id")
-    private String packageTypeId;
+    @Column(name = "package_type")
+    private String packageType;
 
     @Column(name = "olt_upstream")
     private String oltReportedUpstream;
@@ -64,7 +60,7 @@ public class HiveClient {
     private String oltReportedDownstream;
 
     @Column(name = "backend")
-    private String backend;
+    private String provision;
 
     @Column(name = "status")
     private String status;
@@ -72,15 +68,136 @@ public class HiveClient {
     @Column(name = "ssid_name")
     private String ssidName;
 
-    // public void assignIp(String ip) {
-    // this.ip_assigned = ip;
-    // }
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
 
-    // public void setOnuSerialNo(String serialNo) {
-    // this.onu_serial_no = serialNo;
-    // }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    // @Column(name = "date_assigned")
-    // private Date date_assigned;
+    public String getSubscriberAccountNumber() {
+        return subscriberAccountNumber;
+    }
 
+    public void setSubscriberAccountNumber(String subscriberAccountNumber) {
+        this.subscriberAccountNumber = subscriberAccountNumber;
+    }
+
+    public String getClientName() {
+        return clientName;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
+    }
+
+    public String getIpAssigned() {
+        return ipAssigned;
+    }
+
+    public void setIpAssigned(String ipAssigned) {
+        this.ipAssigned = ipAssigned;
+    }
+
+    public String getOnuSerialNumber() {
+        return onuSerialNumber;
+    }
+
+    public void setOnuSerialNumber(String onuSerialNumber) {
+        this.onuSerialNumber = onuSerialNumber;
+    }
+
+    public Integer getSite() {
+        return site;
+    }
+
+    public void setSite(Integer site) {
+        this.site = site;
+    }
+
+    public String getOltIp() {
+        return oltIp;
+    }
+
+    public void setOltIp(String oltIp) {
+        this.oltIp = oltIp;
+    }
+
+    public String getOltInterface() {
+        return oltInterface;
+    }
+
+    public void setOltInterface(String oltInterface) {
+        this.oltInterface = oltInterface;
+    }
+
+    public String getOnuMacAddress() {
+        return onuMacAddress;
+    }
+
+    public void setOnuMacAddress(String onuMacAddress) {
+        this.onuMacAddress = onuMacAddress;
+    }
+
+    public String getOnuDeviceName() {
+        return onuDeviceName;
+    }
+
+    public void setOnuDeviceName(String onuDeviceName) {
+        this.onuDeviceName = onuDeviceName;
+    }
+
+    public String getPackageType() {
+        return packageType;
+    }
+
+    public void setPackageType(String packageType) {
+        this.packageType = packageType;
+    }
+
+    public String getOltReportedUpstream() {
+        return oltReportedUpstream;
+    }
+
+    public void setOltReportedUpstream(String oltReportedUpstream) {
+        this.oltReportedUpstream = oltReportedUpstream;
+    }
+
+    public String getOltReportedDownstream() {
+        return oltReportedDownstream;
+    }
+
+    public void setOltReportedDownstream(String oltReportedDownstream) {
+        this.oltReportedDownstream = oltReportedDownstream;
+    }
+
+    public String getProvision() {
+        return provision;
+    }
+
+    public void setProvision(String provision) {
+        this.provision = provision;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getSsidName() {
+        return ssidName;
+    }
+
+    public void setSsidName(String ssidName) {
+        this.ssidName = ssidName;
+    }
+
+    public HiveClient() {
+        //TODO Auto-generated constructor stub
+    }
 }
