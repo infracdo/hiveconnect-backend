@@ -1,6 +1,5 @@
 package com.autoprov.autoprov.configuration;
 
-
 import java.util.HashMap;
 
 import javax.sql.DataSource;
@@ -9,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -24,41 +24,45 @@ import jakarta.persistence.EntityManagerFactory;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-    entityManagerFactoryRef = "hiveEntityManagerFactory",
-    basePackages = "com.autoprov.autoprov.repositories.hiveRepositories",
-    transactionManagerRef = "hiveTransactionManager"
+    entityManagerFactoryRef = "subscriberEntityManagerFactory",
+    basePackages = "com.autoprov.autoprov.repositories.subscriberRepositories",
+    transactionManagerRef = "subscriberTransactionManager"
 )
-public class hiveDatabaseConfiguration {
+public class subscriberDatabaseConfiguration {
 
     @Autowired
     private Environment env;
 
-    @Bean(name = "hiveDataSource")
+    @Primary
+    @Bean(name = "subscriberDataSource")
     public DataSource dataSource() {
         DriverManagerDataSource ds = new DriverManagerDataSource();
-        ds.setUrl(env.getProperty("hiveDB.datasource.url"));
-        ds.setUsername(env.getProperty("hiveDB.datasource.username"));
-        ds.setPassword(env.getProperty("hiveDB.datasource.password"));
-        ds.setDriverClassName(env.getProperty("hiveDB.datasource.driver-class-name"));
+        ds.setUrl(env.getProperty("clientdb.datasource.url"));
+        ds.setUsername(env.getProperty("clientdb.datasource.username"));
+        ds.setPassword(env.getProperty("clientdb.datasource.password"));
+        ds.setDriverClassName(env.getProperty("clientdb.datasource.driver-class-name"));
         return ds;
     }
 
-    @Bean(name = "hiveEntityManagerFactory")
+    @Primary
+    @Bean(name = "subscriberEntityManagerFactory")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         LocalContainerEntityManagerFactoryBean bean = new LocalContainerEntityManagerFactoryBean();
         bean.setDataSource(dataSource());
         JpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
         bean.setJpaVendorAdapter(adapter);
         HashMap<String, Object> properties = new HashMap<>();
-        properties.put("hibernate.hbm2ddl.auto", env.getProperty("hiveDB.jpa.hibernate.ddl-auto"));
+        properties.put("hibernate.hbm2ddl.auto", env.getProperty("clientdb.jpa.hibernate.ddl-auto"));
+        properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
         bean.setJpaPropertyMap(properties);
-        bean.setPackagesToScan("com.autoprov.autoprov.entity.hiveDomain");
+        bean.setPackagesToScan("com.autoprov.autoprov.entity.subscriberDomain");
         return bean;
     }
 
-    @Bean(name = "hiveTransactionManager")
+    @Primary
+    @Bean(name = "subscriberTransactionManager")
     public PlatformTransactionManager transactionManager(
-            @Qualifier("hiveEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
+            @Qualifier("subscriberEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory);
     }
 }
@@ -89,26 +93,26 @@ public class hiveDatabaseConfiguration {
 
 // @Configuration
 // @EnableTransactionManagement
-// @EnableJpaRepositories(entityManagerFactoryRef = "hiveEntityManagerEntity", basePackages = {
-//         "com.autoprov.autoprov.repositories.hiveRepositories" }, transactionManagerRef = "hiveTransactionManager")
-// public class hiveDatabaseConfiguration {
+// @EnableJpaRepositories(entityManagerFactoryRef = "subscriberEntityManagerEntity", basePackages = {
+//         "com.autoprov.autoprov.repositories.subscriberRepositories" }, transactionManagerRef = "subscriberTransactionManager")
+// public class subscriberDatabaseConfiguration {
 
 //     @Autowired
 //     Environment env;
 
 //     @Primary
-//     @Bean(name = "hiveDataSource")
+//     @Bean(name = "subscriberDataSource")
 //     public DataSource dataSource() {
 //         DriverManagerDataSource ds = new DriverManagerDataSource();
-//         ds.setUrl(env.getProperty("hiveDB.datasource.url"));
-//         ds.setUsername(env.getProperty("hiveDB.datasource.username"));
-//         ds.setPassword(env.getProperty("hiveDB.datasource.password"));
-//         ds.setDriverClassName(env.getProperty("hiveDB.datasource.driver-class-name"));
+//         ds.setUrl(env.getProperty("clientdb.datasource.url"));
+//         ds.setUsername(env.getProperty("clientdb.datasource.username"));
+//         ds.setPassword(env.getProperty("clientdb.datasource.password"));
+//         ds.setDriverClassName(env.getProperty("clientdb.datasource.driver-class-name"));
 //         return ds;
 //     }
 
 //     @Primary
-//     @Bean(name = "hiveEntityManagerEntity")
+//     @Bean(name = "subscriberEntityManagerEntity")
 //     public LocalContainerEntityManagerFactoryBean entityManager() {
 //         LocalContainerEntityManagerFactoryBean bean = new LocalContainerEntityManagerFactoryBean();
 //         bean.setDataSource(dataSource());
@@ -125,9 +129,9 @@ public class hiveDatabaseConfiguration {
 //     }
 
 //     @Primary
-//     @Bean("hiveTransactionManager")
+//     @Bean("subscriberTransactionManager")
 //     public PlatformTransactionManager transactionManager(
-//             @Qualifier("hiveEntityManagerEntity") EntityManagerFactory entityManagerFactory) {
+//             @Qualifier("subscriberEntityManagerEntity") EntityManagerFactory entityManagerFactory) {
 //         return new JpaTransactionManager(entityManagerFactory);
 //     }
 

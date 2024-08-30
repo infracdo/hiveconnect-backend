@@ -24,46 +24,44 @@ import jakarta.persistence.EntityManagerFactory;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-    entityManagerFactoryRef = "hiveEntityManagerFactory",
-    basePackages = "com.autoprov.autoprov.repositories.hiveRepositories",
-    transactionManagerRef = "hiveTransactionManager"
+    entityManagerFactoryRef = "oltEntityManagerFactory",
+    basePackages = "com.autoprov.autoprov.repositories.oltRepositories",
+    transactionManagerRef = "oltTransactionManager"
 )
-public class hiveDatabaseConfiguration {
+public class oltDatabaseConfiguration {
 
     @Autowired
     private Environment env;
 
-    @Bean(name = "hiveDataSource")
+    @Bean(name = "oltDataSource")
     public DataSource dataSource() {
         DriverManagerDataSource ds = new DriverManagerDataSource();
-        ds.setUrl(env.getProperty("hiveDB.datasource.url"));
-        ds.setUsername(env.getProperty("hiveDB.datasource.username"));
-        ds.setPassword(env.getProperty("hiveDB.datasource.password"));
-        ds.setDriverClassName(env.getProperty("hiveDB.datasource.driver-class-name"));
+        ds.setUrl(env.getProperty("oltDB.datasource.url"));
+        ds.setUsername(env.getProperty("oltDB.datasource.username"));
+        ds.setPassword(env.getProperty("oltDB.datasource.password"));
+        ds.setDriverClassName(env.getProperty("oltDB.datasource.driver-class-name"));
         return ds;
     }
 
-    @Bean(name = "hiveEntityManagerFactory")
+    @Bean(name = "oltEntityManagerFactory")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         LocalContainerEntityManagerFactoryBean bean = new LocalContainerEntityManagerFactoryBean();
         bean.setDataSource(dataSource());
         JpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
         bean.setJpaVendorAdapter(adapter);
         HashMap<String, Object> properties = new HashMap<>();
-        properties.put("hibernate.hbm2ddl.auto", env.getProperty("hiveDB.jpa.hibernate.ddl-auto"));
+        properties.put("hibernate.hbm2ddl.auto", env.getProperty("oltDB.jpa.hibernate.ddl-auto"));
         bean.setJpaPropertyMap(properties);
-        bean.setPackagesToScan("com.autoprov.autoprov.entity.hiveDomain");
+        bean.setPackagesToScan("com.autoprov.autoprov.entity.oltDomain");
         return bean;
     }
 
-    @Bean(name = "hiveTransactionManager")
+    @Bean(name = "oltTransactionManager")
     public PlatformTransactionManager transactionManager(
-            @Qualifier("hiveEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
+            @Qualifier("oltEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory);
     }
 }
-
-
 
 
 // import java.util.HashMap;
@@ -89,26 +87,26 @@ public class hiveDatabaseConfiguration {
 
 // @Configuration
 // @EnableTransactionManagement
-// @EnableJpaRepositories(entityManagerFactoryRef = "hiveEntityManagerEntity", basePackages = {
-//         "com.autoprov.autoprov.repositories.hiveRepositories" }, transactionManagerRef = "hiveTransactionManager")
-// public class hiveDatabaseConfiguration {
+// @EnableJpaRepositories(entityManagerFactoryRef = "oltEntityManagerEntity", basePackages = {
+//         "com.autoprov.autoprov.repositories.oltRepositories" }, transactionManagerRef = "oltransactionManager")
+// public class oltDatabaseConfiguration {
 
 //     @Autowired
 //     Environment env;
 
 //     @Primary
-//     @Bean(name = "hiveDataSource")
+//     @Bean(name = "oltDataSource")
 //     public DataSource dataSource() {
 //         DriverManagerDataSource ds = new DriverManagerDataSource();
-//         ds.setUrl(env.getProperty("hiveDB.datasource.url"));
-//         ds.setUsername(env.getProperty("hiveDB.datasource.username"));
-//         ds.setPassword(env.getProperty("hiveDB.datasource.password"));
-//         ds.setDriverClassName(env.getProperty("hiveDB.datasource.driver-class-name"));
+//         ds.setUrl(env.getProperty("oltDB.datasource.url"));
+//         ds.setUsername(env.getProperty("oltDB.datasource.username"));
+//         ds.setPassword(env.getProperty("oltDB.datasource.password"));
+//         ds.setDriverClassName(env.getProperty("oltDB.datasource.driver-class-name"));
 //         return ds;
 //     }
 
 //     @Primary
-//     @Bean(name = "hiveEntityManagerEntity")
+//     @Bean(name = "oltEntityManagerEntity")
 //     public LocalContainerEntityManagerFactoryBean entityManager() {
 //         LocalContainerEntityManagerFactoryBean bean = new LocalContainerEntityManagerFactoryBean();
 //         bean.setDataSource(dataSource());
@@ -119,15 +117,15 @@ public class hiveDatabaseConfiguration {
 //         // properties.put("hibernate.dialect",
 //         // "org.hibernate.dialect.PostgreSQLDialect");
 //         bean.setJpaPropertyMap(properties);
-//         bean.setPackagesToScan("com.autoprov.autoprov.entity.hiveDomain");
+//         bean.setPackagesToScan("com.autoprov.autoprov.entity.oltDomain");
 //         return bean;
 
 //     }
 
 //     @Primary
-//     @Bean("hiveTransactionManager")
+//     @Bean("oltTransactionManager")
 //     public PlatformTransactionManager transactionManager(
-//             @Qualifier("hiveEntityManagerEntity") EntityManagerFactory entityManagerFactory) {
+//             @Qualifier("oltEntityManagerEntity") EntityManagerFactory entityManagerFactory) {
 //         return new JpaTransactionManager(entityManagerFactory);
 //     }
 
