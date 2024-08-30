@@ -2,7 +2,7 @@ services:
 
   frontend:
     build:
-      context: /home/apollo/frontend/init-quasar-provision
+      context: /home/$USER/hiveconnect_fe
       dockerfile: Dockerfile
     ports:
       - "80:80"  # Change port as necessary
