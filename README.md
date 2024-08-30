@@ -2,6 +2,7 @@
 - **Docker**
 - **Docker Compose**
 - **Git**
+- **Linux | Ubuntu | WSL**
 
 ---
 
@@ -46,8 +47,8 @@ To run Docker commands without using sudo, add your user to the Docker group:
 sudo usermod -aG docker $USER
 ```
 
- After running this command, log out and log back in for the changes to take effect.
-
+ - After running this command, log out and log back in for the changes to take effect.
+ - For Ubuntu users, Reboot/Restart device
 
 ---
 ## ✔️ Verify Installation
@@ -57,7 +58,8 @@ Check if Docker is installed and running by executing:
 ```bash
 docker ps
 ```
-If you won't get any errors, that means it is installed succesfully
+- If you get permission denied, logout-login for WSL or Reboot for Ubuntu
+- If you won't get any errors, that means it is installed succesfully
 
 
 ---
@@ -71,7 +73,7 @@ git clone https://github.com/infracdo/hiveconnect_be.git
 ```
 git clone https://github.com/infracdo/hiveconnect_fe.git
 ```
-
+- note: clone it inside /home/user/
 
 ---
 ## 🏃‍♂️ Run Docker
@@ -79,10 +81,18 @@ git clone https://github.com/infracdo/hiveconnect_fe.git
 Navigate to your project directory and start Docker:
 
 ```bash
-cd /path/to/hiveconnect
+cd /home/$USER/hiveconnect_be
 ```
 ```
 docker compose up --build -d
+```
+if you have already used --build, use this for running wihout building image
+```
+docker compose up -d
+```
+to turn it off
+```
+docker compose down
 ```
 
 
@@ -102,7 +112,7 @@ Expected Result: A list of running services.
 
 You can access the frontend and backend of your application locally:
 
-  Frontend: [http://localhost:80](http://localhost:8080/)
+  Frontend: [http://localhost:80](http://localhost:80/)
   
   Backend: [http://localhost:8080](http://localhost:8080/)
 
