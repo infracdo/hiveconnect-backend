@@ -35,6 +35,8 @@ sudo apt-get update
 ```
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
+
+
 ---
 ## ➡️ Run Docker Commands Without sudo
 
@@ -46,6 +48,7 @@ sudo usermod -aG docker $USER
 
  After running this command, log out and log back in for the changes to take effect.
 
+
 ---
 ## ✔️ Verify Installation
 
@@ -56,15 +59,20 @@ docker ps
 ```
 If you won't get any errors, that means it is installed succesfully
 
+
 ---
-## 📦 Clone the Repository
+## 📦 Clone the Repository of Backend and Frontend
 
 Clone the repository to your local machine:
 
 ```bash
-
 git clone https://github.com/infracdo/hiveconnect_be.git
 ```
+```
+git clone https://github.com/infracdo/hiveconnect_fe.git
+```
+
+
 ---
 ## 🏃‍♂️ Run Docker
 
@@ -76,6 +84,8 @@ cd /path/to/hiveconnect
 ```
 docker compose up --build -d
 ```
+
+
 ---
 ## ✔️ Check Running Containers
 
@@ -85,6 +95,7 @@ Verify that your Docker services are running:
 docker compose ps
 ```
 Expected Result: A list of running services.
+
 
 ---
 ## 🌐 Access the Application
