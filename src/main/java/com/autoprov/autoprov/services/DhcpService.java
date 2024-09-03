@@ -67,6 +67,7 @@ public class DhcpService {
         String defaultGateway = cidrBlockDTO.getDefaultGateway();
         String broadcastAddress = cidrBlockDTO.getBroadcastAddress();
         String networkAddress = cidrBlockDTO.getNetworkAddress();
+        String vlanId = cidrBlockDTO.getVlanId();
 
         // Parse CIDR block
         String[] parts = cidrBlock.split("/");
@@ -88,6 +89,8 @@ public class DhcpService {
             ipAddress.setNotes("Ready to assign");
             ipAddress.setNetworkAddress(networkAddress);
             ipAddress.setType(networkType);
+            ipAddress.setVlanId(vlanId); // Set the vlanId here
+
 
             if (ip.equals(defaultGateway)) {
                 ipAddress.setStatus("Not Available");
