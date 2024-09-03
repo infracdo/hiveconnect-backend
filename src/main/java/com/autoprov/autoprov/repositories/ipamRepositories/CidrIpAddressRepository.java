@@ -16,8 +16,8 @@ public interface CidrIpAddressRepository extends JpaRepository<CidrIpAddress, Lo
     @Query(value = "SELECT * from cidr_ipaddress where status = \"Available\"", nativeQuery = true)
     List<CidrIpAddress> findAllAvailableIp();
 
-    //@Query(value = "SELECT * from cidr_ipaddress where ipAddress LIKE ?1%", nativeQuery = true)
-    @Query(value = "SELECT * from cidr_ipaddress", nativeQuery = true)
+    @Query(value = "SELECT * from cidr_ipaddress where ipAddress LIKE ?1%", nativeQuery = true)
+   // @Query(value = "SELECT * from cidr_ipaddress", nativeQuery = true)
     List<CidrIpAddress> findAllUnderCidrBlock(String cidrBlock);
 
     @Query(value = "SELECT ipAddress from cidr_ipaddress where ipAddress LIKE ?1% AND notes LIKE '%OLT IP%'", nativeQuery = true)
