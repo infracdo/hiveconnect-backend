@@ -68,10 +68,10 @@ docker ps
 Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/infracdo/hiveconnect_be.git
+https://github.com/apollo-com-ph/hiveconnect-backend.git
 ```
 ```
-git clone https://github.com/infracdo/hiveconnect_fe.git
+https://github.com/apollo-com-ph/hiveconnect-frontend.git
 ```
 - note: clone it inside /home/user/
 
@@ -81,7 +81,7 @@ git clone https://github.com/infracdo/hiveconnect_fe.git
 Navigate to your project directory and start Docker:
 
 ```bash
-cd /home/$USER/hiveconnect_be
+cd /home/$USER/hiveconnect-backend
 ```
 ```
 docker compose up --build -d
