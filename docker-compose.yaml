@@ -2,10 +2,10 @@ services:
 
   frontend:
     build:
-      context: /home/$USER/hiveconnect_fe
+      context: /home/$USER/hiveconnect-frontend
       dockerfile: Dockerfile
     ports:
-      - "80:80"  # Change port as necessary
+      - "80:80" 
     networks:
       - app-network
 
