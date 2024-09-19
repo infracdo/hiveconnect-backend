@@ -68,10 +68,10 @@ docker ps
 Clone the repository to your local machine:
 
 ```bash
-https://github.com/apollo-com-ph/hiveconnect-backend.git
+git clone https://github.com/apollo-com-ph/hiveconnect-backend.git
 ```
 ```
-https://github.com/apollo-com-ph/hiveconnect-frontend.git
+git clone https://github.com/apollo-com-ph/hiveconnect-frontend.git
 ```
 - note: clone it inside /home/user/
 
