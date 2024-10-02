@@ -25,7 +25,7 @@ public class TroubleshootController {
 
         String device_name = "{job=\"ip_address\",site_tenant=\"DCTECH\",device_name=\""
                 + device + "\"}";
-        String prometheusUrl = "https://dctech-prometheus.apolloglobal.net/api/v1/query?query=lo_status{device_name}";
+        String prometheusUrl = "http://192.168.90.136:9090/api/v1/query?query=lo_status{device_name}";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
