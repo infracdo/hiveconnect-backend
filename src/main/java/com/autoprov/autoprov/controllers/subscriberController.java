@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
+import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
 import com.autoprov.autoprov.services.HiveClientService;
 import com.autoprov.autoprov.services.subscriberService;
 
@@ -37,6 +39,8 @@ import jakarta.validation.Valid;
 @RestController
 public class subscriberController {
 
+    @Autowired
+    private final subscriberRepository accountRepository;
  @Autowired
  private final subscriberService SubscriberService;
 
@@ -44,9 +48,10 @@ public class subscriberController {
  private final HiveClientService hiveclientService;
 
 // POST END POINT add or create new subscriber endpoint
-public subscriberController(subscriberService SubscriberService, HiveClientService hiveclientService) {
+public subscriberController(subscriberService SubscriberService, HiveClientService hiveclientService, subscriberRepository accountRepository) {
     this.SubscriberService = SubscriberService;
     this.hiveclientService = hiveclientService;
+    this.accountRepository = accountRepository;
 }
 
 
@@ -116,6 +121,14 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
+    }
+
+     @Async("asyncExecutor")
+    @GetMapping("/getClientBySerialNumber/{serial_number}")
+    public CompletableFuture<Optional<subscriberEntity>> getClientBySerialNumber(
+            @PathVariable("serial_number") String serial_number) {
+        System.out.println("getClients {" + serial_number + "} invoked");
+        return CompletableFuture.completedFuture(accountRepository.findClientBySerialNumber(serial_number));
     }
 
     @Async("asyncExecutor")
