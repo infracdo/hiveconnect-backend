@@ -19,7 +19,7 @@ services:
       - ./logs:/app/logs
     environment:
       DB_HOST: 192.168.90.72
-      DB_PORT: 5432
+      DB_PORT: 3306
       DB_NAME: hiveDB
       DB_USERNAME: apollo
       DB_PASSWORD: root
