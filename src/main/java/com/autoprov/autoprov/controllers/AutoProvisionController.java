@@ -47,9 +47,9 @@ public class AutoProvisionController {
 
     private Boolean showBody = false;
 
-    private static String playbookMonitoringApiUrl = "https://192.168.90.133/api/v2/job_templates/15/";
-    private static String playbookPreProvUrl = "https://192.168.90.133/api/v2/job_templates/18/";
-    private static String playbookGetJobUrl = "https://192.168.90.133/api/v2/jobs/";
+    private static String playbookMonitoringApiUrl = "https://hive-awx.apolloglobal.net/api/v2/job_templates/15/";
+    private static String playbookPreProvUrl = "https://hive-awx.apolloglobal.net/api/v2/job_templates/18/";
+    private static String playbookGetJobUrl = "https://hive-awx.apolloglobal.net/api/v2/jobs/";
     private static String acsApiUrl = "http://192.168.90.101:7547/";
 
     @Autowired
