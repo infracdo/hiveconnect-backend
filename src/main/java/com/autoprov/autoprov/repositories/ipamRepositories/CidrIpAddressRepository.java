@@ -44,21 +44,17 @@ public interface CidrIpAddressRepository extends JpaRepository<CidrIpAddress, Lo
     @Query(value = "SELECT * from cidr_ipaddress where status =\"Available\" AND ipAddress LIKE ?1% LIMIT 1", nativeQuery = true)
     List<CidrIpAddress> getOneAvailableIpAddressUnderCidrBlock(String cidrBlock);
 
-    @Query(value = "SELECT * from hive.ipaddresses where status = \"Available\"
-    and ip_address LIKE\n" + //
-    "(\n" + //
-    "\tSELECT CONCAT(truncated_network_address, '%') FROM\n" + //
-    "\t(\n" + //
-    "\tSELECT \n" + //
-    "\t SUBSTRING_INDEX(network_address, '.', 3) AS truncated_network_address\n"
-    + //
-    "\tFROM \n" + //
-    "\t hive.cidr_block \n" + //
-    "\tWHERE \n" + //
-    "\t site = ?1 AND network_type = \"Private\"\n" + //
-    "\t) AS subquery\n" + //
-    ")\n" + //
-    "LIMIT 1;", nativeQuery = true)
+    @Query(value = "SELECT * FROM hive.ipaddresses WHERE status = 'Available' " +
+        "AND ip_address LIKE " +
+        "( " +
+        "  SELECT CONCAT(truncated_network_address, '%') FROM " +
+        "  ( " +
+        "    SELECT SUBSTRING_INDEX(network_address, '.', 3) AS truncated_network_address " +
+        "    FROM hive.cidr_block " +
+        "    WHERE site = ?1 AND network_type = 'Private' " +
+        "  ) AS subquery " +
+        ") " +
+        "LIMIT 1", nativeQuery = true)
 
     List<CidrIpAddress> getOneAvailableIpAddressUnderSite(String site, String type);
 
