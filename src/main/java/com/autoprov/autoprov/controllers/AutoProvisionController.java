@@ -47,10 +47,11 @@ public class AutoProvisionController {
 
     private Boolean showBody = false;
 
-    private static String playbookMonitoringApiUrl = "https://hive-awx.apolloglobal.net/api/v2/job_templates/15/";
+    private static String playbookMonitoringApiUrl = "https://hive-awx.apolloglobal.net/api/v2/job_templates/22/";
     private static String playbookPreProvUrl = "https://hive-awx.apolloglobal.net/api/v2/job_templates/18/";
     private static String playbookGetJobUrl = "https://hive-awx.apolloglobal.net/api/v2/jobs/";
     private static String acsApiUrl = "http://192.168.90.101:7547/";
+
 
     @Autowired
     private CidrIpAddressRepository ipAddRepo;
@@ -192,7 +193,7 @@ public class AutoProvisionController {
         TimeUnit.SECONDS.sleep(20);
 
         String requestBody = "{\n" +
-                "\"job_template\": \"15\",\n" +
+                "\"job_template\": \"22\",\n" +
                 "\"ask_variables_on_launch\": \"true\",\n" +
                 "\"extra_vars\": \"---" +
                 "\\nserial_number: " + serialNumber +
@@ -448,7 +449,7 @@ public class AutoProvisionController {
         TimeUnit.SECONDS.sleep(20);
 
         String requestBody = "{\n" +
-                "\"job_template\": \"15\",\n" +
+                "\"job_template\": \"22\",\n" +
                 "\"ask_variables_on_launch\": \"true\",\n" +
                 "\"extra_vars\": \"---" +
                 "\\nserial_number: " + serialNumber +
