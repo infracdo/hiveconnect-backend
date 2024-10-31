@@ -24,10 +24,10 @@ public class oltEntity {
     @Column(name = "olt_id", unique = true, nullable = false)
     private Long newoltId;
 
-    @Column(name = "olt_name", unique = true, nullable = false)
+    @Column(name = "olt_name", nullable = false)
     private String oltName;
 
-    @Column(name = "olt_ipaddress", unique = true, nullable = false)
+    @Column(name = "olt_ipaddress", nullable = false)
     private String oltIp;
 
     @Column(name = "olt_network_site")
