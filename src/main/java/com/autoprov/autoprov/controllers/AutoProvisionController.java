@@ -102,7 +102,8 @@ public class AutoProvisionController {
         // String cidr = params.get("cidr"); // Cidr block of site
         // String site = params.get("networkName"); // To determine IPAM site
         String oltIp = params.get("olt");
-        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        Long oltId = Long.parseLong(params.get("oltId"));
+        String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
         // String wanMode = params.get("wanMode"); // Bridged or Routed
         
         String packageType = params.get("packageType");
@@ -341,7 +342,9 @@ public class AutoProvisionController {
         String macAddress = params.get("macAddress");
         //String site = params.get("site"); // To determine IPAM site
         String oltIp = params.get("olt");
-        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        Long oltId = Long.parseLong(params.get("oltId"));
+        String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
+        //String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         // String wanMode = params.get("wanMode"); // Bridged or Routed
 
         String packageType = params.get("packageType");
@@ -400,7 +403,9 @@ public class AutoProvisionController {
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
         String oltIp = params.get("olt");
-        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        Long oltId = Long.parseLong(params.get("oltId"));
+        String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
+      //  String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
@@ -598,7 +603,9 @@ public class AutoProvisionController {
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
         String oltIp = params.get("olt");
-        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        Long oltId = Long.parseLong(params.get("oltId"));
+        String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
+      //  String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
@@ -1056,7 +1063,9 @@ public class AutoProvisionController {
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
         String oltIp = params.get("olt");
-        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        Long oltId = Long.parseLong(params.get("oltId"));
+        String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
+      //  String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)

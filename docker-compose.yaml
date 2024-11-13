@@ -8,6 +8,7 @@ services:
       - "80:80" 
     networks:
       - app-network
+    restart: unless-stopped
 
   autoprov:
     build:
@@ -17,18 +18,13 @@ services:
       - ./src:/app/src
       - ./target:/app/target
       - ./logs:/app/logs
-    environment:
-      DB_HOST: 192.168.90.72
-      DB_PORT: 3306
-      DB_NAME: hiveDB
-      DB_USERNAME: apollo
-      DB_PASSWORD: root
     ports:
       - "8080:8080"
     networks:
       - app-network
     depends_on:
       - frontend
+    restart: unless-stopped
 
 networks:
   app-network:
