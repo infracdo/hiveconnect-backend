@@ -21,7 +21,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           username: apollo838 # ${{ secrets.DOCKER_USERNAME }} # Add DOCKER_USERNAME secret in GitHub
-          password: charchel1992 # ${{ secrets.DOCKER_PASSWORD }} # Add DOCKER_PASSWORD secret in GitHub
+          password: dckr_pat_sVsgC2NIfqZHtGsVzOrlxICNTqs # ${{ secrets.DOCKER_PASSWORD }} # Add DOCKER_PASSWORD secret in GitHub
 
       # Step 3: Build the Docker image
       - name: Build Docker Image
