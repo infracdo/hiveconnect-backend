@@ -27,7 +27,7 @@ jobs:
       - name: Build Docker Image
         run: 
           # docker build --target build -t my-image:build .
-          docker build --target final -t hiveconnect-backend:latest .
+          docker build -t hiveconnect-backend:latest .
 
       # Step 4: Push the Docker image
       - name: Push Docker Image
