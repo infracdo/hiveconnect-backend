@@ -21,7 +21,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           username: infracdo # ${{ secrets.DOCKER_USERNAME }} # Add DOCKER_USERNAME secret in GitHub
-          password: dckr_pat_4DJe8zrNWaAsBtMluyZrVXbA25E # ${{ secrets.DOCKER_PASSWORD }} # Add DOCKER_PASSWORD secret in GitHub
+          password: dckr_pat__OLCfPrg82w1BYMpRc0aQbVzV1M # ${{ secrets.DOCKER_PASSWORD }} # Add DOCKER_PASSWORD secret in GitHub
 
       # Step 3: Build the Docker image
       - name: Build Docker Image
