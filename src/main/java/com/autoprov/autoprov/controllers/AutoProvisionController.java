@@ -47,10 +47,11 @@ public class AutoProvisionController {
 
     private Boolean showBody = false;
 
-    private static String playbookMonitoringApiUrl = "https://dctech-awx.apolloglobal.net/api/v2/job_templates/15/";
-    private static String playbookPreProvUrl = "https://dctech-awx.apolloglobal.net/api/v2/job_templates/18/";
-    private static String playbookGetJobUrl = "https://dctech-awx.apolloglobal.net/api/v2/jobs/";
+    private static String playbookMonitoringApiUrl = "https://hive-awx.apolloglobal.net/api/v2/job_templates/22/";
+    private static String playbookPreProvUrl = "https://hive-awx.apolloglobal.net/api/v2/job_templates/18/";
+    private static String playbookGetJobUrl = "https://hive-awx.apolloglobal.net/api/v2/jobs/";
     private static String acsApiUrl = "http://192.168.90.101:7547/";
+
 
     @Autowired
     private CidrIpAddressRepository ipAddRepo;
@@ -101,7 +102,8 @@ public class AutoProvisionController {
         // String cidr = params.get("cidr"); // Cidr block of site
         // String site = params.get("networkName"); // To determine IPAM site
         String oltIp = params.get("olt");
-        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        Long oltId = Long.parseLong(params.get("oltId"));
+        String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
         // String wanMode = params.get("wanMode"); // Bridged or Routed
         
         String packageType = params.get("packageType");
@@ -176,7 +178,7 @@ public class AutoProvisionController {
         }
 
         String ansibleApiUrl = playbookMonitoringApiUrl + "launch/";
-        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
 
@@ -192,7 +194,7 @@ public class AutoProvisionController {
         TimeUnit.SECONDS.sleep(20);
 
         String requestBody = "{\n" +
-                "\"job_template\": \"15\",\n" +
+                "\"job_template\": \"22\",\n" +
                 "\"ask_variables_on_launch\": \"true\",\n" +
                 "\"extra_vars\": \"---" +
                 "\\nserial_number: " + serialNumber +
@@ -340,7 +342,9 @@ public class AutoProvisionController {
         String macAddress = params.get("macAddress");
         //String site = params.get("site"); // To determine IPAM site
         String oltIp = params.get("olt");
-        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        Long oltId = Long.parseLong(params.get("oltId"));
+        String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
+        //String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         // String wanMode = params.get("wanMode"); // Bridged or Routed
 
         String packageType = params.get("packageType");
@@ -399,7 +403,9 @@ public class AutoProvisionController {
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
         String oltIp = params.get("olt");
-        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        Long oltId = Long.parseLong(params.get("oltId"));
+        String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
+      //  String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
@@ -433,7 +439,7 @@ public class AutoProvisionController {
         }
 
         String ansibleApiUrl = playbookMonitoringApiUrl + "launch/";
-        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
         if (showBody)
@@ -448,7 +454,7 @@ public class AutoProvisionController {
         TimeUnit.SECONDS.sleep(20);
 
         String requestBody = "{\n" +
-                "\"job_template\": \"15\",\n" +
+                "\"job_template\": \"22\",\n" +
                 "\"ask_variables_on_launch\": \"true\",\n" +
                 "\"extra_vars\": \"---" +
                 "\\nserial_number: " + serialNumber +
@@ -597,7 +603,9 @@ public class AutoProvisionController {
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
         String oltIp = params.get("olt");
-        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        Long oltId = Long.parseLong(params.get("oltId"));
+        String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
+      //  String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
@@ -610,7 +618,7 @@ public class AutoProvisionController {
          String downstream = packageRepo.findBypackageId(packageType).get().getDownstream();
 
         String ansibleApiUrl = playbookPreProvUrl + "launch/";
-        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
 
@@ -748,7 +756,7 @@ public class AutoProvisionController {
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String ansibleApiUrl = playbookGetJobUrl + jobId;
-        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -892,7 +900,7 @@ public class AutoProvisionController {
     public String getOltInterface(String jobId) {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
-        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
         String error = "";
 
         HttpHeaders headers = new HttpHeaders();
@@ -950,7 +958,7 @@ public class AutoProvisionController {
     public String[] getOltBandwidth(String jobId) {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
-        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
+        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
         String error = "";
 
         HttpHeaders headers = new HttpHeaders();
@@ -1055,7 +1063,9 @@ public class AutoProvisionController {
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
         String oltIp = params.get("olt");
-        String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        Long oltId = Long.parseLong(params.get("oltId"));
+        String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
+      //  String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)

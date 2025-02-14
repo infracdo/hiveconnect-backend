@@ -53,7 +53,6 @@ public class subscriberDatabaseConfiguration {
         bean.setJpaVendorAdapter(adapter);
         HashMap<String, Object> properties = new HashMap<>();
         properties.put("hibernate.hbm2ddl.auto", env.getProperty("clientdb.jpa.hibernate.ddl-auto"));
-        properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
         bean.setJpaPropertyMap(properties);
         bean.setPackagesToScan("com.autoprov.autoprov.entity.subscriberDomain");
         return bean;

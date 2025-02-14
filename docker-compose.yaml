@@ -1,15 +1,18 @@
 services:
 
   frontend:
+    container_name: frontend
     build:
-      context: /home/$USER/hiveconnect-frontend
+      context: ../hiveconnect-frontend-prince-branch
       dockerfile: Dockerfile
     ports:
-      - "80:80" 
+      - "8081:80" 
     networks:
-      - app-network
+      hive-network:
+    restart: unless-stopped
 
-  autoprov:
+  hive-backend:
+    container_name: hive-backend
     build:
       context: .
       dockerfile: Dockerfile
@@ -17,19 +20,18 @@ services:
       - ./src:/app/src
       - ./target:/app/target
       - ./logs:/app/logs
-    environment:
-      DB_HOST: 192.168.90.72
-      DB_PORT: 5432
-      DB_NAME: hiveDB
-      DB_USERNAME: apollo
-      DB_PASSWORD: root
     ports:
       - "8080:8080"
     networks:
-      - app-network
+      hive-network:
     depends_on:
       - frontend
+    restart: unless-stopped
 
 networks:
-  app-network:
+  hive-network:
     driver: bridge
+
+volumes:
+  etcd_data:
+    driver: local

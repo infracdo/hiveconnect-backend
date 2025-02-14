@@ -17,9 +17,13 @@ public interface CidrIpAddressRepository extends JpaRepository<CidrIpAddress, Lo
     List<CidrIpAddress> findAllAvailableIp();
 
     @Query(value = "SELECT * from cidr_ipaddress where ipAddress LIKE ?1%", nativeQuery = true)
-   // @Query(value = "SELECT * from cidr_ipaddress", nativeQuery = true)
+    //@Query(value = "SELECT * from cidr_ipaddress", nativeQuery = true)
     List<CidrIpAddress> findAllUnderCidrBlock(String cidrBlock);
 
+  
+    @Query(value = "SELECT * from cidr_ipaddress where network_address LIKE ?1%", nativeQuery = true)
+    List<CidrIpAddress> findAllByNetworkAddress(String networkAddress);
+    
     @Query(value = "SELECT ipAddress from cidr_ipaddress where ipAddress LIKE ?1% AND notes LIKE '%OLT IP%'", nativeQuery = true)
     String getOltIpOfIpAddress(String cidrBlock);
 

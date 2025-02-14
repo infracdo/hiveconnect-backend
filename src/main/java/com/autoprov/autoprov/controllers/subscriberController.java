@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -109,6 +110,7 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
     // GET endpoint to retrieve all subscribers
     @Async("asyncExecutor")
     @GetMapping("/getsubscribers")
+    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
     public ResponseEntity<List<subscriberEntity>> getAllSubscribers() {
         try {
             List<subscriberEntity> subscribers = SubscriberService.getAllSubscribers();
@@ -118,8 +120,10 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
         }
     }
 
+    // DEBUGGING
     @Async("asyncExecutor")
     @GetMapping("/getprovisionedsubscribers")
+    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONED_READ')")
     public ResponseEntity<List<subscriberEntity>> getProvisionedSubscribers() {
         try {
             List<subscriberEntity> provisionedSubscribers = SubscriberService.getProvisionedSubscribers();
@@ -149,6 +153,7 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
 
 }
 
+    // DEBUGGING
  //GET endpoint to retrieve subscriber by id
  @Async("asyncExecutor")
  @GetMapping("/getHiveClientById/{id}")
@@ -170,6 +175,7 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
  // GET endpoint to retrieve all hiveclients
  @Async("asyncExecutor")
  @GetMapping("/getHiveClients")
+ @PreAuthorize("hasAuthority('HIVECONNECT_TROUBLESHOOTING_READ')")
  public ResponseEntity<List<HiveClient>> getAllHiveclients() {
      try {
          List<HiveClient> hiveclients = hiveclientService.getAllHiveclients();

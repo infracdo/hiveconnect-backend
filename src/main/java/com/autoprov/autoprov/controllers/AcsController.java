@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,11 +53,12 @@ public class AcsController {
     // Exposed for HiveApp ----------------------------------------
     @Async("AsyncExecutor")
     @GetMapping("/getRogueDevices")
+    @PreAuthorize("hasAuthority('HIVECONNECT_ROGUE_DEVICES_READ')")
     public CompletableFuture<List<Device>> getRougeDevices() {
 
         List<Device> Device = new ArrayList<>();
         DeviceRepo.findByGroup("unassigned").forEach(Device::add);
-
+        System.out.println("backend hive api accessed");
         return CompletableFuture.completedFuture(Device);
 
         // String apiUrl = acsApiUrl + "getRogueDevices";
