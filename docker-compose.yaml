@@ -1,0 +1,37 @@
+services:
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ../hiveconnect-frontend-prince-branch
+      dockerfile: Dockerfile
+    ports:
+      - "8081:80" 
+    networks:
+      hive-network:
+    restart: unless-stopped
+
+  hive-backend:
+    container_name: hive-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/app/src
+      - ./target:/app/target
+      - ./logs:/app/logs
+    ports:
+      - "8080:8080"
+    networks:
+      hive-network:
+    depends_on:
+      - frontend
+    restart: unless-stopped
+
+networks:
+  hive-network:
+    driver: bridge
+
+volumes:
+  etcd_data:
+    driver: local
