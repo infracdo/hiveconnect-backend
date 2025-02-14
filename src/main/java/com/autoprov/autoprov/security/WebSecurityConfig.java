@@ -167,8 +167,8 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
         .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests((authorize) -> authorize 
-						.requestMatchers("/api/hi").permitAll()
-						.anyRequest().permitAll()
+						.requestMatchers("/api/test/**").permitAll()
+						.anyRequest().authenticated()
 				)
 				.oauth2ResourceServer((oauth2) -> oauth2
 						.jwt(withDefaults())
