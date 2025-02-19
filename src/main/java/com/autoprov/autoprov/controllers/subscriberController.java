@@ -50,7 +50,7 @@ public subscriberController(subscriberService SubscriberService, HiveClientServi
     this.hiveclientService = hiveclientService;
 }
 
-
+// EXPOSE THIS API [USED FOR BILLING]
 @Async("asyncExecutor")
 @PostMapping("/createSubscriber")
 public ResponseEntity<?> addSubscriber(@Valid @RequestBody subscriberEntity subscriberEntity) {
@@ -188,7 +188,7 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
  //GET SUBSCRIBER ACCOUNT INFO BY ACCOUNTNUMBER
 //syntax in postman https://hivetest.apolloglobal.net:8081/subscriberAccountInfo?subscriberAccountNumber=dc008
 
-
+// EXPOSE THIS API [USED FOR BILLING]
 @Async("asyncExecutor")
 @GetMapping("/subscriberAccountInfo")
 public CompletableFuture<ResponseEntity<?>> getSubscriberAccountInfo(

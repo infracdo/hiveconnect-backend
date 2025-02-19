@@ -241,7 +241,7 @@ public class AutoProvisionController {
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        ResponseEntity lastJobStatus = lastJobStatus(clientName, jobId);
+        ResponseEntity lastJobStatus = lastJobStatus(accountNo, jobId);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
             // finalize and mark everything to be activated
@@ -249,7 +249,7 @@ public class AutoProvisionController {
             AcsController.setInformIntervalPostProv(serialNumber);
             AcsController.onuOnboarded(serialNumber);
 
-            String ssidName = clientName.replace(" ", "_");
+            String ssidName = accountNo.replace(" ", "_");
 
             String oltInterface = getOltInterface(jobId);
 
@@ -305,6 +305,7 @@ public class AutoProvisionController {
         StringBuilder jsonBody = new StringBuilder();
 
         jsonBody.append("{");
+        jsonBody.append("\"accountNumber\":\"" + accountNumber + "\",");
         jsonBody.append("\"clientName\":\"" + clientName + "\",");
         jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
         jsonBody.append("\"defaultGateway\":\"" + defaultGateway + "\",");
@@ -501,7 +502,7 @@ public class AutoProvisionController {
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        ResponseEntity lastJobStatus = lastJobStatus(clientName, jobId);
+        ResponseEntity lastJobStatus = lastJobStatus(accountNo, jobId);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
             // finalize and mark everything to be activated
@@ -509,7 +510,7 @@ public class AutoProvisionController {
             AcsController.setInformIntervalPostProv(serialNumber);
             AcsController.onuOnboarded(serialNumber);
 
-            String ssidName = clientName.replace(" ", "_");
+            String ssidName = accountNo.replace(" ", "_");
 
             String oltInterface = getOltInterface(jobId);
             String[] bandwidth = getOltBandwidth(jobId);
@@ -752,7 +753,7 @@ public class AutoProvisionController {
     // Troubleshooting
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
-    public ResponseEntity<Map<String, String>> lastJobStatus(String clientName, String jobId)
+    public ResponseEntity<Map<String, String>> lastJobStatus(String accountNo, String jobId)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String ansibleApiUrl = playbookGetJobUrl + jobId;
@@ -881,7 +882,7 @@ public class AutoProvisionController {
             System.out.println("Match not found");
         }
 
-        String newSsid = clientName.replace(" ", "_");
+        String newSsid = accountNo.replace(" ", "_");
         String password = "" + newSsid + "1234";
 
         // return ("Job ID: " + jobId + "\nStatus: " + lastJobStatus + error);
@@ -1080,7 +1081,7 @@ public class AutoProvisionController {
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
 
-        String ssidName = clientName.replace(" ", "_");
+        String ssidName = accountNo.replace(" ", "_");
 
         String oltInterface = getOltInterface("1424");
 

@@ -72,9 +72,9 @@ public class AcsController {
 
     // Exposed for HiveApp (end) ----------------------------------------
 
-    // [[[[[[---------------Exposed APIs for Connect-Disconnect
+    // [[[[[[---------------Exposed APIs for Connect-Disconnect  [REQUIRES AUTH AND TESTING]
    
-//--------------deactivateSubscriber base on accountNumber---------------------
+//--------------deactivateSubscriber base on accountNumber---------------------  [USED FOR BILLING]
 @Async("AsyncExecutor")
 @PostMapping("/deactivateSubscriber")
 public ResponseEntity<Map<String, String>> disconnectClient(@RequestBody Map<String, String> params) {
@@ -239,7 +239,7 @@ public ResponseEntity<Map<String, String>> disconnectClient(@RequestBody Map<Str
 // }
 
    
-//----------------Activate/Reconnect Subscriber
+//----------------Activate/Reconnect Subscriber  [USED FOR BILLING]
 @Async("AsyncExecutor")
 @PostMapping("/activateSubscriber")
 public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<String, String> params) {
@@ -394,7 +394,7 @@ public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<Stri
 //     }
 // }
 
- //----------------UPDATE PACKAGE----no function yet
+ //----------------UPDATE PACKAGE----no function yet  [USED FOR BILLING]
  @Async("AsyncExecutor")
  @PostMapping("/updateSubscriberPackage")
  public ResponseEntity<Map<String, String>> updateSubscriberPackage(@RequestBody Map<String, String> params) {
@@ -466,7 +466,7 @@ public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<Stri
  }
 
 
-//----------------UPDATE PROVISION STATUS---no function yet
+//----------------UPDATE PROVISION STATUS---no function yet  [USED FOR BILLING]
 @Async("AsyncExecutor")
 @PostMapping("/updateSubscriberProvision")
 public ResponseEntity<Map<String, String>> updateSubscriberProvision(@RequestBody Map<String, String> params) {
@@ -562,7 +562,7 @@ public ResponseEntity<Map<String, String>> updateSubscriberProvision(@RequestBod
 
 
 
- // permanently disconnect
+ // permanently disconnect [USED FOR BILLING]
  @Async("AsyncExecutor")
 @PostMapping("/terminateSubscriber")
 public ResponseEntity<Map<String, String>> permanentDisconnectClient(@RequestBody Map<String, String> params) {

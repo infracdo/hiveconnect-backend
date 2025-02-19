@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autoprov.autoprov.dto.ApiResponse;
 import com.autoprov.autoprov.dto.CidrBlockDTO;
+import com.autoprov.autoprov.entity.acsDomain.Device;
 import com.autoprov.autoprov.entity.ipamDomain.CidrBlock;
 import com.autoprov.autoprov.entity.ipamDomain.CidrIpAddress;
 import com.autoprov.autoprov.repositories.ipamRepositories.CidrBlockRepository;
@@ -58,6 +59,7 @@ public class DhcpController {
     @GetMapping("/getallnetworks")
     @PreAuthorize("hasAuthority('HIVECONNECT_NETWORK_ADDRESSES_READ')")
     public CompletableFuture<List<CidrBlock>> getallnetworks() {
+        System.out.println("backend hive api accessed");
         return CompletableFuture.completedFuture(CidrRepo.getAllNetworks());
     }
 
