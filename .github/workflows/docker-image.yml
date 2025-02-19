@@ -3,7 +3,7 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-      - kubernetes-hive  # Trigger on pushes to the main branch
+      - kubernetes-latest  # Trigger on pushes to the main branch
   pull_request:  # Trigger on pull requests
 
 jobs:
