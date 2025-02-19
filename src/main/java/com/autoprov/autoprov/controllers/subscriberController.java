@@ -80,40 +80,48 @@ public class subscriberController {
                     .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving the account: " + e.getMessage()));
         }
     }
+    
+    // TODO: TEST API IN POSTMAN
+    // EXPOSE THIS API [USED FOR CLIENT MIGRATION] 
+    @Async("asyncExecutor")
+    @PostMapping("/createSubscriberForMigration")
+    public ResponseEntity<?> addSubscriberForMigration(@Valid @RequestBody HiveClient hiveClient) {
+        try {
+            // Check if the account number is empty
+            if (hiveClient.getSubscriberAccountNumber() == null
+                    || hiveClient.getSubscriberAccountNumber().trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "subscriber account number is invalid"));
+            }
 
-    // TODO: MODIFY CODE FOR ACCOUNT MIGRATION
-    // EXPOSE THIS API [USED FOR MIGRATION] 
-    // @Async("asyncExecutor")
-    // @PostMapping("/createSubscriberForMigration")
-    // public ResponseEntity<?> addSubscriberForMigration(@Valid @RequestBody subscriberEntity subscriberEntity) {
-    //     try {
-    //         // Check if the account number is empty
-    //         if (subscriberEntity.getSubscriberAccountNumber() == null
-    //                 || subscriberEntity.getSubscriberAccountNumber().trim().isEmpty()) {
-    //             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-    //                     .body(createErrorResponse(HttpStatus.BAD_REQUEST, "subscriber account number is empty"));
-    //         }
+            // Check if the subscriber name is empty or too long
+            if (hiveClient.getClientName() == null || hiveClient.getClientName().trim().isEmpty()
+                    || hiveClient.getClientName().length() > 50) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "subscriber name is invalid"));
+            }
 
-    //         // Check if the subscriber name is empty or too long
-    //         if (subscriberEntity.getSubscriberName() == null || subscriberEntity.getSubscriberName().trim().isEmpty()
-    //                 || subscriberEntity.getSubscriberName().length() > 50) {
-    //             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-    //                     .body(createErrorResponse(HttpStatus.BAD_REQUEST, "subscriber name is empty"));
-    //         }
+            if (hiveClient.getStatus() == null || hiveClient.getStatus().trim().isEmpty()
+                    || hiveClient.getStatus().length() > 50) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "subscriber status is invalid"));
+            } else if (hiveClient.getStatus().equalsIgnoreCase("ACTIVE")) {
+                hiveClient.setStatus("ACTIVE_PENDING_MIGRATION");
+            } else if (hiveClient.getStatus().equalsIgnoreCase("ONHOLD")) {
+                hiveClient.setStatus("ONHOLD_PENDING_MIGRATION");
+            }
 
-    //         // Set status to NEW
-    //         subscriberEntity.setSubsStatus("NEW"); // TODO; CHANGE TO ACTIVE? 
+            HiveClientService.addHiveMigratedClient(hiveClient.getSubscriberAccountNumber(), hiveClient.getClientName(), hiveClient.getOnuSerialNumber(), hiveClient.getOnuDeviceName(), hiveClient.getOnuMacAddress(), hiveClient.getStatus(), hiveClient.getOltIp(), hiveClient.getOltInterface(), hiveClient.getIpAssigned(), hiveClient.getSsidName(), hiveClient.getPackageType(), hiveClient.getOltReportedUpstream(), hiveClient.getOltReportedDownstream());
 
-    //         subscriberEntity savedSubscriber = SubscriberService.saveSubscriber(subscriberEntity);
-    //         return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse());
-    //     } catch (SubscriberAlreadyExistsException e) {
-    //         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-    //                 .body(createErrorResponse(HttpStatus.UNAUTHORIZED, "subscriber account number already exist"));
-    //     } catch (Exception e) {
-    //         return ResponseEntity.status(HttpStatus.CONFLICT)
-    //                 .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving the account: " + e.getMessage()));
-    //     }
-    // }
+            return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse());
+        } catch (SubscriberAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse(HttpStatus.UNAUTHORIZED, "subscriber account number already exist"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving the account: " + e.getMessage()));
+        }
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

@@ -48,6 +48,31 @@ public class HiveClientService {
         return "Successful";
     }
 
+    public static String addHiveMigratedClient(String accountNo, String clientName, String serialNumber, String deviceName,
+            String macAddress, String status,
+            String oltIp,
+            String oltInterface, String ipAddress, String ssidName, String packageType, String upstream,
+            String downstream) {
+
+        HiveClient newHiveClient = HiveClient.builder()
+                .subscriberAccountNumber(accountNo)
+                .clientName(clientName)
+                .onuSerialNumber(serialNumber)
+                .onuDeviceName(deviceName)
+                .onuMacAddress(macAddress).status(status)
+                .oltIp(oltIp)
+                .oltInterface(oltInterface)
+                .ipAssigned(ipAddress)
+                .provision("MBYBW1")
+                .ssidName(ssidName)
+                .packageType(packageType)
+                .oltReportedUpstream(upstream)
+                .oltReportedDownstream(downstream)
+                .build();
+        hiveClientRepo.save(newHiveClient);
+
+        return "Successful";
+    }
 
      public List<HiveClient> getAllHiveclients() {
         return hiveClientRepo.findAll();

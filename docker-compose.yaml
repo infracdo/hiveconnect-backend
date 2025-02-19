@@ -31,7 +31,3 @@ services:
 networks:
   hive-network:
     driver: bridge
-
-volumes:
-  etcd_data:
-    driver: local
