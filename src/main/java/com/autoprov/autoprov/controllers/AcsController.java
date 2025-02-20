@@ -77,6 +77,7 @@ public class AcsController {
 //--------------deactivateSubscriber base on accountNumber---------------------  [USED FOR BILLING]
 @Async("AsyncExecutor")
 @PostMapping("/deactivateSubscriber")
+@PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
 public ResponseEntity<Map<String, String>> disconnectClient(@RequestBody Map<String, String> params) {
     Map<String, String> response = new LinkedHashMap<>(); // Use String as the value type
     String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -242,6 +243,7 @@ public ResponseEntity<Map<String, String>> disconnectClient(@RequestBody Map<Str
 //----------------Activate/Reconnect Subscriber  [USED FOR BILLING]
 @Async("AsyncExecutor")
 @PostMapping("/activateSubscriber")
+@PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
 public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<String, String> params) {
     Map<String, String> response = new LinkedHashMap<>();
     String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));

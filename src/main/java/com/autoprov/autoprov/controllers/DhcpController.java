@@ -73,6 +73,7 @@ public class DhcpController {
     
     @Async("asyncExecutor")
     @GetMapping("/getIpAddressesOfCidrBlock/{cidrBlock}")
+    @PreAuthorize("hasAuthority('HIVECONNECT_NETWORK_ADDRESSES_READ')")
     public CompletableFuture<List<CidrIpAddress>> getIpAddressesOfCidrBlockPath(
             @PathVariable("cidrBlock") String cidrBlock) {
         List<CidrIpAddress> CidrBlockIps = new ArrayList<>();

@@ -51,6 +51,7 @@ public class subscriberController {
     // EXPOSE THIS API [USED FOR BILLING]
     @Async("asyncExecutor")
     @PostMapping("/createSubscriberForProvisioning")
+    @PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
     public ResponseEntity<?> addSubscriberForProvisioning(@Valid @RequestBody subscriberEntity subscriberEntity) {
         try {
             // Check if the account number is empty
@@ -85,6 +86,7 @@ public class subscriberController {
     // EXPOSE THIS API [USED FOR CLIENT MIGRATION]
     @Async("asyncExecutor")
     @PostMapping("/createSubscriberForMigration")
+    @PreAuthorize("hasAuthority('HIVECONNECT_CLIENT_MIGRATION_ACTION')")
     public ResponseEntity<?> addSubscriberForMigration(@Valid @RequestBody HiveClient hiveClient) {
         try {
             // Check if the account number is empty
@@ -269,6 +271,7 @@ public class subscriberController {
     // EXPOSE THIS API [USED FOR BILLING]
     @Async("asyncExecutor")
     @GetMapping("/subscriberAccountInfo")
+    @PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
     public CompletableFuture<ResponseEntity<?>> getSubscriberAccountInfo(
             @RequestParam(required = false) String subscriberAccountNumber) {
         if (subscriberAccountNumber == null || subscriberAccountNumber.trim().isEmpty()) {
