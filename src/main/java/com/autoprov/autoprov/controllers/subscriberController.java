@@ -80,9 +80,9 @@ public class subscriberController {
                     .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving the account: " + e.getMessage()));
         }
     }
-    
+
     // TODO: TEST API IN POSTMAN
-    // EXPOSE THIS API [USED FOR CLIENT MIGRATION] 
+    // EXPOSE THIS API [USED FOR CLIENT MIGRATION]
     @Async("asyncExecutor")
     @PostMapping("/createSubscriberForMigration")
     public ResponseEntity<?> addSubscriberForMigration(@Valid @RequestBody HiveClient hiveClient) {
@@ -91,27 +91,60 @@ public class subscriberController {
             if (hiveClient.getSubscriberAccountNumber() == null
                     || hiveClient.getSubscriberAccountNumber().trim().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "subscriber account number is invalid"));
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "subscriberAccountNumber (account_no) is missing/invalid"));
+            }
+
+            if (hiveClient.getProvision() == null || hiveClient.getProvision().trim().isEmpty()
+                    || hiveClient.getProvision().length() > 50) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "provision (backend) is missing/invalid"));
             }
 
             // Check if the subscriber name is empty or too long
             if (hiveClient.getClientName() == null || hiveClient.getClientName().trim().isEmpty()
                     || hiveClient.getClientName().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "subscriber name is invalid"));
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "clientName (client_name) is missing/invalid"));
             }
 
+            if (hiveClient.getOltReportedUpstream() == null || hiveClient.getOltReportedUpstream().trim().isEmpty()
+                    || hiveClient.getOltReportedUpstream().length() > 50) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "oltReportedUpstream (olt_upstream) is missing/invalid"));
+            }
+
+            if (hiveClient.getOltReportedDownstream() == null || hiveClient.getOltReportedDownstream().trim().isEmpty()
+                    || hiveClient.getOltReportedDownstream().length() > 50) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "oltReportedDownstream (olt_downstream) is missing/invalid"));
+            }
+
+            if (hiveClient.getOnuDeviceName() == null || hiveClient.getOnuDeviceName().trim().isEmpty()
+                    || hiveClient.getOnuDeviceName().length() > 50) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "onuDeviceName (subscription_name) is missing/invalid"));
+            }
+
+            if (hiveClient.getPackageType() == null || hiveClient.getPackageType().trim().isEmpty()
+                    || hiveClient.getPackageType().length() > 50) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "packageType (package_type) is missing/invalid"));
+            }
+            
             if (hiveClient.getStatus() == null || hiveClient.getStatus().trim().isEmpty()
                     || hiveClient.getStatus().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "subscriber status is invalid"));
-            } else if (hiveClient.getStatus().equalsIgnoreCase("ACTIVE")) {
-                hiveClient.setStatus("ACTIVE_PENDING_MIGRATION");
-            } else if (hiveClient.getStatus().equalsIgnoreCase("ONHOLD")) {
-                hiveClient.setStatus("ONHOLD_PENDING_MIGRATION");
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "status (status) is missing/invalid"));
+            } else {
+                hiveClient.setStatus(hiveClient.getStatus() + "_PENDING_MIGRATION");
             }
 
-            HiveClientService.addHiveMigratedClient(hiveClient.getSubscriberAccountNumber(), hiveClient.getClientName(), hiveClient.getOnuSerialNumber(), hiveClient.getOnuDeviceName(), hiveClient.getOnuMacAddress(), hiveClient.getStatus(), hiveClient.getOltIp(), hiveClient.getOltInterface(), hiveClient.getIpAssigned(), hiveClient.getSsidName(), hiveClient.getPackageType(), hiveClient.getOltReportedUpstream(), hiveClient.getOltReportedDownstream());
+            HiveClientService.addHiveMigratedClient(hiveClient.getSubscriberAccountNumber(), hiveClient.getClientName(),
+                    hiveClient.getOnuSerialNumber(), hiveClient.getOnuDeviceName(), hiveClient.getOnuMacAddress(),
+                    hiveClient.getStatus(), hiveClient.getOltIp(), hiveClient.getOltInterface(), hiveClient.getIpAssigned(),
+                    hiveClient.getProvision(), hiveClient.getSsidName(),
+                    hiveClient.getPackageType(), hiveClient.getOltReportedUpstream(),
+                    hiveClient.getOltReportedDownstream());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse());
         } catch (SubscriberAlreadyExistsException e) {

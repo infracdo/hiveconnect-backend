@@ -51,7 +51,7 @@ public class HiveClientService {
     public static String addHiveMigratedClient(String accountNo, String clientName, String serialNumber, String deviceName,
             String macAddress, String status,
             String oltIp,
-            String oltInterface, String ipAddress, String ssidName, String packageType, String upstream,
+            String oltInterface, String ipAddress, String provision, String ssidName, String packageType, String upstream,
             String downstream) {
 
         HiveClient newHiveClient = HiveClient.builder()
@@ -63,7 +63,7 @@ public class HiveClientService {
                 .oltIp(oltIp)
                 .oltInterface(oltInterface)
                 .ipAssigned(ipAddress)
-                .provision("MBYBW1")
+                .provision(provision)
                 .ssidName(ssidName)
                 .packageType(packageType)
                 .oltReportedUpstream(upstream)
