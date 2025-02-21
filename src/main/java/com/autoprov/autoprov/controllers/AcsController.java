@@ -399,6 +399,7 @@ public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<Stri
  //----------------UPDATE PACKAGE----no function yet  [USED FOR BILLING]
  @Async("AsyncExecutor")
  @PostMapping("/updateSubscriberPackage")
+ @PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
  public ResponseEntity<Map<String, String>> updateSubscriberPackage(@RequestBody Map<String, String> params) {
      Map<String, String> response = new LinkedHashMap<>();
      String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -471,6 +472,7 @@ public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<Stri
 //----------------UPDATE PROVISION STATUS---no function yet  [USED FOR BILLING]
 @Async("AsyncExecutor")
 @PostMapping("/updateSubscriberProvision")
+@PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
 public ResponseEntity<Map<String, String>> updateSubscriberProvision(@RequestBody Map<String, String> params) {
    Map<String, String> response = new LinkedHashMap<>();
    String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -567,6 +569,7 @@ public ResponseEntity<Map<String, String>> updateSubscriberProvision(@RequestBod
  // permanently disconnect [USED FOR BILLING]
  @Async("AsyncExecutor")
 @PostMapping("/terminateSubscriber")
+@PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
 public ResponseEntity<Map<String, String>> permanentDisconnectClient(@RequestBody Map<String, String> params) {
     Map<String, String> response = new LinkedHashMap<>();
     String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));

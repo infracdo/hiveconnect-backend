@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -27,9 +28,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
+import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.services.HiveClientService;
 import com.autoprov.autoprov.services.subscriberService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @CrossOrigin(origins = "*")
@@ -41,6 +44,9 @@ public class subscriberController {
 
     @Autowired
     private final HiveClientService hiveclientService;
+
+    @Autowired
+    private HiveClientRepository hiveClientRepository;
 
     // POST END POINT add or create new subscriber endpoint
     public subscriberController(subscriberService SubscriberService, HiveClientService hiveclientService) {
@@ -82,7 +88,6 @@ public class subscriberController {
         }
     }
 
-    // TODO: TEST API IN POSTMAN
     // EXPOSE THIS API [USED FOR CLIENT MIGRATION]
     @Async("asyncExecutor")
     @PostMapping("/createSubscriberForMigration")
@@ -93,7 +98,8 @@ public class subscriberController {
             if (hiveClient.getSubscriberAccountNumber() == null
                     || hiveClient.getSubscriberAccountNumber().trim().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "subscriberAccountNumber (account_no) is missing/invalid"));
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST,
+                                "subscriberAccountNumber (account_no) is missing/invalid"));
             }
 
             if (hiveClient.getProvision() == null || hiveClient.getProvision().trim().isEmpty()
@@ -106,33 +112,38 @@ public class subscriberController {
             if (hiveClient.getClientName() == null || hiveClient.getClientName().trim().isEmpty()
                     || hiveClient.getClientName().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "clientName (client_name) is missing/invalid"));
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST,
+                                "clientName (client_name) is missing/invalid"));
             }
 
             if (hiveClient.getOltReportedUpstream() == null || hiveClient.getOltReportedUpstream().trim().isEmpty()
                     || hiveClient.getOltReportedUpstream().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "oltReportedUpstream (olt_upstream) is missing/invalid"));
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST,
+                                "oltReportedUpstream (olt_upstream) is missing/invalid"));
             }
 
             if (hiveClient.getOltReportedDownstream() == null || hiveClient.getOltReportedDownstream().trim().isEmpty()
                     || hiveClient.getOltReportedDownstream().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "oltReportedDownstream (olt_downstream) is missing/invalid"));
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST,
+                                "oltReportedDownstream (olt_downstream) is missing/invalid"));
             }
 
             if (hiveClient.getOnuDeviceName() == null || hiveClient.getOnuDeviceName().trim().isEmpty()
                     || hiveClient.getOnuDeviceName().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "onuDeviceName (subscription_name) is missing/invalid"));
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST,
+                                "onuDeviceName (subscription_name) is missing/invalid"));
             }
 
             if (hiveClient.getPackageType() == null || hiveClient.getPackageType().trim().isEmpty()
                     || hiveClient.getPackageType().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "packageType (package_type) is missing/invalid"));
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST,
+                                "packageType (package_type) is missing/invalid"));
             }
-            
+
             if (hiveClient.getStatus() == null || hiveClient.getStatus().trim().isEmpty()
                     || hiveClient.getStatus().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -143,7 +154,8 @@ public class subscriberController {
 
             HiveClientService.addHiveMigratedClient(hiveClient.getSubscriberAccountNumber(), hiveClient.getClientName(),
                     hiveClient.getOnuSerialNumber(), hiveClient.getOnuDeviceName(), hiveClient.getOnuMacAddress(),
-                    hiveClient.getStatus(), hiveClient.getOltIp(), hiveClient.getOltInterface(), hiveClient.getIpAssigned(),
+                    hiveClient.getStatus(), hiveClient.getOltIp(), hiveClient.getOltInterface(),
+                    hiveClient.getIpAssigned(),
                     hiveClient.getProvision(), hiveClient.getSsidName(),
                     hiveClient.getPackageType(), hiveClient.getOltReportedUpstream(),
                     hiveClient.getOltReportedDownstream());
@@ -155,6 +167,72 @@ public class subscriberController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving the account: " + e.getMessage()));
+        }
+    }
+
+    // TODO; TEST THIS IN POSTMAN
+    // EXPOSE THIS API [USED FOR CLIENT MIGRATION]
+    @Async("asyncExecutor")
+    @PostMapping("/updateSubscriberStatusAfterMigration")
+    @PreAuthorize("hasAuthority('HIVECONNECT_CLIENT_MIGRATION_ACTION')")
+    public ResponseEntity<?> updateMigratedSubscriberStatus(@RequestBody Map<String, String> params) {
+        Map<String, String> response = new LinkedHashMap<>();
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String subscriberAccountNumber = params.get("subscriberAccountNumber");
+
+        // Check if the subscriber account number is empty or null
+        if (subscriberAccountNumber == null
+                || subscriberAccountNumber.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(createErrorResponse(HttpStatus.BAD_REQUEST,
+                            "subscriberAccountNumber (account_no) is missing/invalid"));
+        }
+
+        // Fetch client from repository todo: change to hiveclient
+        Optional<HiveClient> clientOptional = hiveClientRepository
+                .findBySubscriberAccountNumber(subscriberAccountNumber);
+        if (!clientOptional.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(createErrorResponse(HttpStatus.NOT_FOUND,
+                            "subscriber does not exist"));
+        }
+
+        try {
+            // Get the client entity
+            HiveClient client = clientOptional.get();
+
+            if (client.getStatus() == null || client.getStatus().trim().isEmpty()
+                    || client.getStatus().length() > 50) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "status (status) is missing/invalid"));
+            }
+
+            if (client.getStatus().contains("_PENDING_MIGRATION")) {
+                // Update the client entity with new status
+                client.setStatus(client.getStatus().replace("_PENDING_MIGRATION", ""));
+
+                // Optionally, update other relevant fields if necessary
+                // Example: client.setUpdatedAt(LocalDateTime.now());
+
+                // Save the updated client entity
+                hiveClientRepository.save(client);
+
+                response.put("timestamp", timestamp);
+                response.put("status", String.valueOf(HttpStatus.OK.value()));
+                response.put("message", "migrated subscriber status updated successfully");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            } else {
+                response.put("timestamp", timestamp);
+                response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+                response.put("message", "subscriber status cannot be updated");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        } catch (Exception e) {
+            // Handle any unexpected exceptions
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            response.put("message", "An unexpected error occurred: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
@@ -248,7 +326,6 @@ public class subscriberController {
                     .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
                             "Error retrieving subscriber: " + e.getMessage()));
         }
-
     }
 
     // GET endpoint to retrieve all hiveclients
@@ -273,7 +350,21 @@ public class subscriberController {
     @GetMapping("/subscriberAccountInfo")
     @PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
     public CompletableFuture<ResponseEntity<?>> getSubscriberAccountInfo(
-            @RequestParam(required = false) String subscriberAccountNumber) {
+            @RequestParam(required = false) String subscriberAccountNumber, HttpServletRequest request) {
+        System.out.println("Authorization header");
+        System.out.println(request.getHeader("Authorization"));
+        // if (!request.getHeader("Authorization").equals(
+        //         "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0YWNjb3VudCIsImlhdCI6MTcyODk4MTA0MH0.6SGymGmjXsK1FgG7tqnirZEYc6r9ZyAvnJP1iEbtdsY")) {
+        //     Map<String, Object> errorResponse = new LinkedHashMap<>();
+        //     errorResponse.put("path", "/error");
+        //     errorResponse.put("error", "Unauthorized");
+        //     errorResponse.put("message", "Full authentication is required to access this resource");
+        //     errorResponse.put("status", HttpStatus.UNAUTHORIZED.value());
+        //     return CompletableFuture
+        //             .completedFuture(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse));
+        // } else {
+        //     System.out.println("Authorized");
+        // }
         if (subscriberAccountNumber == null || subscriberAccountNumber.trim().isEmpty()) {
             Map<String, Object> errorResponse = new LinkedHashMap<>();
             errorResponse.put("timestamp",

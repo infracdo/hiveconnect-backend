@@ -36,7 +36,7 @@
 
 
 
-// @CrossOrigin(origins = "*", maxAge = 3600)
+// @CrossOrigin(origins = "*")
 // @RestController
 // @RequestMapping("/api/auth")
 // public class AuthController {
@@ -115,6 +115,12 @@
 //           Role modRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
 //               .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 //           roles.add(modRole);
+
+          
+//         case "billing":
+//         Role billingRole = roleRepository.findByName(ERole.HIVECONNECT_API_BILLING_ACCESS)
+//             .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+//         roles.add(billingRole);
 
 //           break;
 //         default:
