@@ -1,18 +1,16 @@
 services:
 
   frontend:
-    container_name: frontend
     build:
-      context: ../hiveconnect-frontend-prince-branch
+      context: /home/$USER/hiveconnect-frontend
       dockerfile: Dockerfile
     ports:
-      - "8081:80" 
+      - "80:80" 
     networks:
-      hive-network:
+      - app-network
     restart: unless-stopped
 
-  hive-backend:
-    container_name: hive-backend
+  autoprov:
     build:
       context: .
       dockerfile: Dockerfile
@@ -23,11 +21,12 @@ services:
     ports:
       - "8080:8080"
     networks:
-      hive-network:
+      - app-network
     depends_on:
       - frontend
     restart: unless-stopped
 
 networks:
-  hive-network:
+  app-network:
     driver: bridge
+
