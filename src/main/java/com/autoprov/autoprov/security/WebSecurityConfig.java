@@ -170,6 +170,12 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests((authorize) -> authorize
             .requestMatchers("/api/test/**").permitAll()
+            .requestMatchers("/createSubscriberForProvisioning").permitAll()
+            .requestMatchers("/subscriberAccountInfo").permitAll()
+            .requestMatchers("/updateSubscriberProvision").permitAll()
+            .requestMatchers("/activateSubscriber").permitAll()
+            .requestMatchers("/deactivateSubscriber").permitAll()
+            .requestMatchers("/terminateSubscriber").permitAll()
             .anyRequest().authenticated())
         .oauth2ResourceServer((oauth2) -> oauth2
             .jwt(withDefaults()));
