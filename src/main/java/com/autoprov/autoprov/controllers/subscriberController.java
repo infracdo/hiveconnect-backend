@@ -57,7 +57,7 @@ public class subscriberController {
     // EXPOSE THIS API [USED FOR BILLING]
     @Async("asyncExecutor")
     @PostMapping("/createSubscriberForProvisioning")
-    @PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
     public ResponseEntity<?> addSubscriberForProvisioning(@Valid @RequestBody subscriberEntity subscriberEntity) {
         try {
             // Check if the account number is empty
@@ -91,7 +91,7 @@ public class subscriberController {
     // EXPOSE THIS API [USED FOR CLIENT MIGRATION]
     @Async("asyncExecutor")
     @PostMapping("/createSubscriberForMigration")
-    @PreAuthorize("hasAuthority('HIVECONNECT_CLIENT_MIGRATION_ACTION')")
+   // @PreAuthorize("hasAuthority('HIVECONNECT_CLIENT_MIGRATION_ACTION')")
     public ResponseEntity<?> addSubscriberForMigration(@Valid @RequestBody HiveClient hiveClient) {
         try {
             // Check if the account number is empty
@@ -174,7 +174,7 @@ public class subscriberController {
     // EXPOSE THIS API [USED FOR CLIENT MIGRATION]
     @Async("asyncExecutor")
     @PostMapping("/updateSubscriberStatusAfterMigration")
-    @PreAuthorize("hasAuthority('HIVECONNECT_CLIENT_MIGRATION_ACTION')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_CLIENT_MIGRATION_ACTION')")
     public ResponseEntity<?> updateMigratedSubscriberStatus(@RequestBody Map<String, String> params) {
         Map<String, String> response = new LinkedHashMap<>();
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -265,7 +265,7 @@ public class subscriberController {
     // GET endpoint to retrieve all subscribers
     @Async("asyncExecutor")
     @GetMapping("/getsubscribers")
-    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
     public ResponseEntity<List<subscriberEntity>> getAllSubscribers() {
         try {
             List<subscriberEntity> subscribers = SubscriberService.getAllSubscribers();
@@ -278,7 +278,7 @@ public class subscriberController {
     // DEBUGGING
     @Async("asyncExecutor")
     @GetMapping("/getprovisionedsubscribers")
-    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONED_READ')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONED_READ')")
     public ResponseEntity<List<subscriberEntity>> getProvisionedSubscribers() {
         try {
             List<subscriberEntity> provisionedSubscribers = SubscriberService.getProvisionedSubscribers();
@@ -331,7 +331,7 @@ public class subscriberController {
     // GET endpoint to retrieve all hiveclients
     @Async("asyncExecutor")
     @GetMapping("/getHiveClients")
-    @PreAuthorize("hasAuthority('HIVECONNECT_TROUBLESHOOTING_READ')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_TROUBLESHOOTING_READ')")
     public ResponseEntity<List<HiveClient>> getAllHiveclients() {
         try {
             List<HiveClient> hiveclients = hiveclientService.getAllHiveclients();
@@ -348,7 +348,7 @@ public class subscriberController {
     // EXPOSE THIS API [USED FOR BILLING]
     @Async("asyncExecutor")
     @GetMapping("/subscriberAccountInfo")
-    @PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
     public CompletableFuture<ResponseEntity<?>> getSubscriberAccountInfo(
             @RequestParam(required = false) String subscriberAccountNumber, HttpServletRequest request) {
         System.out.println("Authorization header");
