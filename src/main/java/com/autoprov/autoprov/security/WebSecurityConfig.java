@@ -176,7 +176,7 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
             .requestMatchers("/activateSubscriber").permitAll()
             .requestMatchers("/deactivateSubscriber").permitAll()
             .requestMatchers("/terminateSubscriber").permitAll()
-            .anyRequest().authenticated())
+            .anyRequest().permitAll())
         .oauth2ResourceServer((oauth2) -> oauth2
             .jwt(withDefaults()));
     return http.build();
