@@ -165,73 +165,73 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http.csrf(csrf -> csrf.disable())
-        .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests((authorize) -> authorize
-            .requestMatchers("/api/test/**").permitAll()
-            .requestMatchers("/createSubscriberForProvisioning").permitAll()
-            .requestMatchers("/subscriberAccountInfo").permitAll()
-            .requestMatchers("/updateSubscriberProvision").permitAll()
-            .requestMatchers("/activateSubscriber").permitAll()
-            .requestMatchers("/deactivateSubscriber").permitAll()
-            .requestMatchers("/terminateSubscriber").permitAll()
-            .anyRequest().permitAll())
+    //http.csrf(csrf -> csrf.disable())
+    //    .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+    //    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+    //    .authorizeHttpRequests((authorize) -> authorize
+    //        .requestMatchers("/api/test/**").permitAll()
+    //        .requestMatchers("/createSubscriberForProvisioning").permitAll()
+    //        .requestMatchers("/subscriberAccountInfo").permitAll()
+    //        .requestMatchers("/updateSubscriberProvision").permitAll()
+    //        .requestMatchers("/activateSubscriber").permitAll()
+    //        .requestMatchers("/deactivateSubscriber").permitAll()
+    //        .requestMatchers("/terminateSubscriber").permitAll()
+    //        .anyRequest().permitAll())
         //.oauth2ResourceServer((oauth2) -> oauth2
-            .jwt(withDefaults()));
-    return http.build();
+    //        .jwt(withDefaults()));
+    //return http.build();
 
-    // http.csrf(csrf -> csrf.disable())
-    // .exceptionHandling(exception ->
-    // exception.authenticationEntryPoint(unauthorizedHandler))
-    // .sessionManagement(session ->
-    // session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-    // .authorizeHttpRequests(auth ->
-    // auth.requestMatchers("/api/auth/**").permitAll()
-    // .requestMatchers("/executeProvision").permitAll()
-    // .requestMatchers("/executeAutoConfig").permitAll()
-    // .requestMatchers("/preprovisionCheck").permitAll()
-    // .requestMatchers("/executeMonitoring").permitAll()
-    // .requestMatchers("/lastJobStatus").permitAll()
-    // .requestMatchers("/getOltInterface").permitAll()
-    // .requestMatchers("/getOltBandwidth").permitAll()
-    // .requestMatchers("/simulateHiveMonitoringError").permitAll()
-    // .requestMatchers("/getOltInterface/{jobId}").permitAll()
-    // .requestMatchers("/testExecuteMonitoring").permitAll()
-    // .requestMatchers("/getRogueDevices").permitAll()
-    // .requestMatchers("/addnetwork").permitAll()
-    // .requestMatchers("/getallnetworks").permitAll()
-    // .requestMatchers("/cidripaddresses").permitAll()
-    // .requestMatchers("/addnewolt").permitAll()
-    // .requestMatchers("/getOltByName/{oltName}").permitAll()
-    // .requestMatchers("/getOltByIp/{oltIp}").permitAll()
-    // .requestMatchers("/getallolt").permitAll()
-    // .requestMatchers("/createPackage").permitAll()
-    // .requestMatchers("/checkPackageDetails/{packageType}").permitAll()
-    // .requestMatchers("/testGetPackageDetails/{packageType}").permitAll()
-    // .requestMatchers("/executeInetAutoProv").permitAll()
-    // .requestMatchers("/executeInetMonitoring").permitAll()
-    // .requestMatchers("/getsubscribers").permitAll()
-    // .requestMatchers("/getsubscriberbyid/{id}").permitAll()
-    // .requestMatchers("/getHiveClientById/{id}").permitAll()
-    // .requestMatchers("/getHiveClients").permitAll()
-    // .requestMatchers("/getAllsubscribersAccountInfo").permitAll()
-    // .requestMatchers("/getsubscriberNetworkInfoby/{accountNumber}").permitAll()
-    // .requestMatchers("/getsubscribersNetworkInfo").permitAll()
-    // .requestMatchers("/getallactiveAccount").permitAll()
-    // .requestMatchers("/getprovisionedsubscribers").permitAll()
-    // .requestMatchers("/subscriberAccountInfo").permitAll()
-    // .requestMatchers("/getIpAddressesOfCidrBlock/{cidrBlock}").permitAll()
-    // .requestMatchers("/getClientBySerialNumber/{serial_number}").permitAll()
-    // .requestMatchers("/api/auth/signup").permitAll()
-    // .anyRequest().authenticated()
-    // );
+     http.csrf(csrf -> csrf.disable())
+     .exceptionHandling(exception ->
+     exception.authenticationEntryPoint(unauthorizedHandler))
+     .sessionManagement(session ->
+     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+     .authorizeHttpRequests(auth ->
+     auth.requestMatchers("/api/auth/**").permitAll()
+     .requestMatchers("/executeProvision").permitAll()
+     .requestMatchers("/executeAutoConfig").permitAll()
+     .requestMatchers("/preprovisionCheck").permitAll()
+     .requestMatchers("/executeMonitoring").permitAll()
+     .requestMatchers("/lastJobStatus").permitAll()
+     .requestMatchers("/getOltInterface").permitAll()
+     .requestMatchers("/getOltBandwidth").permitAll()
+     .requestMatchers("/simulateHiveMonitoringError").permitAll()
+     .requestMatchers("/getOltInterface/{jobId}").permitAll()
+     .requestMatchers("/testExecuteMonitoring").permitAll()
+     .requestMatchers("/getRogueDevices").permitAll()
+     .requestMatchers("/addnetwork").permitAll()
+     .requestMatchers("/getallnetworks").permitAll()
+     .requestMatchers("/cidripaddresses").permitAll()
+     .requestMatchers("/addnewolt").permitAll()
+     .requestMatchers("/getOltByName/{oltName}").permitAll()
+     .requestMatchers("/getOltByIp/{oltIp}").permitAll()
+     .requestMatchers("/getallolt").permitAll()
+     .requestMatchers("/createPackage").permitAll()
+     .requestMatchers("/checkPackageDetails/{packageType}").permitAll()
+     .requestMatchers("/testGetPackageDetails/{packageType}").permitAll()
+     .requestMatchers("/executeInetAutoProv").permitAll()
+     .requestMatchers("/executeInetMonitoring").permitAll()
+     .requestMatchers("/getsubscribers").permitAll()
+     .requestMatchers("/getsubscriberbyid/{id}").permitAll()
+     .requestMatchers("/getHiveClientById/{id}").permitAll()
+     .requestMatchers("/getHiveClients").permitAll()
+     .requestMatchers("/getAllsubscribersAccountInfo").permitAll()
+     .requestMatchers("/getsubscriberNetworkInfoby/{accountNumber}").permitAll()
+     .requestMatchers("/getsubscribersNetworkInfo").permitAll()
+     .requestMatchers("/getallactiveAccount").permitAll()
+     .requestMatchers("/getprovisionedsubscribers").permitAll()
+     .requestMatchers("/subscriberAccountInfo").permitAll()
+     .requestMatchers("/getIpAddressesOfCidrBlock/{cidrBlock}").permitAll()
+     .requestMatchers("/getClientBySerialNumber/{serial_number}").permitAll()
+     .requestMatchers("/api/auth/signup").permitAll()
+     .anyRequest().authenticated()
+     );
 
-    // http.authenticationProvider(authenticationProvider());
+     http.authenticationProvider(authenticationProvider());
 
-    // http.addFilterBefore(authenticationJwtTokenFilter(),
-    // UsernamePasswordAuthenticationFilter.class);
+     http.addFilterBefore(authenticationJwtTokenFilter(),
+     UsernamePasswordAuthenticationFilter.class);
 
-    // return http.build();
+     return http.build();
   }
 }
