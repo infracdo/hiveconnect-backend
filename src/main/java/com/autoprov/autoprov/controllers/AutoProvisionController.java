@@ -89,7 +89,7 @@ public class AutoProvisionController {
     // API for INET ----------------------------------------------
     @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
-    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
+   // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     public ResponseEntity<Map<String, String>> executeInetProvision(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
@@ -332,7 +332,7 @@ public class AutoProvisionController {
     // APIs for HiveApp ----------------------------------------------
     @Async("AsyncExecutor")
     @PostMapping("/executeAutoConfig")
-    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     public ResponseEntity<Map<String, String>> executeHiveAutoConfig(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
@@ -401,7 +401,7 @@ public class AutoProvisionController {
 
     @Async("AsyncExecutor")
     @PostMapping("/executeMonitoring")
-    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     public ResponseEntity<Map<String, String>> executeHiveMonitoring(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
         String accountNo = params.get("accountNo");
@@ -597,7 +597,7 @@ public class AutoProvisionController {
 
     @Async("AsyncExecutor")
     @PostMapping("/preprovisionCheck")
-    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     public ResponseEntity<Map<String, String>> preprovisionCheck(@RequestBody Map<String, String> params)
             throws InterruptedException, JsonMappingException, JsonProcessingException {
 
@@ -759,7 +759,7 @@ public class AutoProvisionController {
     // Troubleshooting
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
-    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
     public ResponseEntity<Map<String, String>> lastJobStatus(String accountNo, String jobId)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
@@ -905,7 +905,7 @@ public class AutoProvisionController {
     // Get OLT Interface
     @Async("AsyncExecutor")
     @GetMapping("/getOltInterface")
-    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
     public String getOltInterface(String jobId) {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
@@ -964,7 +964,7 @@ public class AutoProvisionController {
 
     @Async("AsyncExecutor")
     @GetMapping("/getOltBandwidth")
-    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
     public String[] getOltBandwidth(String jobId) {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
@@ -1018,7 +1018,7 @@ public class AutoProvisionController {
     // Simulate error
     @Async("AsyncExecutor")
     @PostMapping("/simulateHiveMonitoringError")
-    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     public ResponseEntity<Map<String, String>> simulateError(String jobId) {
         Map<String, String> response = new HashMap<>();
         response.put("awx_job_id", jobId);
@@ -1061,14 +1061,14 @@ public class AutoProvisionController {
 
     @Async("AsyncExecutor")
     @GetMapping("/getOltInterface/{jobId}")
-    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
     public String testGetOltInterface(@PathVariable("jobId") String jobId) {
         return getOltInterface(jobId);
     }
 
     @Async("asyncExecutor")
     @GetMapping("/testExecuteMonitoring")
-    @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
     public String testExecuteMonitoring(@RequestBody Map<String, String> params) {
 
         String accountNo = params.get("accountNo");

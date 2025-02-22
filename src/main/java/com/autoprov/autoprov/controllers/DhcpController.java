@@ -57,7 +57,7 @@ public class DhcpController {
 
     @Async("AsyncExecutor")
     @GetMapping("/getallnetworks")
-    @PreAuthorize("hasAuthority('HIVECONNECT_NETWORK_ADDRESSES_READ')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_NETWORK_ADDRESSES_READ')")
     public CompletableFuture<List<CidrBlock>> getallnetworks() {
         System.out.println("backend hive api accessed");
         return CompletableFuture.completedFuture(CidrRepo.getAllNetworks());
@@ -73,7 +73,7 @@ public class DhcpController {
     
     @Async("asyncExecutor")
     @GetMapping("/getIpAddressesOfCidrBlock/{cidrBlock}")
-    @PreAuthorize("hasAuthority('HIVECONNECT_NETWORK_ADDRESSES_READ')")
+    //@PreAuthorize("hasAuthority('HIVECONNECT_NETWORK_ADDRESSES_READ')")
     public CompletableFuture<List<CidrIpAddress>> getIpAddressesOfCidrBlockPath(
             @PathVariable("cidrBlock") String cidrBlock) {
         List<CidrIpAddress> CidrBlockIps = new ArrayList<>();
