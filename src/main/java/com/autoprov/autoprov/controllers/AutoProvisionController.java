@@ -48,9 +48,9 @@ public class AutoProvisionController {
 
     private Boolean showBody = false;
 
-    private static String playbookMonitoringApiUrl = "https://hive-awx.apolloglobal.net/api/v2/job_templates/22/";
-    private static String playbookPreProvUrl = "https://hive-awx.apolloglobal.net/api/v2/job_templates/18/";
-    private static String playbookGetJobUrl = "https://hive-awx.apolloglobal.net/api/v2/jobs/";
+    private static String playbookMonitoringApiUrl = "https://dctech-awx.apolloglobal.net/api/v2/job_templates/15/";
+    private static String playbookPreProvUrl = "https://dctech-awx.apolloglobal.net/api/v2/job_templates/18/";
+    private static String playbookGetJobUrl = "https://dctech-awx.apolloglobal.net/api/v2/jobs/";
     private static String acsApiUrl = "http://10.160.0.52:7547/";
 
 
@@ -180,7 +180,7 @@ public class AutoProvisionController {
         }
 
         String ansibleApiUrl = playbookMonitoringApiUrl + "launch/";
-        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
+        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
 
