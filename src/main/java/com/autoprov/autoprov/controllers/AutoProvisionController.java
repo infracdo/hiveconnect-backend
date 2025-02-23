@@ -51,7 +51,7 @@ public class AutoProvisionController {
     private static String playbookMonitoringApiUrl = "https://hive-awx.apolloglobal.net/api/v2/job_templates/22/";
     private static String playbookPreProvUrl = "https://hive-awx.apolloglobal.net/api/v2/job_templates/18/";
     private static String playbookGetJobUrl = "https://hive-awx.apolloglobal.net/api/v2/jobs/";
-    private static String acsApiUrl = "http://192.168.90.101:7547/";
+    private static String acsApiUrl = "http://10.160.0.52:7547/";
 
 
     @Autowired
