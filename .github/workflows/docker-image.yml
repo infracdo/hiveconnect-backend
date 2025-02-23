@@ -27,10 +27,10 @@ jobs:
       - name: Build Docker Image
         run: 
           # docker build --target build -t my-image:build .
-          docker build -t hiveconnect-backend-test:latest .
+          docker build -t hiveconnect-backend:sbx .
 
       # Step 4: Push the Docker image
       - name: Push Docker Image
         run: |
-          docker tag hiveconnect-backend-test:latest infracdo/hiveconnect-backend-test:latest
-          docker push infracdo/hiveconnect-backend-test:latest
+          docker tag hiveconnect-backend:sbx infracdo/hiveconnect-backend:sbx
+          docker push infracdo/hiveconnect-backend:sbx
