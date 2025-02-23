@@ -17,6 +17,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -165,20 +166,24 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
     http.csrf(csrf -> csrf.disable())
-        .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests((authorize) -> authorize
-            .requestMatchers("/api/test/**").permitAll()
-            .requestMatchers("/createSubscriberForProvisioning").permitAll()
-            .requestMatchers("/subscriberAccountInfo").permitAll()
-            .requestMatchers("/updateSubscriberProvision").permitAll()
-            .requestMatchers("/activateSubscriber").permitAll()
-            .requestMatchers("/deactivateSubscriber").permitAll()
-            .requestMatchers("/terminateSubscriber").permitAll()
-            .anyRequest().authenticated())
-        .oauth2ResourceServer((oauth2) -> oauth2
-            .jwt(withDefaults()));
+    .exceptionHandling(exception ->
+    exception.authenticationEntryPoint(unauthorizedHandler))
+    .sessionManagement(session ->
+    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+    .authorizeHttpRequests((authorize) -> authorize
+    // .requestMatchers("/api/test/**").permitAll()
+    // .requestMatchers("/createSubscriberForProvisioning").permitAll()
+    // .requestMatchers("/subscriberAccountInfo").permitAll()
+    // .requestMatchers("/updateSubscriberProvision").permitAll()
+    // .requestMatchers("/activateSubscriber").permitAll()
+    // .requestMatchers("/deactivateSubscriber").permitAll()
+    // .requestMatchers("/terminateSubscriber").permitAll()
+    .anyRequest().permitAll())
+    // .oauth2ResourceServer((oauth2) -> oauth2
+    // .jwt(withDefaults()))
+    ;
     return http.build();
 
     // http.csrf(csrf -> csrf.disable())
@@ -231,6 +236,37 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 
     // http.addFilterBefore(authenticationJwtTokenFilter(),
     // UsernamePasswordAuthenticationFilter.class);
+
+    
+    // // First part: General configuration (csrf, exception handling, session management)
+    // http.csrf(csrf -> csrf.disable())
+    //     .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+    //     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+    // // Second part: Authorization configuration
+    // http
+    //     .authorizeHttpRequests((authorize) -> authorize
+    //         // Public endpoints with no authentication
+    //         .requestMatchers("/api/test/**", "/api/auth/**").permitAll() // No authentication for these endpoints
+    //         // Specific paths requiring custom authentication
+    //         .requestMatchers("/createSubscriberForProvisioning", "/updateSubscriberProvision",
+    //             "/updateSubscriberPackage", "/subscriberAccountInfo", "/activateSubscriber", "/deactivateSubscriber",
+    //             "/terminateSubscriber")
+    //         .authenticated()  // Ensure authentication is required for these specific paths
+    //         .anyRequest().authenticated())  // Apply OAuth2 authentication for all other requests
+
+    //     // Apply OAuth2 Resource Server (JWT) to all paths except the ones specified above
+    //     .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()));  // Apply JWT validation for all requests by default
+
+    // // Apply custom authentication provider and JWT filter for the specific endpoints only
+    // http
+    //     .authorizeHttpRequests((authorize) -> authorize
+    //         .requestMatchers("/createSubscriberForProvisioning", "/updateSubscriberProvision",
+    //             "/updateSubscriberPackage", "/subscriberAccountInfo", "/activateSubscriber", "/deactivateSubscriber",
+    //             "/terminateSubscriber")
+    //         .authenticated()) // Ensure authentication is required for these paths
+    //     .authenticationProvider(authenticationProvider()) // Apply custom authentication provider
+    //     .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);  // Apply custom JWT filter
 
     // return http.build();
   }
