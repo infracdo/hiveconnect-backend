@@ -48,7 +48,7 @@ public class AcsController {
 
     
 
-    private static String acsApiUrl = "http://10.160.0.52:7547/";
+    private static String acsApiUrl = "http://10.160.0.62:7547/";
 
     // Exposed for HiveApp ----------------------------------------
     @Async("AsyncExecutor")
