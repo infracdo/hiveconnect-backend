@@ -11,13 +11,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
-
-
 @Data
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "new_subscriber") //database table name
+@Table(name = "new_subscriber") // database table name
 public class subscriberEntity {
 
     @Id
@@ -42,9 +40,7 @@ public class subscriberEntity {
     @Column(name = "subscriber_status")
     private String subsstatus;
 
-
-
-    //-------------temporary
+    // -------------temporary
     @Column(name = "ip_assigned", unique = true)
     private String ipAssigned;
 
@@ -78,124 +74,131 @@ public class subscriberEntity {
     @Column(name = "olt_ip")
     private String oltIp;
 
-    //----------------------
+    // ----------------------
 
- // Default constructor
- public subscriberEntity() {}
- // Getters and Setters
- public Long getNewSubscriberId() {
-     return newsubscriberId;
- }
- public void setNewSubscriberId(Long newSubscriberId) {
-     this.newsubscriberId = newSubscriberId;
- }
- public String getSubscriberAccountNumber() {
-     return subscriberAccountNumber;
- }
- public void setSubscriberAccountNumber(String subscriberAccountNumber) {
-     this.subscriberAccountNumber = subscriberAccountNumber;
- }
- public String getSubscriberName() {
-     return subscriberName;
- }
- public void setSubscriberName(String subscriberName) {
-     this.subscriberName = subscriberName;
- }
- public String getPackageType() {
-     return packageType;
- }
- public void setPackageType(String packageTypeId) {
-     this.packageType = packageTypeId;
- }
+    // Default constructor
+    public subscriberEntity() {
+    }
 
- public String getProvision() {
-     return provision;
- }
- public void setProvision(String provision) {
-     this.provision = provision;
- }
+    // Getters and Setters
+    public Long getNewSubscriberId() {
+        return newsubscriberId;
+    }
 
- public String getSubsStatus() {
-     return subsstatus;
- }
- public void setSubsStatus(String subsStatus) {
-     this.subsstatus = subsStatus;
- }
+    public void setNewSubscriberId(Long newSubscriberId) {
+        this.newsubscriberId = newSubscriberId;
+    }
 
+    public String getSubscriberAccountNumber() {
+        return subscriberAccountNumber;
+    }
 
- public String getIpAssigned() {
-    return ipAssigned;
-}
+    public void setSubscriberAccountNumber(String subscriberAccountNumber) {
+        this.subscriberAccountNumber = subscriberAccountNumber;
+    }
 
-public void setIpAssigned(String ipAssigned) {
-    this.ipAssigned = ipAssigned;
-}
+    public String getSubscriberName() {
+        return subscriberName;
+    }
 
-public String getOnuSerialNumber() {
-    return onuSerialNumber;
-}
+    public void setSubscriberName(String subscriberName) {
+        this.subscriberName = subscriberName;
+    }
 
-public void setOnuSerialNumber(String onuSerialNumber) {
-    this.onuSerialNumber = onuSerialNumber;
-}
+    public String getPackageType() {
+        return packageType;
+    }
 
-public String getSite() {
-    return site;
-}
+    public void setPackageType(String packageTypeId) {
+        this.packageType = packageTypeId;
+    }
 
-public void setSite(String site) {
-    this.site = site;
-}
+    public String getProvision() {
+        return provision;
+    }
 
-public String getOltIp() {
-    return oltIp;
-}
+    public void setProvision(String provision) {
+        this.provision = provision;
+    }
 
-public void setOltIp(String oltIp) {
-    this.oltIp = oltIp;
-}
+    public String getSubsStatus() {
+        return subsstatus;
+    }
 
+    public void setSubsStatus(String subsStatus) {
+        this.subsstatus = subsStatus;
+    }
 
-public String getOnuMacAddress() {
-    return onuMacAddress;
-}
+    public String getIpAssigned() {
+        return ipAssigned;
+    }
 
-public void setOnuMacAddress(String onuMacAddress) {
-    this.onuMacAddress = onuMacAddress;
-}
+    public void setIpAssigned(String ipAssigned) {
+        this.ipAssigned = ipAssigned;
+    }
 
-public String getOnuDeviceName() {
-    return onuDeviceName;
-}
+    public String getOnuSerialNumber() {
+        return onuSerialNumber;
+    }
 
-public void setOnuDeviceName(String onuDeviceName) {
-    this.onuDeviceName = onuDeviceName;
-}
+    public void setOnuSerialNumber(String onuSerialNumber) {
+        this.onuSerialNumber = onuSerialNumber;
+    }
 
+    public String getSite() {
+        return site;
+    }
 
-public String getOltReportedUpstream() {
-    return oltReportedUpstream;
-}
+    public void setSite(String site) {
+        this.site = site;
+    }
 
-public void setOltReportedUpstream(String oltReportedUpstream) {
-    this.oltReportedUpstream = oltReportedUpstream;
-}
+    public String getOltIp() {
+        return oltIp;
+    }
 
-public String getOltReportedDownstream() {
-    return oltReportedDownstream;
-}
+    public void setOltIp(String oltIp) {
+        this.oltIp = oltIp;
+    }
 
-public void setOltReportedDownstream(String oltReportedDownstream) {
-    this.oltReportedDownstream = oltReportedDownstream;
-}
+    public String getOnuMacAddress() {
+        return onuMacAddress;
+    }
 
+    public void setOnuMacAddress(String onuMacAddress) {
+        this.onuMacAddress = onuMacAddress;
+    }
 
-public String getSsidName() {
-    return ssidName;
-}
+    public String getOnuDeviceName() {
+        return onuDeviceName;
+    }
 
-public void setSsidName(String ssidName) {
-    this.ssidName = ssidName;
-}
+    public void setOnuDeviceName(String onuDeviceName) {
+        this.onuDeviceName = onuDeviceName;
+    }
+
+    public String getOltReportedUpstream() {
+        return oltReportedUpstream;
+    }
+
+    public void setOltReportedUpstream(String oltReportedUpstream) {
+        this.oltReportedUpstream = oltReportedUpstream;
+    }
+
+    public String getOltReportedDownstream() {
+        return oltReportedDownstream;
+    }
+
+    public void setOltReportedDownstream(String oltReportedDownstream) {
+        this.oltReportedDownstream = oltReportedDownstream;
+    }
+
+    public String getSsidName() {
+        return ssidName;
+    }
+
+    public void setSsidName(String ssidName) {
+        this.ssidName = ssidName;
+    }
 
 }

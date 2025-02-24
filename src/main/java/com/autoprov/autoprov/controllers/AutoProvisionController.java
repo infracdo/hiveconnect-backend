@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -48,10 +49,20 @@ public class AutoProvisionController {
 
     private Boolean showBody = false;
 
-    private static String playbookMonitoringApiUrl = "https://hive-awx.apolloglobal.net/api/v2/job_templates/22/";
-    private static String playbookPreProvUrl = "https://hive-awx.apolloglobal.net/api/v2/job_templates/18/";
-    private static String playbookGetJobUrl = "https://hive-awx.apolloglobal.net/api/v2/jobs/";
-    private static String acsApiUrl = "http://192.168.90.101:7547/";
+    @Value("${playbookMonitoringApiUrl}")
+    private static String playbookMonitoringApiUrl;
+
+    @Value("${playbookPreProvUrl}")
+    private static String playbookPreProvUrl;
+    
+    @Value("${playbookGetJobUrl}")
+    private static String playbookGetJobUrl;
+
+    @Value("${acsApiUrl}")
+    private static String acsApiUrl;
+
+    @Value("${ansibleAccessToken}")
+    private static String ansibleAccessToken;
 
 
     @Autowired
@@ -181,7 +192,7 @@ public class AutoProvisionController {
         }
 
         String ansibleApiUrl = playbookMonitoringApiUrl + "launch/";
-        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
+        String accessToken = ansibleAccessToken;
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
 
@@ -448,7 +459,7 @@ public class AutoProvisionController {
         }
 
         String ansibleApiUrl = playbookMonitoringApiUrl + "launch/";
-        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
+        String accessToken = ansibleAccessToken;
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
         if (showBody)
@@ -629,7 +640,7 @@ public class AutoProvisionController {
          String downstream = packageRepo.findBypackageId(packageType).get().getDownstream();
 
         String ansibleApiUrl = playbookPreProvUrl + "launch/";
-        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
+        String accessToken = ansibleAccessToken;
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
 
@@ -769,7 +780,7 @@ public class AutoProvisionController {
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String ansibleApiUrl = playbookGetJobUrl + jobId;
-        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
+        String accessToken = ansibleAccessToken;
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -915,7 +926,7 @@ public class AutoProvisionController {
     public String getOltInterface(String jobId) {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
-        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
+        String accessToken = ansibleAccessToken;
         String error = "";
 
         HttpHeaders headers = new HttpHeaders();
@@ -975,7 +986,7 @@ public class AutoProvisionController {
     public String[] getOltBandwidth(String jobId) {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
-        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
+        String accessToken = ansibleAccessToken;
         String error = "";
 
         HttpHeaders headers = new HttpHeaders();
