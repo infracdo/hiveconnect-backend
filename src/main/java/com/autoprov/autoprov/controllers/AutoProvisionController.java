@@ -90,7 +90,6 @@ public class AutoProvisionController {
     @Async("AsyncExecutor")
     @PostMapping("/executeProvision")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, String>> executeInetProvision(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
@@ -334,7 +333,6 @@ public class AutoProvisionController {
     @Async("AsyncExecutor")
     @PostMapping("/executeAutoConfig")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, String>> executeHiveAutoConfig(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
@@ -404,7 +402,6 @@ public class AutoProvisionController {
     @Async("AsyncExecutor")
     @PostMapping("/executeMonitoring")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, String>> executeHiveMonitoring(@RequestBody Map<String, String> params)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
         String accountNo = params.get("accountNo");
@@ -601,7 +598,6 @@ public class AutoProvisionController {
     @Async("AsyncExecutor")
     @PostMapping("/preprovisionCheck")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, String>> preprovisionCheck(@RequestBody Map<String, String> params)
             throws InterruptedException, JsonMappingException, JsonProcessingException {
 
@@ -764,7 +760,6 @@ public class AutoProvisionController {
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, String>> lastJobStatus(String accountNo, String jobId)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
@@ -911,7 +906,6 @@ public class AutoProvisionController {
     @Async("AsyncExecutor")
     @GetMapping("/getOltInterface")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
-    @PreAuthorize("hasRole('USER')")
     public String getOltInterface(String jobId) {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
@@ -971,7 +965,6 @@ public class AutoProvisionController {
     @Async("AsyncExecutor")
     @GetMapping("/getOltBandwidth")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
-    @PreAuthorize("hasRole('USER')")
     public String[] getOltBandwidth(String jobId) {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
@@ -1026,7 +1019,6 @@ public class AutoProvisionController {
     @Async("AsyncExecutor")
     @PostMapping("/simulateHiveMonitoringError")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, String>> simulateError(String jobId) {
         Map<String, String> response = new HashMap<>();
         response.put("awx_job_id", jobId);
@@ -1070,7 +1062,6 @@ public class AutoProvisionController {
     @Async("AsyncExecutor")
     @GetMapping("/getOltInterface/{jobId}")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
-    @PreAuthorize("hasRole('USER')")
     public String testGetOltInterface(@PathVariable("jobId") String jobId) {
         return getOltInterface(jobId);
     }
@@ -1078,7 +1069,6 @@ public class AutoProvisionController {
     @Async("asyncExecutor")
     @GetMapping("/testExecuteMonitoring")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
-    @PreAuthorize("hasRole('USER')")
     public String testExecuteMonitoring(@RequestBody Map<String, String> params) {
 
         String accountNo = params.get("accountNo");

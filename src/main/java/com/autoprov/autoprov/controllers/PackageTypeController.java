@@ -10,7 +10,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties.Http;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -104,15 +103,15 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
 //GET ENDPOINT
     @Async("asyncExecutor")
     @GetMapping("/checkPackageDetails/{packageType}")
-    public ResponseEntity<Optional<PackageTypeEntity>> findByPackageTypeId(
+    public CompletableFuture<Optional<PackageTypeEntity>> findByPackageTypeId(
             @PathVariable("packageType") String package_type) {
 
-        return new ResponseEntity<>(packageRepo.findBypackageId(package_type), HttpStatus.OK);
+        return CompletableFuture.completedFuture(packageRepo.findBypackageId(package_type));
     }
 
     @Async("asyncExecutor")
     @GetMapping("/testGetPackageDetails/{packageType}")
-    public ResponseEntity<String> testFindByPackageTypeId(
+    public CompletableFuture<String> testFindByPackageTypeId(
             @PathVariable("packageType") String packageType) {
 
         String upstream = "";
@@ -127,9 +126,10 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
             upstream = convertToKbps(packageT.getUpstream());
             downstream = convertToKbps(packageT.getDownstream());
             packageName = packageT.getPackageType();
+
         }
 
-        return new ResponseEntity<>("Upstream: " + upstream + " Downstream: " + downstream, HttpStatus.OK);
+        return CompletableFuture.completedFuture("Upstream: " + upstream + " Downstream: " + downstream);
     }
 
     public static String convertToKbps(String speed) {

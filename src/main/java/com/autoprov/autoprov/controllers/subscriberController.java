@@ -57,7 +57,7 @@ public class subscriberController {
     // EXPOSE THIS API [USED FOR BILLING]
     @Async("asyncExecutor")
     @PostMapping("/createSubscriberForProvisioning")
-    @PreAuthorize("hasRole('USER')")
+    // @PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
     public ResponseEntity<?> addSubscriberForProvisioning(@Valid @RequestBody subscriberEntity subscriberEntity) {
         try {
             // Check if the account number is empty
@@ -88,10 +88,10 @@ public class subscriberController {
         }
     }
 
-    // EXPOSE THIS API [USED FOR MIGRATION]
+    // EXPOSE THIS API [USED FOR CLIENT MIGRATION]
     @Async("asyncExecutor")
     @PostMapping("/createSubscriberForMigration")
-    @PreAuthorize("hasRole('USER')")
+    // @PreAuthorize("hasAuthority('HIVECONNECT_CLIENT_MIGRATION_ACTION')")
     public ResponseEntity<?> addSubscriberForMigration(@Valid @RequestBody HiveClient hiveClient) {
         try {
             // Check if the account number is empty
@@ -170,10 +170,11 @@ public class subscriberController {
         }
     }
 
-    // EXPOSE THIS API [USED FOR MIGRATION]
+    // TODO; TEST THIS IN POSTMAN
+    // EXPOSE THIS API [USED FOR CLIENT MIGRATION]
     @Async("asyncExecutor")
-    @PostMapping("/updateMigrationSubscriberStatus")
-    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/updateSubscriberStatusAfterMigration")
+    // @PreAuthorize("hasAuthority('HIVECONNECT_CLIENT_MIGRATION_ACTION')")
     public ResponseEntity<?> updateMigratedSubscriberStatus(@RequestBody Map<String, String> params) {
         Map<String, String> response = new LinkedHashMap<>();
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -265,7 +266,6 @@ public class subscriberController {
     @Async("asyncExecutor")
     @GetMapping("/getsubscribers")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<subscriberEntity>> getAllSubscribers() {
         try {
             List<subscriberEntity> subscribers = SubscriberService.getAllSubscribers();
@@ -278,24 +278,11 @@ public class subscriberController {
     // DEBUGGING
     @Async("asyncExecutor")
     @GetMapping("/getprovisionedsubscribers")
-    // @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<HiveClient>> getProvisionedSubscribers() {
+    // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONED_READ')")
+    public ResponseEntity<List<subscriberEntity>> getProvisionedSubscribers() {
         try {
-            List<HiveClient> provisionedSubscribers = hiveclientService.getActiveOnholdSubscribers();
+            List<subscriberEntity> provisionedSubscribers = SubscriberService.getProvisionedSubscribers();
             return ResponseEntity.ok(provisionedSubscribers);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-    }
-    
-    // EXPOSE THIS API [USED FOR MIGRATION]
-    @Async("asyncExecutor")
-    @GetMapping("/getmigratingsubscribers")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<HiveClient>> getMigratingSubscribers() {
-        try {
-            List<HiveClient> migratingSubscribers = hiveclientService.getAllMigratingSubscribers();
-            return ResponseEntity.ok(migratingSubscribers);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
@@ -345,7 +332,6 @@ public class subscriberController {
     @Async("asyncExecutor")
     @GetMapping("/getHiveClients")
     // @PreAuthorize("hasAuthority('HIVECONNECT_TROUBLESHOOTING_READ')")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<HiveClient>> getAllHiveclients() {
         try {
             List<HiveClient> hiveclients = hiveclientService.getAllHiveclients();
@@ -362,8 +348,8 @@ public class subscriberController {
     // EXPOSE THIS API [USED FOR BILLING]
     @Async("asyncExecutor")
     @GetMapping("/subscriberAccountInfo")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> getSubscriberAccountInfo(
+    // @PreAuthorize("hasAuthority('HIVECONNECT_API_BILLING_ACCESS')")
+    public CompletableFuture<ResponseEntity<?>> getSubscriberAccountInfo(
             @RequestParam(required = false) String subscriberAccountNumber, HttpServletRequest request) {
         System.out.println("Authorization header");
         System.out.println(request.getHeader("Authorization"));
@@ -385,7 +371,7 @@ public class subscriberController {
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             errorResponse.put("status", HttpStatus.BAD_REQUEST.value());
             errorResponse.put("message", "subscriber account number is empty");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
         }
 
         try {
@@ -407,14 +393,15 @@ public class subscriberController {
 
                 response.put("data", data);
 
-                return ResponseEntity.ok(response);
+                return CompletableFuture.completedFuture(ResponseEntity.ok(response));
             } else {
                 Map<String, Object> errorResponse = new LinkedHashMap<>();
                 errorResponse.put("timestamp",
                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
                 errorResponse.put("status", HttpStatus.CONFLICT.value());
                 errorResponse.put("message", "subscriber account number does not exist");
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+                return CompletableFuture
+                        .completedFuture(ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse));
             }
         } catch (Exception e) {
             Map<String, Object> errorResponse = new LinkedHashMap<>();
@@ -422,14 +409,14 @@ public class subscriberController {
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             errorResponse.put("status", HttpStatus.CONFLICT.value());
             errorResponse.put("message", "Error retrieving Subscriber: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+            return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse));
         }
     }
 
     // GET ALL SUBSCRIBER INFO WITH THIS PARAMETERS
     @Async("asyncExecutor")
     @GetMapping("/getAllsubscribersAccountInfo")
-    public ResponseEntity<?> getAllHiveClgetAllSubscriberInfo() {
+    public CompletableFuture<ResponseEntity<?>> getAllHiveClgetAllSubscriberInfo() {
         try {
             List<HiveClient> hiveClients = hiveclientService.getAllSubscriberInfo(); // Fetch all clients
             if (hiveClients != null && !hiveClients.isEmpty()) {
@@ -442,15 +429,15 @@ public class subscriberController {
                     return response;
                 }).collect(Collectors.toList());
 
-                return ResponseEntity.ok(responseList);
+                return CompletableFuture.completedFuture(ResponseEntity.ok(responseList));
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(createErrorResponse(HttpStatus.NOT_FOUND, "No clients/subscribers found"));
+                return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(createErrorResponse(HttpStatus.NOT_FOUND, "No clients/subscribers found")));
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(createErrorResponse(HttpStatus.CONFLICT,
-                    "Error retrieving clients/subscribers: " + e.getMessage()));
+            return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(createErrorResponse(HttpStatus.CONFLICT,
+                            "Error retrieving clients/subscribers: " + e.getMessage())));
         }
     }
 
@@ -458,7 +445,7 @@ public class subscriberController {
     // provided
     @Async("asyncExecutor")
     @GetMapping("/getsubscriberNetworkInfoby/{accountNumber}")
-    public ResponseEntity<?> getHiveClientNetworkInfo(@PathVariable String accountNumber) {
+    public CompletableFuture<ResponseEntity<?>> getHiveClientNetworkInfo(@PathVariable String accountNumber) {
         try {
             HiveClient hiveClient = hiveclientService.getHiveClientByAccountNumber(accountNumber);
             if (hiveClient != null) {
@@ -470,22 +457,22 @@ public class subscriberController {
                 response.put("packageType", hiveClient.getPackageType());
                 response.put("oltReportedUpstream", hiveClient.getOltReportedUpstream());
                 response.put("oltReportedDownstream", hiveClient.getOltReportedDownstream());
-                return ResponseEntity.ok(response);
+                return CompletableFuture.completedFuture(ResponseEntity.ok(response));
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(createErrorResponse(HttpStatus.NOT_FOUND,
-                        "Subscriber not found with account number: " + accountNumber));
+                return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(createErrorResponse(HttpStatus.NOT_FOUND,
+                                "Subscriber not found with account number: " + accountNumber)));
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(createErrorResponse(HttpStatus.CONFLICT, "Error retrieving Subscriber: " + e.getMessage()));
+            return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(createErrorResponse(HttpStatus.CONFLICT, "Error retrieving Subscriber: " + e.getMessage())));
         }
     }
 
     // ---------------------
     @Async("asyncExecutor")
     @GetMapping("/getsubscribersNetworkInfo")
-    public ResponseEntity<?> getAllSubscriberNetworkInfo() {
+    public CompletableFuture<ResponseEntity<?>> getAllSubscriberNetworkInfo() {
         try {
             List<HiveClient> hiveClients = hiveclientService.getAllSubscriberNetworkInfo(); // Fetch all subscribers
             if (hiveClients != null && !hiveClients.isEmpty()) {
@@ -501,33 +488,32 @@ public class subscriberController {
                     return response;
                 }).collect(Collectors.toList());
 
-                return ResponseEntity.ok(responseList);
+                return CompletableFuture.completedFuture(ResponseEntity.ok(responseList));
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(createErrorResponse(HttpStatus.NOT_FOUND, "No subscribers found"));
+                return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(createErrorResponse(HttpStatus.NOT_FOUND, "No subscribers found")));
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(createErrorResponse(HttpStatus.CONFLICT, "Error retrieving subscribers: " + e.getMessage()));
+            return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(createErrorResponse(HttpStatus.CONFLICT, "Error retrieving subscribers: " + e.getMessage())));
         }
     }
 
     @Async("asyncExecutor")
     @GetMapping("/getallactiveAccount")
-    public ResponseEntity<?> getActiveAndActivatedClients() {
-        try {
-            List<Map<String, Object>> clients = hiveclientService.getActiveAndActivatedClients();
-            if (hiveclientService.getActiveAndActivatedClients() != null && !clients.isEmpty()) {
-                return ResponseEntity.ok(clients);
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(createErrorResponse(HttpStatus.NOT_FOUND,
-                                "No clients found with status Active or Activated."));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(createErrorResponse(HttpStatus.CONFLICT, "Error retrieving clients: " + e.getMessage()));
-        }
+    public CompletableFuture<ResponseEntity<?>> getActiveAndActivatedClients() {
+        return hiveclientService.getActiveAndActivatedClients()
+                .thenApply(clients -> {
+                    if (clients != null && !clients.isEmpty()) {
+                        return ResponseEntity.ok(clients);
+                    } else {
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                .body(createErrorResponse(HttpStatus.NOT_FOUND,
+                                        "No clients found with status Active or Activated."));
+                    }
+                })
+                .exceptionally(e -> ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(createErrorResponse(HttpStatus.CONFLICT, "Error retrieving clients: " + e.getMessage())));
     }
 
 }

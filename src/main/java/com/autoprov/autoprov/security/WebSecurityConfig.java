@@ -167,33 +167,32 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-    // http.csrf(csrf -> csrf.disable())
-    // .exceptionHandling(exception ->
-    // exception.authenticationEntryPoint(unauthorizedHandler))
-    // .sessionManagement(session ->
-    // session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-    // .authorizeHttpRequests((authorize) -> authorize
-    // // .requestMatchers("/api/test/**").permitAll()
-    // // .requestMatchers("/createSubscriberForProvisioning").permitAll()
-    // // .requestMatchers("/subscriberAccountInfo").permitAll()
-    // // .requestMatchers("/updateSubscriberProvision").permitAll()
-    // // .requestMatchers("/activateSubscriber").permitAll()
-    // // .requestMatchers("/deactivateSubscriber").permitAll()
-    // // .requestMatchers("/terminateSubscriber").permitAll()
-    // .anyRequest().permitAll())
-    // // .oauth2ResourceServer((oauth2) -> oauth2
-    // // .jwt(withDefaults()))
-    // ;
-    // return http.build();
-
     http.csrf(csrf -> csrf.disable())
     .exceptionHandling(exception ->
     exception.authenticationEntryPoint(unauthorizedHandler))
     .sessionManagement(session ->
     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-    .authorizeHttpRequests(auth ->
-    auth.requestMatchers("/api/auth/**").permitAll()
-    .requestMatchers("/api/test/**").permitAll()
+    .authorizeHttpRequests((authorize) -> authorize
+    // .requestMatchers("/api/test/**").permitAll()
+    // .requestMatchers("/createSubscriberForProvisioning").permitAll()
+    // .requestMatchers("/subscriberAccountInfo").permitAll()
+    // .requestMatchers("/updateSubscriberProvision").permitAll()
+    // .requestMatchers("/activateSubscriber").permitAll()
+    // .requestMatchers("/deactivateSubscriber").permitAll()
+    // .requestMatchers("/terminateSubscriber").permitAll()
+    .anyRequest().permitAll())
+    // .oauth2ResourceServer((oauth2) -> oauth2
+    // .jwt(withDefaults()))
+    ;
+    return http.build();
+
+    // http.csrf(csrf -> csrf.disable())
+    // .exceptionHandling(exception ->
+    // exception.authenticationEntryPoint(unauthorizedHandler))
+    // .sessionManagement(session ->
+    // session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+    // .authorizeHttpRequests(auth ->
+    // auth.requestMatchers("/api/auth/**").permitAll()
     // .requestMatchers("/executeProvision").permitAll()
     // .requestMatchers("/executeAutoConfig").permitAll()
     // .requestMatchers("/preprovisionCheck").permitAll()
@@ -204,7 +203,7 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
     // .requestMatchers("/simulateHiveMonitoringError").permitAll()
     // .requestMatchers("/getOltInterface/{jobId}").permitAll()
     // .requestMatchers("/testExecuteMonitoring").permitAll()
-    // .requestMatchers("/getmigratingsubscribers").permitAll()
+    // .requestMatchers("/getRogueDevices").permitAll()
     // .requestMatchers("/addnetwork").permitAll()
     // .requestMatchers("/getallnetworks").permitAll()
     // .requestMatchers("/cidripaddresses").permitAll()
@@ -230,13 +229,13 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
     // .requestMatchers("/getIpAddressesOfCidrBlock/{cidrBlock}").permitAll()
     // .requestMatchers("/getClientBySerialNumber/{serial_number}").permitAll()
     // .requestMatchers("/api/auth/signup").permitAll()
-    .anyRequest().authenticated()
-    );
+    // .anyRequest().authenticated()
+    // );
 
-    http.authenticationProvider(authenticationProvider());
+    // http.authenticationProvider(authenticationProvider());
 
-    http.addFilterBefore(authenticationJwtTokenFilter(),
-    UsernamePasswordAuthenticationFilter.class);
+    // http.addFilterBefore(authenticationJwtTokenFilter(),
+    // UsernamePasswordAuthenticationFilter.class);
 
     
     // // First part: General configuration (csrf, exception handling, session management)
@@ -250,13 +249,14 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
     //         // Public endpoints with no authentication
     //         .requestMatchers("/api/test/**", "/api/auth/**").permitAll() // No authentication for these endpoints
     //         // Specific paths requiring custom authentication
-    //         .requestMatchers("/getsubscribers", "/getprovisionedsubscribers",
-    //             "/getHiveClients", "/getRogueDevices", "/getallnetworks", "/getallolt",
-    //             "/getIpAddressesOfCidrBlock/**", "/executeProvision", "/executeAutoConfig", "/executeMonitoring", "/preprovisionCheck", "/simulateHiveMonitoringError", "/lastJobStatus", "/getOltBandwidth", "/getOltInterface/**", "/testExecuteMonitoring", "/createSubscriberForMigration", "/updateSubscriberStatusAfterMigration", "/addnetwork", "/addnewolt", "/createPackage", "/getOltByIp/**", "/getOltByName/**", "/checkPackageDetails/**", "/testGetPackageDetails/**", "/getsubscriberbyid/**", "/getHiveClientById/**", "/getAllsubscribersAccountInfo", "/getsubscriberNetworkInfoby/**", "/getsubscribersNetworkInfo", "/getallactiveAccount", "/getStatus/**", "/cidripaddresses")
-    //         .authenticated())  // Ensure authentication is required for these specific paths
+    //         .requestMatchers("/createSubscriberForProvisioning", "/updateSubscriberProvision",
+    //             "/updateSubscriberPackage", "/subscriberAccountInfo", "/activateSubscriber", "/deactivateSubscriber",
+    //             "/terminateSubscriber")
+    //         .authenticated()  // Ensure authentication is required for these specific paths
+    //         .anyRequest().authenticated())  // Apply OAuth2 authentication for all other requests
 
     //     // Apply OAuth2 Resource Server (JWT) to all paths except the ones specified above
-    //     .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()));  // Apply JWT validation for requests to these paths 
+    //     .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()));  // Apply JWT validation for all requests by default
 
     // // Apply custom authentication provider and JWT filter for the specific endpoints only
     // http
@@ -268,6 +268,6 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
     //     .authenticationProvider(authenticationProvider()) // Apply custom authentication provider
     //     .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);  // Apply custom JWT filter
 
-    return http.build();
+    // return http.build();
   }
 }
