@@ -64,6 +64,7 @@ public class oltController {
     @Async("asyncExecutor")
     @GetMapping("/getallolt")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<oltEntity>> getAllOlts() {
         List<oltEntity> olts = oltService.getAllOlts();
         return ResponseEntity.status(HttpStatus.OK).body(olts);

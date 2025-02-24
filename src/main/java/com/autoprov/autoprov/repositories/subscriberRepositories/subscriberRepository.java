@@ -38,8 +38,11 @@ public interface subscriberRepository extends JpaRepository<subscriberEntity, Lo
     @Query(value = "SELECT * from new_subscriber where subscriber_status = \'NEW\'", nativeQuery = true)
     List<subscriberEntity> getNewClients();
 
-    @Query(value = "SELECT * from new_subscriber where subscriber_status != 'NEW'", nativeQuery = true)
+    @Query(value = "SELECT * FROM new_subscriber WHERE subscriber_status IN ('ACTIVE', 'ONHOLD')", nativeQuery = true)
     List<subscriberEntity> getNonNewClients();
+
+    @Query(value = "SELECT * FROM new_subscriber WHERE subscriber_status LIKE '%_PENDING_MIGRATION'", nativeQuery = true)
+    List<subscriberEntity> getMigratingClients();
 
     @Query(value = "SELECT * from new_subscriber where bucket_id = 100", nativeQuery = true)
     List<subscriberEntity> getHiveConnectClients();

@@ -23,12 +23,14 @@ public class TestController {
 
   @GetMapping("/mod")
   // @PreAuthorize("hasRole('HIVECONNECT_NETWORK_SUPPORT')")
+  @PreAuthorize("hasRole('MODERATOR')")
   public String moderatorAccess() {
     return "Network Support Board.";
   }
 
   @GetMapping("/admin")
   // @PreAuthorize("hasAuthority('ROLE_HIVECONNECT_ADMIN')")
+  @PreAuthorize("hasRole('ADMIN')")
   public String adminAccess() {
     return "Hiveconnect Admin Board.";
   }

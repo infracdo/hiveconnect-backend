@@ -36,7 +36,6 @@ public class subscriberService {
         return SubscriberRepo.getNonNewClients();
     }
 
-
     public subscriberEntity getSubscriberById(Long id) {
         Optional<subscriberEntity> subscriber = SubscriberRepo.findById(id);
         return subscriber.orElse(null);

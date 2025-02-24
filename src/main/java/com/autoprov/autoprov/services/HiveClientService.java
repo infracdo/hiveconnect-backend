@@ -90,9 +90,9 @@ public class HiveClientService {
     }
 
     @Async("asyncExecutor")
-    public CompletableFuture<List<Map<String, Object>>> getActiveAndActivatedClients() {
+    public List<Map<String, Object>> getActiveAndActivatedClients() {
         List<Map<String, Object>> clients = hiveClientRepo.findClientsByStatus();
-        return CompletableFuture.completedFuture(clients);
+        return clients;
     }
 
     
@@ -103,6 +103,14 @@ public class HiveClientService {
 
     public List<HiveClient> getAllSubscriberInfo() {
         return hiveClientRepo.findAll();
+    }
+
+    public List<HiveClient> getActiveOnholdSubscribers() {
+        return hiveClientRepo.findActiveHold();
+    }
+    
+    public List<HiveClient> getAllMigratingSubscribers() {
+        return hiveClientRepo.findMigrating();
     }
     
     public List<HiveClient> getAllSubscriberNetworkInfo() {
