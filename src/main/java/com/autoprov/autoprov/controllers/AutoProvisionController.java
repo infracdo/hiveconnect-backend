@@ -445,7 +445,7 @@ public class AutoProvisionController {
         }
 
         String ansibleApiUrl = playbookMonitoringApiUrl + "launch/";
-        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
+        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
         if (showBody)
@@ -625,7 +625,7 @@ public class AutoProvisionController {
          String downstream = packageRepo.findBypackageId(packageType).get().getDownstream();
 
         String ansibleApiUrl = playbookPreProvUrl + "launch/";
-        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
+        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
 
@@ -764,7 +764,7 @@ public class AutoProvisionController {
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String ansibleApiUrl = playbookGetJobUrl + jobId;
-        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
+        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -909,7 +909,7 @@ public class AutoProvisionController {
     public String getOltInterface(String jobId) {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
-        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
+        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
         String error = "";
 
         HttpHeaders headers = new HttpHeaders();
@@ -968,7 +968,7 @@ public class AutoProvisionController {
     public String[] getOltBandwidth(String jobId) {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
-        String accessToken = "RoghfKpKHm1XihE1qkoywVToeKduUC";
+        String accessToken = "6NHpotS8gptsgnbZM2B4yiFQHQq7mz";
         String error = "";
 
         HttpHeaders headers = new HttpHeaders();
