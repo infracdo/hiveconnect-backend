@@ -16,6 +16,12 @@ public interface HiveClientRepository extends CrudRepository<HiveClient, Long> {
     @Query(value = "SELECT * from hive_clients where status = \'ACTIVE'", nativeQuery = true)
     List<HiveClient> findAll();
 
+    @Query(value = "SELECT * from hive_clients where status IN ('ACTIVE', 'ONHOLD')", nativeQuery = true)
+    List<HiveClient> findActiveHold();
+    
+    @Query(value = "SELECT * from hive_clients where status LIKE '%_PENDING_MIGRATION'", nativeQuery = true)
+    List<HiveClient> findMigrating();
+
    Optional<HiveClient> findBySubscriberAccountNumber(String subscriberAccountNumber);
 
     //HiveClient findByAccountNumber(String accountNumber);
@@ -41,7 +47,6 @@ public interface HiveClientRepository extends CrudRepository<HiveClient, Long> {
     @Transactional
     @Query(value = "UPDATE hive_clients SET modem_mac_address = NULL, ip_assigned = NULL, status = \'New\', subscription_name = NULL, backend = NULL, olt_interface = NULL, olt_ip = NULL, onu_serial_number = NULL, ssid_name = NULL, ssid_pw = NULL WHERE location LIKE \'Hive Test\'", nativeQuery = true)
     void resetHiveDummy();
-
 
     @Modifying
     @Query("UPDATE HiveClient c SET c.status = ?2 WHERE c.subscriberAccountNumber = ?1")
