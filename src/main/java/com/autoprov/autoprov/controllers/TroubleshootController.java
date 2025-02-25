@@ -1,6 +1,5 @@
 package com.autoprov.autoprov.controllers;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -20,16 +19,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @RestController
 public class TroubleshootController {
 
-    @Value("${prometheusApiUrl}")
-    private static String prometheusApiUrl;
-
     @Async("asyncExecutor")
     @GetMapping("/getStatus/{device}")
     public String getOnuStatus(@PathVariable("device") String device) {
 
         String device_name = "{job=\"ip_address\",site_tenant=\"DCTECH\",device_name=\""
                 + device + "\"}";
-        String prometheusUrl = prometheusApiUrl + device_name;
+        String prometheusUrl = "http://192.168.90.136:9090/api/v1/query?query=lo_status{device_name}";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -48,8 +47,8 @@ public class AcsController {
     private subscriberRepository subscriberRepo;
 
     
-    @Value("${acsApiUrl}")
-    private static String acsApiUrl;
+
+    private static String acsApiUrl = "http://192.168.90.101:7547/";
 
     // Exposed for HiveApp ----------------------------------------
     @Async("AsyncExecutor")
