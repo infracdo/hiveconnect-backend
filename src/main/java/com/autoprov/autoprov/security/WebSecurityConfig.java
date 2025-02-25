@@ -5,8 +5,6 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -22,13 +20,13 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
+import static org.springframework.security.config.Customizer.withDefaults;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import com.autoprov.autoprov.security.jwt.AuthEntryPointJwt;
 import com.autoprov.autoprov.security.jwt.AuthTokenFilter;
 import com.autoprov.autoprov.security.services.UserDetailsServiceImpl;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,24 +34,16 @@ import java.util.Map;
 
 @CrossOrigin(origins = "*")
 @SuppressWarnings("deprecation")
+@Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 // (securedEnabled = true,
 // jsr250Enabled = true,
 // prePostEnabled = true) // by default
-@Configuration
-@PropertySource("classpath:application.properties")
 public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 
-  private String jwkSetUri;
-
-  public WebSecurityConfig(@Value("${app.jwkSetUri}") String jwkSetUri) {
-    this.jwkSetUri = jwkSetUri;
-  }
-
-  @Autowired
-  private Environment env;
+  String jwkSetUri = "https://wcdssi.apolloglobal.net:8443/auth/realms/workconnect-test/protocol/openid-connect/certs";
 
   @Autowired
   UserDetailsServiceImpl userDetailsService;
@@ -133,6 +123,8 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
   @Bean
   JwtDecoder jwtDecoder() {
     return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+
+
   }
 
   @Bean
@@ -197,103 +189,86 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
     // return http.build();
 
     http.csrf(csrf -> csrf.disable())
-        .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**").permitAll()
-            .requestMatchers("/api/test/**").permitAll()
-            // .requestMatchers("/executeProvision").permitAll()
-            // .requestMatchers("/executeAutoConfig").permitAll()
-            .requestMatchers("/preprovisionCheck").permitAll()
-            // .requestMatchers("/executeMonitoring").permitAll()
-            // .requestMatchers("/lastJobStatus").permitAll()
-            // .requestMatchers("/getOltInterface").permitAll()
-            // .requestMatchers("/getOltBandwidth").permitAll()
-            // .requestMatchers("/simulateHiveMonitoringError").permitAll()
-            // .requestMatchers("/getOltInterface/{jobId}").permitAll()
-            // .requestMatchers("/testExecuteMonitoring").permitAll()
-            // .requestMatchers("/getmigratingsubscribers").permitAll()
-            // .requestMatchers("/addnetwork").permitAll()
-            // .requestMatchers("/getallnetworks").permitAll()
-            // .requestMatchers("/cidripaddresses").permitAll()
-            // .requestMatchers("/addnewolt").permitAll()
-            // .requestMatchers("/getOltByName/{oltName}").permitAll()
-            // .requestMatchers("/getOltByIp/{oltIp}").permitAll()
-            // .requestMatchers("/getallolt").permitAll()
-            // .requestMatchers("/createPackage").permitAll()
-            // .requestMatchers("/checkPackageDetails/{packageType}").permitAll()
-            // .requestMatchers("/testGetPackageDetails/{packageType}").permitAll()
-            // .requestMatchers("/executeInetAutoProv").permitAll()
-            // .requestMatchers("/executeInetMonitoring").permitAll()
-            // .requestMatchers("/getsubscribers").permitAll()
-            // .requestMatchers("/getsubscriberbyid/{id}").permitAll()
-            // .requestMatchers("/getHiveClientById/{id}").permitAll()
-            // .requestMatchers("/getHiveClients").permitAll()
-            // .requestMatchers("/getAllsubscribersAccountInfo").permitAll()
-            // .requestMatchers("/getsubscriberNetworkInfoby/{accountNumber}").permitAll()
-            // .requestMatchers("/getsubscribersNetworkInfo").permitAll()
-            // .requestMatchers("/getallactiveAccount").permitAll()
-            // .requestMatchers("/getprovisionedsubscribers").permitAll()
-            // .requestMatchers("/subscriberAccountInfo").permitAll()
-            // .requestMatchers("/getIpAddressesOfCidrBlock/{cidrBlock}").permitAll()
-            // .requestMatchers("/getClientBySerialNumber/{serial_number}").permitAll()
-            // .requestMatchers("/api/auth/signup").permitAll()
-            .anyRequest().authenticated());
+    .exceptionHandling(exception ->
+    exception.authenticationEntryPoint(unauthorizedHandler))
+    .sessionManagement(session ->
+    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+    .authorizeHttpRequests(auth ->
+    auth.requestMatchers("/api/auth/**").permitAll()
+    .requestMatchers("/api/test/**").permitAll()
+    // .requestMatchers("/executeProvision").permitAll()
+    // .requestMatchers("/executeAutoConfig").permitAll()
+    // .requestMatchers("/preprovisionCheck").permitAll()
+    // .requestMatchers("/executeMonitoring").permitAll()
+    // .requestMatchers("/lastJobStatus").permitAll()
+    // .requestMatchers("/getOltInterface").permitAll()
+    // .requestMatchers("/getOltBandwidth").permitAll()
+    // .requestMatchers("/simulateHiveMonitoringError").permitAll()
+    // .requestMatchers("/getOltInterface/{jobId}").permitAll()
+    // .requestMatchers("/testExecuteMonitoring").permitAll()
+    // .requestMatchers("/getmigratingsubscribers").permitAll()
+    // .requestMatchers("/addnetwork").permitAll()
+    // .requestMatchers("/getallnetworks").permitAll()
+    // .requestMatchers("/cidripaddresses").permitAll()
+    // .requestMatchers("/addnewolt").permitAll()
+    // .requestMatchers("/getOltByName/{oltName}").permitAll()
+    // .requestMatchers("/getOltByIp/{oltIp}").permitAll()
+    // .requestMatchers("/getallolt").permitAll()
+    // .requestMatchers("/createPackage").permitAll()
+    // .requestMatchers("/checkPackageDetails/{packageType}").permitAll()
+    // .requestMatchers("/testGetPackageDetails/{packageType}").permitAll()
+    // .requestMatchers("/executeInetAutoProv").permitAll()
+    // .requestMatchers("/executeInetMonitoring").permitAll()
+    // .requestMatchers("/getsubscribers").permitAll()
+    // .requestMatchers("/getsubscriberbyid/{id}").permitAll()
+    // .requestMatchers("/getHiveClientById/{id}").permitAll()
+    // .requestMatchers("/getHiveClients").permitAll()
+    // .requestMatchers("/getAllsubscribersAccountInfo").permitAll()
+    // .requestMatchers("/getsubscriberNetworkInfoby/{accountNumber}").permitAll()
+    // .requestMatchers("/getsubscribersNetworkInfo").permitAll()
+    // .requestMatchers("/getallactiveAccount").permitAll()
+    // .requestMatchers("/getprovisionedsubscribers").permitAll()
+    // .requestMatchers("/subscriberAccountInfo").permitAll()
+    // .requestMatchers("/getIpAddressesOfCidrBlock/{cidrBlock}").permitAll()
+    // .requestMatchers("/getClientBySerialNumber/{serial_number}").permitAll()
+    // .requestMatchers("/api/auth/signup").permitAll()
+    .anyRequest().authenticated()
+    );
 
     http.authenticationProvider(authenticationProvider());
 
     http.addFilterBefore(authenticationJwtTokenFilter(),
-        UsernamePasswordAuthenticationFilter.class);
+    UsernamePasswordAuthenticationFilter.class);
 
-    // // First part: General configuration (csrf, exception handling, session
-    // management)
+    
+    // // First part: General configuration (csrf, exception handling, session management)
     // http.csrf(csrf -> csrf.disable())
-    // .exceptionHandling(exception ->
-    // exception.authenticationEntryPoint(unauthorizedHandler))
-    // .sessionManagement(session ->
-    // session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+    //     .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+    //     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
     // // Second part: Authorization configuration
     // http
-    // .authorizeHttpRequests((authorize) -> authorize
-    // // Public endpoints with no authentication
-    // .requestMatchers("/api/test/**", "/api/auth/**").permitAll() // No
-    // authentication for these endpoints
-    // // Specific paths requiring custom authentication
-    // .requestMatchers("/getsubscribers", "/getprovisionedsubscribers",
-    // "/getHiveClients", "/getRogueDevices", "/getallnetworks", "/getallolt",
-    // "/getIpAddressesOfCidrBlock/**", "/executeProvision", "/executeAutoConfig",
-    // "/executeMonitoring", "/preprovisionCheck", "/simulateHiveMonitoringError",
-    // "/lastJobStatus", "/getOltBandwidth", "/getOltInterface/**",
-    // "/testExecuteMonitoring", "/createSubscriberForMigration",
-    // "/updateSubscriberStatusAfterMigration", "/addnetwork", "/addnewolt",
-    // "/createPackage", "/getOltByIp/**", "/getOltByName/**",
-    // "/checkPackageDetails/**", "/testGetPackageDetails/**",
-    // "/getsubscriberbyid/**", "/getHiveClientById/**",
-    // "/getAllsubscribersAccountInfo", "/getsubscriberNetworkInfoby/**",
-    // "/getsubscribersNetworkInfo", "/getallactiveAccount", "/getStatus/**",
-    // "/cidripaddresses")
-    // .authenticated()) // Ensure authentication is required for these specific
-    // paths
+    //     .authorizeHttpRequests((authorize) -> authorize
+    //         // Public endpoints with no authentication
+    //         .requestMatchers("/api/test/**", "/api/auth/**").permitAll() // No authentication for these endpoints
+    //         // Specific paths requiring custom authentication
+    //         .requestMatchers("/getsubscribers", "/getprovisionedsubscribers",
+    //             "/getHiveClients", "/getRogueDevices", "/getallnetworks", "/getallolt",
+    //             "/getIpAddressesOfCidrBlock/**", "/executeProvision", "/executeAutoConfig", "/executeMonitoring", "/preprovisionCheck", "/simulateHiveMonitoringError", "/lastJobStatus", "/getOltBandwidth", "/getOltInterface/**", "/testExecuteMonitoring", "/createSubscriberForMigration", "/updateSubscriberStatusAfterMigration", "/addnetwork", "/addnewolt", "/createPackage", "/getOltByIp/**", "/getOltByName/**", "/checkPackageDetails/**", "/testGetPackageDetails/**", "/getsubscriberbyid/**", "/getHiveClientById/**", "/getAllsubscribersAccountInfo", "/getsubscriberNetworkInfoby/**", "/getsubscribersNetworkInfo", "/getallactiveAccount", "/getStatus/**", "/cidripaddresses")
+    //         .authenticated())  // Ensure authentication is required for these specific paths
 
-    // // Apply OAuth2 Resource Server (JWT) to all paths except the ones specified
-    // above
-    // .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults())); // Apply JWT
-    // validation for requests to these paths
+    //     // Apply OAuth2 Resource Server (JWT) to all paths except the ones specified above
+    //     .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()));  // Apply JWT validation for requests to these paths 
 
-    // // Apply custom authentication provider and JWT filter for the specific
-    // endpoints only
+    // // Apply custom authentication provider and JWT filter for the specific endpoints only
     // http
-    // .authorizeHttpRequests((authorize) -> authorize
-    // .requestMatchers("/createSubscriberForProvisioning",
-    // "/updateSubscriberProvision",
-    // "/updateSubscriberPackage", "/subscriberAccountInfo", "/activateSubscriber",
-    // "/deactivateSubscriber",
-    // "/terminateSubscriber")
-    // .authenticated()) // Ensure authentication is required for these paths
-    // .authenticationProvider(authenticationProvider()) // Apply custom
-    // authentication provider
-    // .addFilterBefore(authenticationJwtTokenFilter(),
-    // UsernamePasswordAuthenticationFilter.class); // Apply custom JWT filter
+    //     .authorizeHttpRequests((authorize) -> authorize
+    //         .requestMatchers("/createSubscriberForProvisioning", "/updateSubscriberProvision",
+    //             "/updateSubscriberPackage", "/subscriberAccountInfo", "/activateSubscriber", "/deactivateSubscriber",
+    //             "/terminateSubscriber")
+    //         .authenticated()) // Ensure authentication is required for these paths
+    //     .authenticationProvider(authenticationProvider()) // Apply custom authentication provider
+    //     .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);  // Apply custom JWT filter
 
     return http.build();
   }
