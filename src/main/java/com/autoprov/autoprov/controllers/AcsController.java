@@ -47,9 +47,9 @@ public class AcsController {
     @Autowired
     private subscriberRepository subscriberRepo;
 
-    
     @Value("${acsApiUrl}")
     private static String acsApiUrl;
+
 
     // Exposed for HiveApp ----------------------------------------
     @Async("AsyncExecutor")

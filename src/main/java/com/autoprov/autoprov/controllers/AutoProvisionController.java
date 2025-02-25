@@ -49,6 +49,7 @@ public class AutoProvisionController {
 
     private Boolean showBody = false;
 
+
     @Value("${playbookMonitoringApiUrl}")
     private static String playbookMonitoringApiUrl;
 
@@ -63,6 +64,7 @@ public class AutoProvisionController {
 
     @Value("${ansibleAccessToken}")
     private static String ansibleAccessToken;
+
 
 
     @Autowired
@@ -193,6 +195,7 @@ public class AutoProvisionController {
 
         String ansibleApiUrl = playbookMonitoringApiUrl + "launch/";
         String accessToken = ansibleAccessToken;
+
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
 
