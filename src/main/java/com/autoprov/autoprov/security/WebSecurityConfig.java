@@ -122,7 +122,9 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 
   @Bean
   JwtDecoder jwtDecoder() {
-    return NimbusJwtDecoder.withJwkSetUri(this.jwkSetUri).build();
+    return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+
+
   }
 
   @Bean
