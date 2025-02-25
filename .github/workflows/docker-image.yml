@@ -3,7 +3,7 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-      - hivekube-test  # Trigger on pushes to the main branch
+      - keycloak-ez  # Trigger on pushes to the main branch
 #  pull_request:  # Trigger on pull requests
 
 jobs:
@@ -11,10 +11,10 @@ jobs:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
 
- #   steps:
+    steps:
       # Step 1: Checkout the code
- #     - name: Checkout repository
- #       uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       # Step 2: Set up Docker
  #     - name: Log in to DockerHub
