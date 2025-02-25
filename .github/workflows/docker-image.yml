@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - kubernetes-latest  # Trigger on pushes to the main branch
-  pull_request:  # Trigger on pull requests
+#  pull_request:  # Trigger on pull requests
 
 jobs:
   build-and-push:
