@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.github.cdimascio.dotenv.Dotenv;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController

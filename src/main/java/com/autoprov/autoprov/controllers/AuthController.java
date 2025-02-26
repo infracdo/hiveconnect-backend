@@ -1,23 +1,30 @@
 package com.autoprov.autoprov.controllers;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.autoprov.autoprov.dto.ApiResponse;
 import com.autoprov.autoprov.entity.subscriberDomain.models.ERole;
 import com.autoprov.autoprov.entity.subscriberDomain.models.Role;
 import com.autoprov.autoprov.entity.subscriberDomain.models.User;
@@ -30,6 +37,7 @@ import com.autoprov.autoprov.repositories.subscriberRepositories.UserRepository;
 import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.security.services.UserDetailsImpl;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @CrossOrigin(origins = "*")
@@ -125,5 +133,38 @@ public class AuthController {
         userRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+    }
+
+    @PostMapping("/logaction")
+    public ResponseEntity<?> logUserAction(HttpServletRequest request, @RequestBody Map<String, String> params) {
+        String keycloakUser = params.get("user"); // sent by frontend, empty if not via frontend
+        String requester_ip = params.get("accessed_endpoint"); // sent by endpoint that invoked this method
+        String action; // sent by frontend, empty if not via frontend
+        String accessed_endpoint = params.get("accessed_endpoint"); // sent by endpoint that invoked this method
+        String payload = params.get("payload"); // sent by endpoint that invoked this method
+        String user_agent = request.getHeader("User-Agent"); // sent by endpoint that invoked this method
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String additional_info; // sent by frontend, empty if not via frontend
+
+        if (params.containsKey("action") && params.get("action") != null) {
+            action = params.get("additional_info");
+        } else {
+            action = "API CALL TO BACKEND";
+        }
+
+        if (params.containsKey("additional_info") && params.get("additional_info") != null) {
+            additional_info = params.get("additional_info")+ " WITH TOKEN " + request.getHeader("Authorization");
+        } else {
+            additional_info = "SENT FROM API CLIENT WITH BEARER " + request.getHeader("Authorization");
+        }
+        String responseMessage = String.format("[%s]: User %s %s %s from %s. Additional info: %s.", timestamp, keycloakUser, action, accessed_endpoint, user_agent, additional_info);
+        System.out.println("responseMessage: " + responseMessage);
+       try {
+            ApiResponse response = new ApiResponse(HttpStatus.CREATED.value(), responseMessage);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (Exception e) {
+            ApiResponse response = new ApiResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
     }
 }
