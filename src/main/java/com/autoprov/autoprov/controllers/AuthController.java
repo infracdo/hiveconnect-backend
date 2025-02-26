@@ -137,27 +137,26 @@ public class AuthController {
 
     @PostMapping("/logaction")
     public ResponseEntity<?> logUserAction(HttpServletRequest request, @RequestBody Map<String, String> params) {
-        String keycloakUser = params.get("user"); // sent by frontend, empty if not via frontend
-        String requester_ip = params.get("accessed_endpoint"); // sent by endpoint that invoked this method
-        String action; // sent by frontend, empty if not via frontend
-        String accessed_endpoint = params.get("accessed_endpoint"); // sent by endpoint that invoked this method
-        String payload = params.get("payload"); // sent by endpoint that invoked this method
-        String user_agent = request.getHeader("User-Agent"); // sent by endpoint that invoked this method
+        JwtUtils jwtutils = new JwtUtils();
+        String user = "N/A"; // admin - sent by frontend, empty if not via frontend
+        String ip = params.get("client_ip"); // 127.0.0.1 - sent by endpoint that invoked this method
+        String action = "API REQUEST TO BACKEND API"; // accessed hiveconnect rogue devices - sent by frontend, default value if not via frontend
+        String endpoint = params.get("accessed_endpoint"); // /test - sent by endpoint that invoked this method
+        String payload = params.get("payload"); // RES-123-456 - sent by endpoint that invoked this method
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        String additional_info; // sent by frontend, empty if not via frontend
+        String response_status = params.get("response_status"); // 200 OK - sent by endpoint that invoked this method
+        String token_info = jwtutils.getUserNameFromJwtToken(params.get("token_info")); // used static token of frontendaccount - sent by endpoint that invoked this method
+        String user_agent = request.getHeader("User-Agent"); // sent by endpoint that invoked this method
+
+        if (params.containsKey("user") && params.get("user") != null) {
+            user = params.get("user");
+        }
 
         if (params.containsKey("action") && params.get("action") != null) {
-            action = params.get("additional_info");
-        } else {
-            action = "API CALL TO BACKEND";
+            action = params.get("action");
         }
 
-        if (params.containsKey("additional_info") && params.get("additional_info") != null) {
-            additional_info = params.get("additional_info")+ " WITH TOKEN " + request.getHeader("Authorization");
-        } else {
-            additional_info = "SENT FROM API CLIENT WITH BEARER " + request.getHeader("Authorization");
-        }
-        String responseMessage = String.format("[%s]: User %s %s %s from %s. Additional info: %s.", timestamp, keycloakUser, action, accessed_endpoint, user_agent, additional_info);
+        String responseMessage = String.format("[%s]: User %s %s %s from %s. Additional info: %s.", timestamp, user, action, endpoint, user_agent, token_info);
         System.out.println("responseMessage: " + responseMessage);
        try {
             ApiResponse response = new ApiResponse(HttpStatus.CREATED.value(), responseMessage);

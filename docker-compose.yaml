@@ -2,7 +2,7 @@ services:
 
   frontend:
     build:
-      context: /home/$USER/hiveconnect-frontend
+      context: ../hiveconnect-frontend-prince-branch
       dockerfile: Dockerfile
     ports:
       - "80:80" 
@@ -20,6 +20,8 @@ services:
       - ./logs:/app/logs
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     networks:
       - app-network
     depends_on:
