@@ -4,6 +4,7 @@ WORKDIR /app
 
 # Copy the pom.xml and download dependencies to cache
 COPY pom.xml .
+COPY .env .
 RUN mvn dependency:go-offline
 
 # Copy the rest of the project files into the container
