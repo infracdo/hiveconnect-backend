@@ -19,6 +19,11 @@
 	<dependencies>
 
 <dependency>
+<groupId>me.paulschwarz</groupId>
+<artifactId>spring-dotenv</artifactId>
+<version>3.0.0</version>
+</dependency>
+<dependency>
 <groupId>org.springframework.security</groupId>
 <artifactId>spring-security-oauth2-jose</artifactId>
 </dependency>
