@@ -48,7 +48,7 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 
   private String jwkSetUri;
 
-  public WebSecurityConfig(@Value("${app.jwkSetUri}") String jwkSetUri) {
+  public WebSecurityConfig(@Value("https://wcdssi.apolloglobal.net:8443/auth/realms/workconnect-test/protocol/openid-connect/certs") String jwkSetUri) {
     this.jwkSetUri = jwkSetUri;
   }
 
