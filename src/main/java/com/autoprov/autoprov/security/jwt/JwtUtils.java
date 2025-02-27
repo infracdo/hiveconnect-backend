@@ -23,7 +23,7 @@ import io.jsonwebtoken.security.Keys;
 public class JwtUtils {
   private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-  @Value("${JWT_SECRET}")
+  @Value("${bezkoder.app.jwtSecret}")
   private String jwtSecret;
 
   // @Value("${JWT_EXPIRATION_MS}")
