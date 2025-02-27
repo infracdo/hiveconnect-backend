@@ -56,7 +56,7 @@ public class AutoProvisionController {
 
     @Value("${playbookPreProvUrl}")
     private static String playbookPreProvUrl;
-    
+
     @Value("${playbookGetJobUrl}")
     private static String playbookGetJobUrl;
 
@@ -72,7 +72,6 @@ public class AutoProvisionController {
     @Value("${ansibleMigrationToken}")
     private static String ansibleMigrationToken;
 
-
     @Autowired
     private CidrIpAddressRepository ipAddRepo;
 
@@ -87,8 +86,8 @@ public class AutoProvisionController {
     // @Autowired
     // private HiveClientRepository hiveClientRepo;
 
-     @Autowired
-     private PackageRepository packageRepo;
+    @Autowired
+    private PackageRepository packageRepo;
 
     @Autowired
     private DevicesRepository devicesRepo;
@@ -102,7 +101,7 @@ public class AutoProvisionController {
     // @Async("AsyncExecutor")
     // @GetMapping("/hello")
     // public String helloWorld() {
-    //     return "Hi!";
+    // return "Hi!";
     // }
 
     // General Exposed Endpoints ----------------------------
@@ -129,7 +128,7 @@ public class AutoProvisionController {
         Long oltId = Long.parseLong(params.get("oltId"));
         String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
         // String wanMode = params.get("wanMode"); // Bridged or Routed
-        
+
         String packageType = params.get("packageType");
         String upstream = params.get("upstream");
         String downstream = params.get("downstream");
@@ -137,10 +136,9 @@ public class AutoProvisionController {
         // String upstream = "1000";
         // String downstream = "10000";
 
-
         // TODO: Dynamic Site, get actual IP Address according to Site
-    
-        //site = "CDO_3";
+
+        // site = "CDO_3";
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
@@ -293,7 +291,7 @@ public class AutoProvisionController {
                 client.setOltIp(oltIp);
                 client.setPackageType(packageType);
                 client.setSsidName(ssidName);
-                //client.setSite(site);
+                // client.setSite(site);
                 client.setProvision("HiveConnect");
                 clientRepo.save(client);
 
@@ -397,11 +395,11 @@ public class AutoProvisionController {
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
-        //String site = params.get("site"); // To determine IPAM site
+        // String site = params.get("site"); // To determine IPAM site
         String oltIp = params.get("olt");
         Long oltId = Long.parseLong(params.get("oltId"));
         String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
-        //String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        // String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         // String wanMode = params.get("wanMode"); // Bridged or Routed
 
         String packageType = params.get("packageType");
@@ -413,8 +411,7 @@ public class AutoProvisionController {
         // String upstream = "1000";
         // String downstream = "10000";
 
-
-       // site = "CDO_3";
+        // site = "CDO_3";
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
@@ -461,19 +458,29 @@ public class AutoProvisionController {
         if (accountNo == null) {
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "subscriber accountNo is missing/empty");
+            response.put("message", "accountNo is missing/empty");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
         Optional<HiveClient> clientOptional = hiveClientRepository
                 .findBySubscriberAccountNumber(accountNo);
-        if (!clientOptional.isPresent()) {
+
+        if (!clientOptional.isPresent()) { // if subscriber does not exist in database
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            response.put("message", "subscriber for migration not found");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            response.put("message", "subscriber not found with account number: " + accountNo);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } else {
+            HiveClient client = clientOptional.get();
+            if (!client.getStatus().contains("_PENDING_MIGRATION")) { // if subscriber is not pending for migration
+                Map<String, String> response = new HashMap<>();
+                response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+                response.put("message", "cannot find any subscriber with account number: " + accountNo
+                        + " that is pending for migration");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
         }
-
+        
         String migrationResponse = executeBucketHiveMigration(accountNo);
 
         if (migrationResponse.contains("Successful")) {
@@ -508,7 +515,7 @@ public class AutoProvisionController {
         String oltIp = params.get("olt");
         Long oltId = Long.parseLong(params.get("oltId"));
         String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
-      //  String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        // String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
@@ -517,8 +524,7 @@ public class AutoProvisionController {
         if (showBody)
             System.out.println(ipAddRepo
                     .getOneAvailableIpAddressUnderSite(site, "Private"));
-        
-        
+
         String packageType = params.get("packageType");
         // String upstream = params.get("upstream");
         // String downstream = params.get("downstream");
@@ -701,7 +707,7 @@ public class AutoProvisionController {
 
         String jobId;
 
-        System.out.println(">>> HiveService: Pre-Provision Check Initialized" );
+        System.out.println(">>> HiveService: Pre-Provision Check Initialized");
 
         String accountNo = params.get("accountNo");
         String clientName = params.get("clientName");
@@ -710,17 +716,17 @@ public class AutoProvisionController {
         String oltIp = params.get("olt");
         Long oltId = Long.parseLong(params.get("oltId"));
         String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
-      //  String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        // String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
                 .getIpAddress();
-        
+
         String packageType = params.get("packageType");
         // String upstream = params.get("upstream");
         // String downstream = params.get("downstream");
-         String upstream = packageRepo.findBypackageId(packageType).get().getUpstream();
-         String downstream = packageRepo.findBypackageId(packageType).get().getDownstream();
+        String upstream = packageRepo.findBypackageId(packageType).get().getUpstream();
+        String downstream = packageRepo.findBypackageId(packageType).get().getDownstream();
 
         String ansibleApiUrl = playbookPreProvUrl + "launch/";
         String accessToken = ansibleAccessToken;
@@ -1130,15 +1136,15 @@ public class AutoProvisionController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    //------7-24-24
+    // ------7-24-24
     // @Async("asyncExecutor")
     // @PostMapping("/resetHiveDummy")
     // public String deleteClient() {
-    //     clientRepo.resetHiveDummy();
-    //     deviceRepo.resetHiveDummy();
-    //     return "Hive Demo Dummy Accounts cleared! Test Devices reverted to rogue!";
+    // clientRepo.resetHiveDummy();
+    // deviceRepo.resetHiveDummy();
+    // return "Hive Demo Dummy Accounts cleared! Test Devices reverted to rogue!";
     // }
-    //---------
+    // ---------
 
     // --------- OTHER FUNCTIONS ------------
     public String getDate() {
@@ -1182,12 +1188,12 @@ public class AutoProvisionController {
         String oltIp = params.get("olt");
         Long oltId = Long.parseLong(params.get("oltId"));
         String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
-      //  String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        // String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
                 .get(0)
                 .getIpAddress();
-       
+
         String packageType = params.get("packageType");
         String upstream = params.get("upstream");
         String downstream = params.get("downstream");
