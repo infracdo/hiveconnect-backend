@@ -458,7 +458,7 @@ public class AutoProvisionController {
         if (accountNo == null) {
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "accountNo is missing/empty");
+            response.put("message", "Subscriber accountNo is missing/empty");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
@@ -468,19 +468,19 @@ public class AutoProvisionController {
         if (!clientOptional.isPresent()) { // if subscriber does not exist in database
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            response.put("message", "subscriber not found with account number: " + accountNo);
+            response.put("message", "Subscriber not found with account number: " + accountNo);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } else {
             HiveClient client = clientOptional.get();
             if (!client.getStatus().contains("_PENDING_MIGRATION")) { // if subscriber is not pending for migration
                 Map<String, String> response = new HashMap<>();
                 response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-                response.put("message", "cannot find any subscriber with account number: " + accountNo
+                response.put("message", "Cannot find any subscriber with account number: " + accountNo
                         + " that is pending for migration");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         }
-        
+
         String migrationResponse = executeBucketHiveMigration(accountNo);
 
         if (migrationResponse.contains("Successful")) {
