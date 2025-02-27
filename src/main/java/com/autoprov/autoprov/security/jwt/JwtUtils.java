@@ -50,6 +50,14 @@ public class JwtUtils {
                .parseClaimsJws(token).getBody().getSubject();
   }
 
+  public static String returnTokenOwner(String token) {
+    System.out.println("Token: " + token);
+    JwtUtils jwtutils = new JwtUtils();
+    String owner = jwtutils.getUserNameFromJwtToken(token.substring(7));
+    System.out.println("Token owner: " + owner);
+    return owner;
+  }
+
   public boolean validateJwtToken(String authToken) {
     try {
       Jwts.parserBuilder().setSigningKey(key()).build().parse(authToken);

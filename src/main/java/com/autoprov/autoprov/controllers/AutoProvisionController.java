@@ -582,11 +582,11 @@ public class AutoProvisionController {
         System.out.println(">>> HiveService: Bucket to Migration executed from HiveApp");
 
         // Prepare RequestBody Values
-        String accountNo = params.get("accountNo");
+        String accountNo = params.get("account_number");
         if (accountNo == null) {
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "Subscriber accountNo is missing/empty");
+            response.put("message", "Subscriber account_number is missing/empty");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
