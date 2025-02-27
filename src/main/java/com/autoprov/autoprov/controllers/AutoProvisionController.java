@@ -51,6 +51,9 @@ public class AutoProvisionController {
 
     private Boolean showBody = false;
 
+    @Value("${playbookBandwidthLimitationApiUrl}")
+    private static String playbookBandwidthLimitationApiUrl;
+
     @Value("${playbookMonitoringApiUrl}")
     private static String playbookMonitoringApiUrl;
 
@@ -265,7 +268,7 @@ public class AutoProvisionController {
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        ResponseEntity lastJobStatus = lastJobStatus(accountNo, jobId);
+        ResponseEntity lastJobStatus = lastJobStatus(accountNo, jobId, false);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
             // finalize and mark everything to be activated
@@ -423,6 +426,23 @@ public class AutoProvisionController {
         String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0,
                 (ipAddress.lastIndexOf("."))));
 
+        String packageName = "";
+
+        Optional<PackageTypeEntity> optionalPackage = packageRepo.findBypackageId(packageType);
+        if (optionalPackage.isPresent()) {
+            PackageTypeEntity packageT = optionalPackage.get();
+            if (showBody)
+                System.out.println(packageT.toString());
+            upstream = packageT.getUpstream();
+            downstream = packageT.getDownstream();
+            packageName = packageT.getPackageType();
+
+        }
+
+        String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
+        if (showBody)
+            System.out.println(deviceName);
+
         // ACS Processes
         Optional<CidrIpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         String vlanId = ipAddressData.get().getVlanId();
@@ -431,11 +451,119 @@ public class AutoProvisionController {
                 ipAddress, vlanId);
 
         if (acsResponse.contains("Successful")) {
-            Map<String, String> response = new HashMap<>();
-            response.put("status", "200");
-            response.put("message", acsResponse);
-            // can put change admin creds here
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+            // SET BANDWIDTH LIMIT HERE
+            String ansibleApiUrl = playbookBandwidthLimitationApiUrl + "launch/";
+            String accessToken = ansibleAccessToken;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + accessToken);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            TimeUnit.SECONDS.sleep(20);
+            AcsController.getWan2MacAddress(serialNumber);
+            TimeUnit.SECONDS.sleep(20);
+
+            String requestBody = "{\n" +
+                    "\"job_template\": \"22\",\n" +
+                    "\"ask_variables_on_launch\": \"true\",\n" +
+                    "\"extra_vars\": \"---" +
+                    "\\ndevice_name: " + deviceName +
+                    "\\nserial_number: " + serialNumber +
+                    "\\nmac_address: " + macAddress +
+                    "\\nolt_ip: " + oltIp +
+                    "\\naccount_number: " + accountNo + // TODO: add actual account number
+                    "\\nstatus: Activated " +
+                    "\\nonu_private_ip: " + ipAddress +
+                    "\\ndownstream: " + downstream +
+                    "\\nupstream: " + upstream +
+                    "\\npackage: " + packageType + "\""
+                    +
+                    "}";
+            if (showBody)
+                System.out.println(requestBody);
+
+            HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> response = restTemplate.exchange(ansibleApiUrl,
+                    HttpMethod.POST, requestEntity,
+                    String.class);
+
+            System.out.println(">>> HiveConnect: Ansible executed");
+            String jobId;
+            if (response.getStatusCode() == HttpStatus.CREATED) {
+                System.out.println("Request successful.");
+                if (showBody)
+                    System.out.println(response.getBody());
+
+                String responseBody = response.getBody();
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonNode = objectMapper.readTree(responseBody);
+                jobId = jsonNode.get("id").asText();
+
+            } else {
+                System.out.println("Request failed. Response: " + response.getStatusCode());
+                if (showBody)
+                    System.out.println(response.getBody());
+                return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            ResponseEntity lastJobStatus = lastJobStatus(accountNo, jobId, true);
+
+            if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
+                // COMMENT FROM HERE
+                // finalize and mark everything to be activated
+                ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
+                AcsController.setInformIntervalPostProv(serialNumber);
+                AcsController.onuOnboarded(serialNumber);
+    
+                String ssidName = accountNo.replace(" ", "_");
+    
+                String oltInterface = getOltInterface(jobId);
+                String[] bandwidth = getOltBandwidth(jobId);
+    
+                Optional<subscriberEntity> optionalClient = clientRepo.findBySubscriberAccountNumber(accountNo);
+                if (optionalClient.isPresent()) {
+                    subscriberEntity client = optionalClient.get();
+                    client.setOnuDeviceName(deviceName);
+                    client.setOnuMacAddress(macAddress);
+                    client.setSubsStatus("ACTIVE");
+                    client.setIpAssigned(ipAddress);
+                    client.setBucketId("100");
+                    client.setOltReportedUpstream(upstream);
+                    client.setOltReportedDownstream(downstream);
+                    client.setOnuSerialNumber(serialNumber);
+                    client.setOltIp(oltIp);
+                    client.setPackageType(packageType);
+                    client.setSsidName(ssidName);
+                    client.setSite(site);
+                    client.setProvision("HiveConnect");
+                    clientRepo.save(client);
+    
+                    HiveClientService.addHiveNewClient(accountNo, client.getSubscriberName(), serialNumber, deviceName,
+                            macAddress, oltIp, oltInterface,
+                            ipAddress,
+                            ssidName, packageType, bandwidth[0], bandwidth[1]);
+                            
+                    deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
+                }
+                // END HERE
+                return lastJobStatus;
+                
+                // OLD CODE
+                // Map<String, String> response = new HashMap<>();
+                // response.put("status", "200");
+                // response.put("message", acsResponse);
+                // // can put change admin creds here
+                // return ResponseEntity.status(HttpStatus.OK).body(response);
+                
+            } else {
+                AcsController.deleteWanInstance(serialNumber);
+                AcsController.rollbackSsid(serialNumber);
+
+                return lastJobStatus;
+            }
+
         } else {
             AcsController.deleteWanInstance(serialNumber);
             AcsController.rollbackSsid(serialNumber);
@@ -552,9 +680,9 @@ public class AutoProvisionController {
         headers.set("Authorization", "Bearer " + accessToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        TimeUnit.SECONDS.sleep(20);
-        AcsController.getWan2MacAddress(serialNumber);
-        TimeUnit.SECONDS.sleep(20);
+        // TimeUnit.SECONDS.sleep(20);
+        // AcsController.getWan2MacAddress(serialNumber);
+        // TimeUnit.SECONDS.sleep(20);
 
         String requestBody = "{\n" +
                 "\"job_template\": \"22\",\n" +
@@ -604,52 +732,52 @@ public class AutoProvisionController {
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        ResponseEntity lastJobStatus = lastJobStatus(accountNo, jobId);
+        ResponseEntity lastJobStatus = lastJobStatus(accountNo, jobId, false);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
             // finalize and mark everything to be activated
-            ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
-            AcsController.setInformIntervalPostProv(serialNumber);
-            AcsController.onuOnboarded(serialNumber);
+            // ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
+            // AcsController.setInformIntervalPostProv(serialNumber);
+            // AcsController.onuOnboarded(serialNumber);
 
-            String ssidName = accountNo.replace(" ", "_");
+            // String ssidName = accountNo.replace(" ", "_");
 
-            String oltInterface = getOltInterface(jobId);
-            String[] bandwidth = getOltBandwidth(jobId);
+            // String oltInterface = getOltInterface(jobId);
+            // String[] bandwidth = getOltBandwidth(jobId);
 
-            Optional<subscriberEntity> optionalClient = clientRepo.findBySubscriberAccountNumber(accountNo);
-            if (optionalClient.isPresent()) {
-                subscriberEntity client = optionalClient.get();
-                client.setOnuDeviceName(deviceName);
-                client.setOnuMacAddress(macAddress);
-                client.setSubsStatus("ACTIVE");
-                client.setIpAssigned(ipAddress);
-                client.setBucketId("100");
-                client.setOltReportedUpstream(upstream);
-                client.setOltReportedDownstream(downstream);
-                client.setOnuSerialNumber(serialNumber);
-                client.setOltIp(oltIp);
-                client.setPackageType(packageType);
-                client.setSsidName(ssidName);
-                client.setSite(site);
-                client.setProvision("HiveConnect");
-                clientRepo.save(client);
+            // Optional<subscriberEntity> optionalClient = clientRepo.findBySubscriberAccountNumber(accountNo);
+            // if (optionalClient.isPresent()) {
+            //     subscriberEntity client = optionalClient.get();
+            //     client.setOnuDeviceName(deviceName);
+            //     client.setOnuMacAddress(macAddress);
+            //     client.setSubsStatus("ACTIVE");
+            //     client.setIpAssigned(ipAddress);
+            //     client.setBucketId("100");
+            //     client.setOltReportedUpstream(upstream);
+            //     client.setOltReportedDownstream(downstream);
+            //     client.setOnuSerialNumber(serialNumber);
+            //     client.setOltIp(oltIp);
+            //     client.setPackageType(packageType);
+            //     client.setSsidName(ssidName);
+            //     client.setSite(site);
+            //     client.setProvision("HiveConnect");
+            //     clientRepo.save(client);
 
-                HiveClientService.addHiveNewClient(accountNo, client.getSubscriberName(), serialNumber, deviceName,
-                        macAddress, oltIp, oltInterface,
-                        ipAddress,
-                        ssidName, packageType, bandwidth[0], bandwidth[1]);
+            //     HiveClientService.addHiveNewClient(accountNo, client.getSubscriberName(), serialNumber, deviceName,
+            //             macAddress, oltIp, oltInterface,
+            //             ipAddress,
+            //             ssidName, packageType, bandwidth[0], bandwidth[1]);
 
-                // Optional<ClientDetail> optionalClientDetail =
-                // clientDetailRepo.findByClientId(client.getId());
-                // if (optionalClientDetail.isPresent()) {
-                // ClientDetail clientDetail = optionalClientDetail.get();
-                // clientDetail.setStatus("finished");
+            //     // Optional<ClientDetail> optionalClientDetail =
+            //     // clientDetailRepo.findByClientId(client.getId());
+            //     // if (optionalClientDetail.isPresent()) {
+            //     // ClientDetail clientDetail = optionalClientDetail.get();
+            //     // clientDetail.setStatus("finished");
 
-                // }
+            //     // }
 
-                deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
-            }
+            //     deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
+            // }
 
             return lastJobStatus;
         } else {
@@ -857,35 +985,55 @@ public class AutoProvisionController {
     // Troubleshooting
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
-    // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> lastJobStatus(String accountNo, String jobId)
+    public ResponseEntity<Map<String, String>> lastJobStatus(String accountNo, String jobId, boolean generateCredentials)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
+        
+        // Monitor the job status
+        String lastJobStatus = monitorJobStatus(jobId);
 
+        // Handle job failure
+        if (lastJobStatus.contains("fail")) {
+            return handleJobFailure(jobId);
+        }
+
+        // Generate credentials if requested
+        if (generateCredentials) {
+            return generateCredentials(accountNo, jobId);
+        }
+
+        // Default response for successful job completion without credential generation
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "200");
+        response.put("message", "Job completed successfully.");
+        response.put("awx_job_id", jobId);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+
+    }
+
+    // Method to monitor job status
+    private String monitorJobStatus(String jobId) throws InterruptedException {
         String ansibleApiUrl = playbookGetJobUrl + jobId;
         String accessToken = ansibleAccessToken;
-
+    
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
-
+    
         String requestBody = "";
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
-
+    
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> responseEntity = null;
         String responseBody = null;
-
+    
         StringBuilder tries = new StringBuilder();
-
-        System.out.println("Trying Get Job " + jobId);
+    
+        System.out.println("Trying to Get Job " + jobId);
         while (responseBody == null || responseBody.contains("\"finished\":null")) {
             TimeUnit.SECONDS.sleep(10);
-            responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
-                    String.class);
-
+            responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity, String.class);
+    
             if (responseEntity.getStatusCode() == HttpStatus.NOT_FOUND) {
-
                 tries.append("|");
                 System.out.println(tries.toString());
                 continue;
@@ -897,109 +1045,288 @@ public class AutoProvisionController {
                 continue;
             }
         }
-
+    
         if (showBody)
             System.out.println(responseBody);
+    
         ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(responseBody);
-
+        JsonNode jsonNode;
+        try {
+            jsonNode = objectMapper.readTree(responseBody);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            // Handle the exception appropriately, e.g., return a default status or throw a custom exception
+            return "error";
+        }
+    
         // Extract last job details
         String lastJobStatus = jsonNode.get("status").asText();
-
+    
         // Print the results
         System.out.println("Job ID: " + jobId);
         System.out.println("Job Status: " + lastJobStatus);
-
-        if (lastJobStatus.contains("fail")) {
-
-            ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/job_events/?failed=True";
-            requestEntity = new HttpEntity<>(requestBody, headers);
-
-            restTemplate = new RestTemplate();
-            responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
-                    String.class);
-            String stderr = responseEntity.getBody().toString();
-
-            if (showBody)
-                System.out.println(responseBody);
-            StringBuilder error = new StringBuilder();
-
-            try {
-
-                if (stderr.contains("Pseudo-terminal will not be allocated because stdin is not a terminal"))
-                    error.append("Bad OLT-IP.");
-
-                if (stderr.contains("name: OLT Vendor"))
-                    error.append("Bad OLT-IP; OLT-IP not live.");
-
-                if (stderr.contains("Host with the same visible name"))
-                    error.append("Client's device is already provisioned.");
-
-                if (stderr.contains("UnboundLocalError: local variable 'name' referenced before assignment"))
-                    error.append("Device on the OLT Interface already provisioned.");
-
-                if (stderr.contains("Duplicate termination found"))
-                    error.append("IP Address already assigned to someone.");
-
-                if (stderr.contains("[prometheus]: UNREACHABLE! =>"))
-                    error.append("Monitoring platform Prometheus is unreachable. Try again later.");
-
-                if (stderr.contains("FAILED!") && stderr.contains("mac-address-table"))
-                    error.append("Error on MAC Address Filtering.");
-
-                System.out.println("Errors: " + stderr);
-
-                Map<String, String> response = new HashMap<>();
-                response.put("status", "500");
-                response.put("message", error.toString());
-                response.put("awx_job_id: ", jobId.toString());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-
-            }
-
-            catch (
-
-            Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
-        requestEntity = new HttpEntity<>(requestBody, headers);
-
-        restTemplate = new RestTemplate();
-        responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
-                String.class);
-
-        responseBody = responseEntity.getBody();
-
-        // Define the pattern
-        Pattern pattern = Pattern.compile("\"olt_interface_bind\\.stdout\"\\s*:\\s*\"([^\"]+)\"");
-
-        // Create a matcher
-        Matcher matcher = pattern.matcher(responseBody);
-
-        // Find the match
-        if (matcher.find()) {
-            // Extract the desired value
-            String oltInterfaceBind = matcher.group(1);
-            System.out.println("olt_interface_bind.stdout: " + oltInterfaceBind);
-        } else {
-            System.out.println("Match not found");
-        }
-
-        String newSsid = accountNo.replace(" ", "_");
-        String password = "" + newSsid + "1234";
-
-        // return ("Job ID: " + jobId + "\nStatus: " + lastJobStatus + error);
-        Map<String, String> response = new HashMap<>();
-        response.put("awx_job_id", jobId);
-        response.put("status", "200");
-        response.put("message", "Provisioning and Monitoring Successful!");
-        response.put("ssid_name", newSsid + "2.4G/5G");
-        response.put("ssid_pw", password);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+    
+        return lastJobStatus;
     }
+
+    // Method to handle job failure
+    private ResponseEntity<Map<String, String>> handleJobFailure(String jobId) {
+        String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/job_events/?failed=True";
+        String accessToken = ansibleAccessToken;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String requestBody = "";
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity, String.class);
+        String stderr = responseEntity.getBody().toString();
+
+        if (showBody)
+            System.out.println(stderr);
+        StringBuilder error = new StringBuilder();
+
+        try {
+            if (stderr.contains("Pseudo-terminal will not be allocated because stdin is not a terminal"))
+                error.append("Bad OLT-IP.");
+
+            if (stderr.contains("name: OLT Vendor"))
+                error.append("Bad OLT-IP; OLT-IP not live.");
+
+            if (stderr.contains("Host with the same visible name"))
+                error.append("Client's device is already provisioned.");
+
+            if (stderr.contains("UnboundLocalError: local variable 'name' referenced before assignment"))
+                error.append("Device on the OLT Interface already provisioned.");
+
+            if (stderr.contains("Duplicate termination found"))
+                error.append("IP Address already assigned to someone.");
+
+            if (stderr.contains("[prometheus]: UNREACHABLE! =>"))
+                error.append("Monitoring platform Prometheus is unreachable. Try again later.");
+
+            if (stderr.contains("FAILED!") && stderr.contains("mac-address-table"))
+                error.append("Error on MAC Address Filtering.");
+
+            System.out.println("Errors: " + stderr);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "500");
+            response.put("message", error.toString());
+            response.put("awx_job_id: ", jobId.toString());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "500");
+            response.put("message", "An error occurred while processing the job status.");
+            response.put("awx_job_id: ", jobId.toString());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // Method to generate credentials
+    private ResponseEntity<Map<String, String>> generateCredentials(String accountNo, String jobId) {
+        try {
+            String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
+            String accessToken = ansibleAccessToken;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + accessToken);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String requestBody = "";
+            HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity, String.class);
+
+            String responseBody = responseEntity.getBody();
+
+            // Define the pattern
+            Pattern pattern = Pattern.compile("\"olt_interface_bind\\.stdout\"\\s*:\\s*\"([^\"]+)\"");
+
+            // Create a matcher
+            Matcher matcher = pattern.matcher(responseBody);
+
+            // Find the match
+            if (matcher.find()) {
+                // Extract the desired value
+                String oltInterfaceBind = matcher.group(1);
+                System.out.println("olt_interface_bind.stdout: " + oltInterfaceBind);
+            } else {
+                System.out.println("Match not found");
+            }
+
+            String newSsid = accountNo.replace(" ", "_");
+            String password = "" + newSsid + "1234";
+
+            Map<String, String> response = new HashMap<>();
+            response.put("awx_job_id", jobId);
+            response.put("status", "200");
+            response.put("message", "Provisioning Successful!");
+            response.put("ssid_name", newSsid + "2.4G/5G");
+            response.put("ssid_pw", password);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "500");
+            response.put("message", "An error occurred while generating credentials.");
+            response.put("awx_job_id", jobId);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+    // @Async("AsyncExecutor")
+    // @GetMapping("/lastJobStatus")
+    // // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
+    // @PreAuthorize("hasRole('USER')")
+    // public ResponseEntity<Map<String, String>> lastJobStatus(String accountNo, String jobId)
+    //         throws JsonMappingException, JsonProcessingException, InterruptedException {
+
+    //     String ansibleApiUrl = playbookGetJobUrl + jobId;
+    //     String accessToken = ansibleAccessToken;
+
+    //     HttpHeaders headers = new HttpHeaders();
+    //     headers.set("Authorization", "Bearer " + accessToken);
+    //     headers.setContentType(MediaType.APPLICATION_JSON);
+
+    //     String requestBody = "";
+    //     HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+    //     RestTemplate restTemplate = new RestTemplate();
+    //     ResponseEntity<String> responseEntity = null;
+    //     String responseBody = null;
+
+    //     StringBuilder tries = new StringBuilder();
+
+    //     System.out.println("Trying Get Job " + jobId);
+    //     while (responseBody == null || responseBody.contains("\"finished\":null")) {
+    //         TimeUnit.SECONDS.sleep(10);
+    //         responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+    //                 String.class);
+
+    //         if (responseEntity.getStatusCode() == HttpStatus.NOT_FOUND) {
+
+    //             tries.append("|");
+    //             System.out.println(tries.toString());
+    //             continue;
+    //         }
+    //         responseBody = responseEntity.getBody();
+    //         if (responseBody == null || responseBody.contains("\"finished\":null")) {
+    //             tries.append("|");
+    //             System.out.println(tries.toString());
+    //             continue;
+    //         }
+    //     }
+
+    //     if (showBody)
+    //         System.out.println(responseBody);
+    //     ObjectMapper objectMapper = new ObjectMapper();
+    //     JsonNode jsonNode = objectMapper.readTree(responseBody);
+
+    //     // Extract last job details
+    //     String lastJobStatus = jsonNode.get("status").asText();
+
+    //     // Print the results
+    //     System.out.println("Job ID: " + jobId);
+    //     System.out.println("Job Status: " + lastJobStatus);
+
+    //     if (lastJobStatus.contains("fail")) {
+
+    //         ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/job_events/?failed=True";
+    //         requestEntity = new HttpEntity<>(requestBody, headers);
+
+    //         restTemplate = new RestTemplate();
+    //         responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+    //                 String.class);
+    //         String stderr = responseEntity.getBody().toString();
+
+    //         if (showBody)
+    //             System.out.println(responseBody);
+    //         StringBuilder error = new StringBuilder();
+
+    //         try {
+
+    //             if (stderr.contains("Pseudo-terminal will not be allocated because stdin is not a terminal"))
+    //                 error.append("Bad OLT-IP.");
+
+    //             if (stderr.contains("name: OLT Vendor"))
+    //                 error.append("Bad OLT-IP; OLT-IP not live.");
+
+    //             if (stderr.contains("Host with the same visible name"))
+    //                 error.append("Client's device is already provisioned.");
+
+    //             if (stderr.contains("UnboundLocalError: local variable 'name' referenced before assignment"))
+    //                 error.append("Device on the OLT Interface already provisioned.");
+
+    //             if (stderr.contains("Duplicate termination found"))
+    //                 error.append("IP Address already assigned to someone.");
+
+    //             if (stderr.contains("[prometheus]: UNREACHABLE! =>"))
+    //                 error.append("Monitoring platform Prometheus is unreachable. Try again later.");
+
+    //             if (stderr.contains("FAILED!") && stderr.contains("mac-address-table"))
+    //                 error.append("Error on MAC Address Filtering.");
+
+    //             System.out.println("Errors: " + stderr);
+
+    //             Map<String, String> response = new HashMap<>();
+    //             response.put("status", "500");
+    //             response.put("message", error.toString());
+    //             response.put("awx_job_id: ", jobId.toString());
+    //             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+
+    //         }
+
+    //         catch (
+
+    //         Exception e) {
+    //             e.printStackTrace();
+    //         }
+    //     }
+
+    //     ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
+    //     requestEntity = new HttpEntity<>(requestBody, headers);
+
+    //     restTemplate = new RestTemplate();
+    //     responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+    //             String.class);
+
+    //     responseBody = responseEntity.getBody();
+
+    //     // Define the pattern
+    //     Pattern pattern = Pattern.compile("\"olt_interface_bind\\.stdout\"\\s*:\\s*\"([^\"]+)\"");
+
+    //     // Create a matcher
+    //     Matcher matcher = pattern.matcher(responseBody);
+
+    //     // Find the match
+    //     if (matcher.find()) {
+    //         // Extract the desired value
+    //         String oltInterfaceBind = matcher.group(1);
+    //         System.out.println("olt_interface_bind.stdout: " + oltInterfaceBind);
+    //     } else {
+    //         System.out.println("Match not found");
+    //     }
+
+    //     String newSsid = accountNo.replace(" ", "_");
+    //     String password = "" + newSsid + "1234";
+
+    //     // return ("Job ID: " + jobId + "\nStatus: " + lastJobStatus + error);
+    //     Map<String, String> response = new HashMap<>();
+    //     response.put("awx_job_id", jobId);
+    //     response.put("status", "200");
+    //     response.put("message", "Provisioning and Monitoring Successful!");
+    //     response.put("ssid_name", newSsid + "2.4G/5G");
+    //     response.put("ssid_pw", password);
+    //     return ResponseEntity.status(HttpStatus.OK).body(response);
+    // }
 
     // Get OLT Interface
     @Async("AsyncExecutor")
