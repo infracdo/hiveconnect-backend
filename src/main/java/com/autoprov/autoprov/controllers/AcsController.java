@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,9 +31,10 @@ import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
+import com.autoprov.autoprov.security.jwt.JwtUtils;
+import com.autoprov.autoprov.services.LogService;
 
-
-
+import jakarta.servlet.http.HttpServletRequest;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -47,7 +49,12 @@ public class AcsController {
     @Autowired
     private subscriberRepository subscriberRepo;
 
-    
+    @Autowired
+    private LogService logService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
     @Value("${acsApiUrl}")
     private static String acsApiUrl;
 
@@ -55,743 +62,791 @@ public class AcsController {
     @Async("AsyncExecutor")
     @GetMapping("/getRogueDevices")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<Device>> getRougeDevices() {
+    public ResponseEntity<?> getRougeDevices(@RequestParam(required = false) String user, @RequestParam(required = false) String action, HttpServletRequest request) {
+        
+        String method = request.getMethod();
+        String endpoint = request.getRequestURI();
+        String ip = request.getRemoteAddr();
+        String token = request.getHeader("Authorization").substring(7);
+        System.out.println("Token in header: " + token);
+        String client = jwtUtils.getUserNameFromJwtToken(token);
+        String agent = request.getHeader("User-Agent");
 
         List<Device> Device = new ArrayList<>();
         DeviceRepo.findByGroup("unassigned").forEach(Device::add);
         System.out.println("backend hive api accessed");
-        return new ResponseEntity<>(Device, HttpStatus.OK); 
 
-        // String apiUrl = acsApiUrl + "getRogueDevices";
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null, String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(), jwtUtils.getUserNameFromJwtToken(token), agent);
 
-        // RestTemplate restTemplate = new RestTemplate();
-        // List response = restTemplate.getForObject(apiUrl, List.class);
-
-        // return ResponseEntity.status(HttpStatus.OK).body(response);
+        return new ResponseEntity<>(Device, HttpStatus.OK);
 
     }
 
     // Exposed for HiveApp (end) ----------------------------------------
 
-    // [[[[[[---------------Exposed APIs for Connect-Disconnect  [REQUIRES AUTH AND TESTING]
-   
-//--------------deactivateSubscriber base on accountNumber---------------------  [USED FOR BILLING]
-@Async("AsyncExecutor")
-@PostMapping("/deactivateSubscriber")
-@PreAuthorize("hasRole('USER')")
-public ResponseEntity<Map<String, String>> disconnectClient(@RequestBody Map<String, String> params) {
-    Map<String, String> response = new LinkedHashMap<>(); // Use String as the value type
-    String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-    String subscriberAccountNumber = params.get("subscriberAccountNumber");
-
-    // Check if the subscriber account number is empty or null
-    if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-        response.put("message", "subscriber account number is empty");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
-
-    // Fetch the client from the repository based on the account number
-    Optional<subscriberEntity> optionalClient = subscriberRepo.findBySubscriberAccountNumber(subscriberAccountNumber);
-    if (!optionalClient.isPresent()) {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-        response.put("message", "subscriber account number does not exist: " + subscriberAccountNumber);
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-    }
-
-    subscriberEntity client = optionalClient.get();
-
-    // Check if the subscriber is active
-    // if (client.getSubsStatus() == null || !client.getSubsStatus().equals("ACTIVE")|| !client.getSubsStatus().equals("Activated")) {
-    //     response.put("timestamp", timestamp);
-    //     response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-    //     response.put("message", "subscriber not active");
-    //     return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-    // }
-    if (client.getSubsStatus() == null || 
-   (!client.getSubsStatus().equals("ACTIVE") && !client.getSubsStatus().equals("Activated"))) {
-    response.put("timestamp", timestamp);
-    response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-    response.put("message", "subscriber not active");
-    return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-}
-
-    // Get the serial number from the client
-    String serialNumber = client.getOnuSerialNumber();
-    if (serialNumber == null) {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-        response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-    }
-
-    // Call to ACS to Disconnect Wan2
-    String apiUrl = acsApiUrl + "toggleWan";
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-
-    String instance = "2";
-    String toggle = "0";
-
-    // Create a JSON request body
-    StringBuilder jsonBody = new StringBuilder();
-    jsonBody.append("{");
-    jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
-    jsonBody.append("\"Instance\":\"").append(instance).append("\",");
-    jsonBody.append("\"Toggle\":\"").append(toggle).append("\"");
-    jsonBody.append("}");
-
-    String jsonRequestBody = jsonBody.toString();
-    System.out.println(jsonRequestBody);
-
-    HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-    RestTemplate restTemplate = new RestTemplate();
-    String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
-
-    System.out.println("HiveConnect Pushed: subscriber successfully deactivated");
-    System.out.println("Response: " + jsonResponse);
-
-    // Handle the response and update the client status
-    if (jsonResponse.contains("Pushed")) {
-        client.setSubsStatus("DEACTIVATED");
-        subscriberRepo.save(client);
-
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.CREATED.value()));
-        response.put("message", "subscriber successfully deactivated");
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    } else {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-        response.put("message", jsonResponse);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-    }
-}
-
-
-//-------POST END POINT BASE ON ACCOUNT NUMBER SEND FOR TEMPORARY DISCONNECTION
-// @Async("AsyncExecutor")
-// @PostMapping("/deactivateSubscriber")
-// public ResponseEntity<Map<String, String>> disconnectClient(@RequestBody Map<String, String> params) {
-//     // Extract account number from request body
-//     String accountNumber = params.get("accountNumber");
-    
-//     // Fetch client from repository
-//     Optional<HiveClient> optionalClient = hiveClientRepository.findBySubscriberAccountNumber(accountNumber);
-//     if (!optionalClient.isPresent()) {
-//         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//             .body(Collections.singletonMap("message", "Client not found for account number: " + accountNumber));
-//     }
-
-//     HiveClient client = optionalClient.get();
-
-//     // Get the serial number from the client
-//     String serialNumber = client.getOnuSerialNumber();
-//     if (serialNumber == null) {
-//         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//             .body(Collections.singletonMap("message", "Serial number is not available for account number: " + accountNumber));
-//     }
-
-//     // Call to ACS to Disconnect Wan2
-//     String apiUrl = acsApiUrl + "toggleWan";
-
-//     // Create headers with Content-Type set to application/json
-//     HttpHeaders headers = new HttpHeaders();
-//     headers.setContentType(MediaType.APPLICATION_JSON);
-
-//     String instance = "2";
-//     String toggle = "0";
-
-//     // Create a JSON request body
-//     StringBuilder jsonBody = new StringBuilder();
-//     jsonBody.append("{");
-//     jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
-//     jsonBody.append("\"Instance\":\"").append(instance).append("\",");
-//     jsonBody.append("\"Toggle\":\"").append(toggle).append("\"");
-//     jsonBody.append("}");
-
-//     String jsonRequestBody = jsonBody.toString();
-//     System.out.println(jsonRequestBody);
-
-//     HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-//     RestTemplate restTemplate = new RestTemplate();
-//     String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
-
-//     System.out.println("HiveConnect: ACS Push: WAN2 Disable Task Pushed");
-//     System.out.println("Response: " + jsonResponse);
-
-//     // Handle response and update client status
-//     if (jsonResponse.contains("Pushed")) {
-//         // Update client status to 'deactivated'
-//         client.setStatus("deactivated");
-//         hiveClientRepository.save(client);
-
-//         Map<String, String> response = new HashMap<>();
-//         response.put("status", "200");
-//         response.put("message", "HiveConnect: ACS Push: WAN2 Disable Task Pushed");
-//         return ResponseEntity.status(HttpStatus.OK).body(response);
-//     } else {
-//         Map<String, String> response = new HashMap<>();
-//         response.put("status", "500");
-//         response.put("message", jsonResponse);
-//         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//     }
-// }
-
-   
-//----------------Activate/Reconnect Subscriber  [USED FOR BILLING]
-@Async("AsyncExecutor")
-@PostMapping("/activateSubscriber")
-@PreAuthorize("hasRole('USER')")
-public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<String, String> params) {
-    Map<String, String> response = new LinkedHashMap<>();
-    String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-    String subscriberAccountNumber = params.get("subscriberAccountNumber");
-
-    // Check if the subscriber account number is empty or null
-    if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-        response.put("message", "subscriber account number is empty");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
-
-    // Fetch client from repository
-    Optional<subscriberEntity> clientOptional = subscriberRepo.findBySubscriberAccountNumber(subscriberAccountNumber);
-    if (!clientOptional.isPresent()) {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-        response.put("message", "subscriber does not exist for account number: " + subscriberAccountNumber);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
-
-    subscriberEntity client = clientOptional.get();
-
-
-    // Check if the subscriber is deactivated
-    if (client.getSubsStatus() == null || !client.getSubsStatus().equals("DEACTIVATED")) {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-        response.put("message", "subscriber not Inactive");
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-    }
-
-    // Get the serial number from the client
-    String serialNumber = client.getOnuSerialNumber();
-    if (serialNumber == null) {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-        response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-    }
-
-    // Call to ACS to Reconnect Wan2
-    String apiUrl = acsApiUrl + "toggleWan";
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-
-    String instance = "2";
-    String toggle = "1"; // Toggle value for reconnect
-
-    // Create a JSON request body
-    StringBuilder jsonBody = new StringBuilder();
-    jsonBody.append("{");
-    jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
-    jsonBody.append("\"Instance\":\"").append(instance).append("\",");
-    jsonBody.append("\"Toggle\":\"").append(toggle).append("\"");
-    jsonBody.append("}");
-
-    String jsonRequestBody = jsonBody.toString();
-    System.out.println(jsonRequestBody);
-
-    HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-    RestTemplate restTemplate = new RestTemplate();
-    String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
-
-    System.out.println("HiveConnect Pushed:subscriber successfully activated");
-    System.out.println("Response: " + jsonResponse);
-
-    // Handle response
-    if (jsonResponse.contains("Pushed")) {
-        // Update client status to 'active'
-        client.setSubsStatus("ACTIVE");
-        subscriberRepo.save(client);
-
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.OK.value()));
-        response.put("message", "HiveConnect:subscriver successfully activated");
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    } else {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-        response.put("message", jsonResponse);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-    }
-}
-
-
-// POST end point to Recconect Internet based on account NUmber sent from billing
-// @Async("AsyncExecutor")
-// @PostMapping("/activateSubscriber")
-// public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<String, String> params) {
-//     // Extract account number from request body
-//     String subscriberAccountNumber = params.get("subscriberAccountNumber");
-    
-//     // Fetch client from repository
-//     Optional<HiveClient> clientOptional = hiveClientRepository.findBySubscriberAccountNumber(subscriberAccountNumber);
-//     if (!clientOptional.isPresent()) {
-//         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//             .body(Collections.singletonMap("message", "Client not found for account number: " + subscriberAccountNumber));
-//     }
-    
-//     HiveClient client = clientOptional.get();
-
-//     // Get the serial number from the client
-//     String serialNumber = client.getOnuSerialNumber();
-
-//     // Call to ACS to Reconnect Wan2
-//     String apiUrl = acsApiUrl + "toggleWan";
-
-//     // Create headers with Content-Type set to application/json
-//     HttpHeaders headers = new HttpHeaders();
-//     headers.setContentType(MediaType.APPLICATION_JSON);
-
-//     String instance = "2";
-//     String toggle = "1"; // Toggle value for reconnect
-
-//     // Create a JSON request body
-//     StringBuilder jsonBody = new StringBuilder();
-//     jsonBody.append("{");
-//     jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
-//     jsonBody.append("\"Instance\":\"").append(instance).append("\",");
-//     jsonBody.append("\"Toggle\":\"").append(toggle).append("\"");
-//     jsonBody.append("}");
-
-//     String jsonRequestBody = jsonBody.toString();
-//     System.out.println(jsonRequestBody);
-
-//     HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-//     RestTemplate restTemplate = new RestTemplate();
-//     String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
-
-//     System.out.println("HiveConnect: ACS Push: WAN2 Enable Task Pushed");
-//     System.out.println("Response: " + jsonResponse);
-
-//     // Handle response
-//     if (jsonResponse.contains("Pushed")) {
-//         // Update client status to 'active'
-//         client.setStatus("active");
-//         hiveClientRepository.save(client);
-
-//         Map<String, String> response = new HashMap<>();
-//         response.put("status", "200");
-//         response.put("message", "HiveConnect: ACS Push: WAN2 Enable Task Pushed");
-//         return ResponseEntity.status(HttpStatus.OK).body(response);
-//     } else {
-//         Map<String, String> response = new HashMap<>();
-//         response.put("status", "500");
-//         response.put("message", jsonResponse);
-//         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//     }
-// }
-
- //----------------UPDATE PACKAGE----no function yet  [USED FOR BILLING]
- @Async("AsyncExecutor")
- @PostMapping("/updateSubscriberPackage")
- @PreAuthorize("hasRole('USER')")
- public ResponseEntity<Map<String, String>> updateSubscriberPackage(@RequestBody Map<String, String> params) {
-     Map<String, String> response = new LinkedHashMap<>();
-     String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-     String subscriberAccountNumber = params.get("subscriberAccountNumber");
-     String packageType = params.get("packageType");
- 
-     // Check if the subscriber account number is empty or null
-     if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
-         response.put("timestamp", timestamp);
-         response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-         response.put("message", "Subscriber account number is empty");
-         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-     }
- 
-     // Check if the package type is empty or null
-     if (packageType == null || packageType.isEmpty()) {
-         response.put("timestamp", timestamp);
-         response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-         response.put("message", "Package type is empty");
-         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-     }
- 
-     // // Fetch package from repository
-     // Optional<subscriberEntity> packageOptional = subscriberRepo.findByPackageType(packageType);
-     // if (!packageOptional.isPresent()) {
-     //     response.put("timestamp", timestamp);
-     //     response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-     //     response.put("message", "Package does not exist for type: " + packageType);
-     //     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-     // }
- 
-     // Fetch client from repository
-     Optional<subscriberEntity> clientOptional = subscriberRepo.findBySubscriberAccountNumber(subscriberAccountNumber);
-     if (!clientOptional.isPresent()) {
-         response.put("timestamp", timestamp);
-         response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-         response.put("message", "subscriber account number does not exist ");
-         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-     }
- 
-     try {
-         // Get the client entity
-         subscriberEntity client = clientOptional.get();
- 
-         // Update the client entity with new package type
-         client.setPackageType(packageType);
- 
-         // Optionally, update other relevant fields if necessary
-         // Example: client.setUpdatedAt(LocalDateTime.now());
- 
-         // Save the updated client entity
-         subscriberRepo.save(client);
- 
-         // Prepare success response
-         response.put("timestamp", timestamp);
-         response.put("status", String.valueOf(HttpStatus.OK.value()));
-         response.put("message", "subscriber package successfully updated");
- 
-         return ResponseEntity.status(HttpStatus.OK).body(response);
-     } catch (Exception e) {
-         // Handle any unexpected exceptions
-         response.put("timestamp", timestamp);
-         response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-         response.put("message", "An unexpected error occurred: " + e.getMessage());
-         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-     }
- }
-
-
-//----------------UPDATE PROVISION STATUS---no function yet  [USED FOR BILLING]
-@Async("AsyncExecutor")
-@PostMapping("/updateSubscriberProvision")
-@PreAuthorize("hasRole('USER')")
-public ResponseEntity<Map<String, String>> updateSubscriberProvision(@RequestBody Map<String, String> params) {
-   Map<String, String> response = new LinkedHashMap<>();
-   String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-   String subscriberAccountNumber = params.get("subscriberAccountNumber");
-   String provision = params.get("provision");
-
-   // Check if the subscriber account number is empty or null
-   if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
-       response.put("timestamp", timestamp);
-       response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-       response.put("message", "Subscriber account number is empty");
-       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-   }
-
-   // Check if the provision is empty or null
-   if (provision == null || provision.isEmpty()) {
-       response.put("timestamp", timestamp);
-       response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-       response.put("message", "Provision is empty");
-       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-   }
-
-   // Validate provision type
-   String provisionUpperCase = provision.toUpperCase();
-   if (!(provisionUpperCase.equals("HIVECONNECT") || provisionUpperCase.equals("HIVE") || provisionUpperCase.equals("BUCKET"))) {
-       response.put("timestamp", timestamp);
-       response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-       response.put("message", "Provision type does not exist");
-       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-   }
-
-   // Fetch subscriber from repository
-   Optional<subscriberEntity> clientOptional = subscriberRepo.findBySubscriberAccountNumber(subscriberAccountNumber);
-   if (!clientOptional.isPresent()) {
-       response.put("timestamp", timestamp);
-       response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-       response.put("message", "Subscriber does not exist for account number: " + subscriberAccountNumber);
-       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-   }
-
-   try {
-       // Get the client entity
-       subscriberEntity client = clientOptional.get();
-       String currentProvision = client.getProvision();
-       String subsStatus = client.getSubsStatus();
-       System.out.println("Current Status: " + subsStatus);
-
-       // Check if provision contains specific words, ignoring case
-       if (provisionUpperCase.contains("HIVECONNECT") || provisionUpperCase.contains("HIVE")) {
-           if ("NEW".equalsIgnoreCase(subsStatus)) {
-               response.put("timestamp", timestamp);
-               response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-               response.put("message", "This account number is not yet provisioned");
-               return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-           } else {
-               client.setProvision("HIVECONNECT");
-           }
-       } else if ("BUCKET".equalsIgnoreCase(provision)) {
-           if ("BUCKET".equalsIgnoreCase(subsStatus)) {
-               client.setProvision("BUCKET");
-               subscriberRepo.save(client);
-               response.put("timestamp", timestamp);
-               response.put("status", String.valueOf(HttpStatus.OK.value()));
-               response.put("message", "Subscriber provision successfully updated to BUCKET");
-               return ResponseEntity.status(HttpStatus.OK).body(response);
-           } else {
-               response.put("timestamp", timestamp);
-               response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-               response.put("message", "This account number is not yet provisioned");
-               return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-           }
-       }
-
-       // Save the updated client entity
-       subscriberRepo.save(client);
-
-       // Prepare success response
-       response.put("timestamp", timestamp);
-       response.put("status", String.valueOf(HttpStatus.OK.value()));
-       response.put("message", "subscriber provision status successfully updated");
-       return ResponseEntity.status(HttpStatus.OK).body(response);
-
-   } catch (Exception e) {
-       // Handle any unexpected exceptions
-       response.put("timestamp", timestamp);
-       response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-       response.put("message", "An unexpected error occurred: " + e.getMessage());
-       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-   }
-}
-
-
-
-
- // permanently disconnect [USED FOR BILLING]
- @Async("AsyncExecutor")
-@PostMapping("/terminateSubscriber")
-@PreAuthorize("hasRole('USER')")
-public ResponseEntity<Map<String, String>> permanentDisconnectClient(@RequestBody Map<String, String> params) {
-    Map<String, String> response = new LinkedHashMap<>();
-    String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-    String subscriberAccountNumber = params.get("subscriberAccountNumber");
-
-    if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-        response.put("message", "Subscriber account number is empty");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
-
-    Optional<subscriberEntity> clientOptional = subscriberRepo.findBySubscriberAccountNumber(subscriberAccountNumber);
-    if (!clientOptional.isPresent()) {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-        response.put("message", "Subscriber does not exist for account number: " + subscriberAccountNumber);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
-
-    subscriberEntity client = clientOptional.get();
-
-    if (client.getSubsStatus() == null || !client.getSubsStatus().equals("DEACTIVATED")) {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-        response.put("message", "Subscriber not inactive (need to deactivate account first)");
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-    }
-
-    String serialNumber = client.getOnuSerialNumber();
-    if (serialNumber == null) {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-        response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-    }
-
-    try {
-        String apiUrl = acsApiUrl + "deleteWanInstance";
+    // [[[[[[---------------Exposed APIs for Connect-Disconnect [REQUIRES AUTH AND
+    // TESTING]
+
+    // --------------deactivateSubscriber base on accountNumber---------------------
+    // [USED FOR BILLING]
+    @Async("AsyncExecutor")
+    @PostMapping("/deactivateSubscriber")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Map<String, String>> disconnectClient(@RequestBody Map<String, String> params) {
+        Map<String, String> response = new LinkedHashMap<>(); // Use String as the value type
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String subscriberAccountNumber = params.get("subscriberAccountNumber");
+
+        // Check if the subscriber account number is empty or null
+        if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "subscriber account number is empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Fetch the client from the repository based on the account number
+        Optional<subscriberEntity> optionalClient = subscriberRepo
+                .findBySubscriberAccountNumber(subscriberAccountNumber);
+        if (!optionalClient.isPresent()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
+            response.put("message", "subscriber account number does not exist: " + subscriberAccountNumber);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        }
+
+        subscriberEntity client = optionalClient.get();
+
+        // Check if the subscriber is active
+        // if (client.getSubsStatus() == null ||
+        // !client.getSubsStatus().equals("ACTIVE")||
+        // !client.getSubsStatus().equals("Activated")) {
+        // response.put("timestamp", timestamp);
+        // response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
+        // response.put("message", "subscriber not active");
+        // return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        // }
+        if (client.getSubsStatus() == null ||
+                (!client.getSubsStatus().equals("ACTIVE") && !client.getSubsStatus().equals("Activated"))) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
+            response.put("message", "subscriber not active");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        }
+
+        // Get the serial number from the client
+        String serialNumber = client.getOnuSerialNumber();
+        if (serialNumber == null) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+
+        // Call to ACS to Disconnect Wan2
+        String apiUrl = acsApiUrl + "toggleWan";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         String instance = "2";
-        String jsonBody = String.format("{\"serialNumber\":\"%s\",\"Instance\":\"%s\"}", serialNumber, instance);
+        String toggle = "0";
 
-        HttpEntity<String> requestEntity = new HttpEntity<>(jsonBody, headers);
-        RestTemplate restTemplate = new RestTemplate(); // Consider using a RestTemplate bean
+        // Create a JSON request body
+        StringBuilder jsonBody = new StringBuilder();
+        jsonBody.append("{");
+        jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
+        jsonBody.append("\"Instance\":\"").append(instance).append("\",");
+        jsonBody.append("\"Toggle\":\"").append(toggle).append("\"");
+        jsonBody.append("}");
+
+        String jsonRequestBody = jsonBody.toString();
+        System.out.println(jsonRequestBody);
+
+        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
 
-        if (jsonResponse != null && jsonResponse.contains("Successful")) {
-            client.setSubsStatus("TERMINATED");
+        System.out.println("HiveConnect Pushed: subscriber successfully deactivated");
+        System.out.println("Response: " + jsonResponse);
+
+        // Handle the response and update the client status
+        if (jsonResponse.contains("Pushed")) {
+            client.setSubsStatus("DEACTIVATED");
+            subscriberRepo.save(client);
+
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.CREATED.value()));
+            response.put("message", "subscriber successfully deactivated");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } else {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            response.put("message", jsonResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // -------POST END POINT BASE ON ACCOUNT NUMBER SEND FOR TEMPORARY DISCONNECTION
+    // @Async("AsyncExecutor")
+    // @PostMapping("/deactivateSubscriber")
+    // public ResponseEntity<Map<String, String>> disconnectClient(@RequestBody
+    // Map<String, String> params) {
+    // // Extract account number from request body
+    // String accountNumber = params.get("accountNumber");
+
+    // // Fetch client from repository
+    // Optional<HiveClient> optionalClient =
+    // hiveClientRepository.findBySubscriberAccountNumber(accountNumber);
+    // if (!optionalClient.isPresent()) {
+    // return ResponseEntity.status(HttpStatus.NOT_FOUND)
+    // .body(Collections.singletonMap("message", "Client not found for account
+    // number: " + accountNumber));
+    // }
+
+    // HiveClient client = optionalClient.get();
+
+    // // Get the serial number from the client
+    // String serialNumber = client.getOnuSerialNumber();
+    // if (serialNumber == null) {
+    // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    // .body(Collections.singletonMap("message", "Serial number is not available for
+    // account number: " + accountNumber));
+    // }
+
+    // // Call to ACS to Disconnect Wan2
+    // String apiUrl = acsApiUrl + "toggleWan";
+
+    // // Create headers with Content-Type set to application/json
+    // HttpHeaders headers = new HttpHeaders();
+    // headers.setContentType(MediaType.APPLICATION_JSON);
+
+    // String instance = "2";
+    // String toggle = "0";
+
+    // // Create a JSON request body
+    // StringBuilder jsonBody = new StringBuilder();
+    // jsonBody.append("{");
+    // jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
+    // jsonBody.append("\"Instance\":\"").append(instance).append("\",");
+    // jsonBody.append("\"Toggle\":\"").append(toggle).append("\"");
+    // jsonBody.append("}");
+
+    // String jsonRequestBody = jsonBody.toString();
+    // System.out.println(jsonRequestBody);
+
+    // HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody,
+    // headers);
+    // RestTemplate restTemplate = new RestTemplate();
+    // String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity,
+    // String.class);
+
+    // System.out.println("HiveConnect: ACS Push: WAN2 Disable Task Pushed");
+    // System.out.println("Response: " + jsonResponse);
+
+    // // Handle response and update client status
+    // if (jsonResponse.contains("Pushed")) {
+    // // Update client status to 'deactivated'
+    // client.setStatus("deactivated");
+    // hiveClientRepository.save(client);
+
+    // Map<String, String> response = new HashMap<>();
+    // response.put("status", "200");
+    // response.put("message", "HiveConnect: ACS Push: WAN2 Disable Task Pushed");
+    // return ResponseEntity.status(HttpStatus.OK).body(response);
+    // } else {
+    // Map<String, String> response = new HashMap<>();
+    // response.put("status", "500");
+    // response.put("message", jsonResponse);
+    // return
+    // ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    // }
+    // }
+
+    // ----------------Activate/Reconnect Subscriber [USED FOR BILLING]
+    @Async("AsyncExecutor")
+    @PostMapping("/activateSubscriber")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<String, String> params) {
+        Map<String, String> response = new LinkedHashMap<>();
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String subscriberAccountNumber = params.get("subscriberAccountNumber");
+
+        // Check if the subscriber account number is empty or null
+        if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "subscriber account number is empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Fetch client from repository
+        Optional<subscriberEntity> clientOptional = subscriberRepo
+                .findBySubscriberAccountNumber(subscriberAccountNumber);
+        if (!clientOptional.isPresent()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
+            response.put("message", "subscriber does not exist for account number: " + subscriberAccountNumber);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        subscriberEntity client = clientOptional.get();
+
+        // Check if the subscriber is deactivated
+        if (client.getSubsStatus() == null || !client.getSubsStatus().equals("DEACTIVATED")) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
+            response.put("message", "subscriber not Inactive");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        }
+
+        // Get the serial number from the client
+        String serialNumber = client.getOnuSerialNumber();
+        if (serialNumber == null) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+
+        // Call to ACS to Reconnect Wan2
+        String apiUrl = acsApiUrl + "toggleWan";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String instance = "2";
+        String toggle = "1"; // Toggle value for reconnect
+
+        // Create a JSON request body
+        StringBuilder jsonBody = new StringBuilder();
+        jsonBody.append("{");
+        jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
+        jsonBody.append("\"Instance\":\"").append(instance).append("\",");
+        jsonBody.append("\"Toggle\":\"").append(toggle).append("\"");
+        jsonBody.append("}");
+
+        String jsonRequestBody = jsonBody.toString();
+        System.out.println(jsonRequestBody);
+
+        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+
+        System.out.println("HiveConnect Pushed:subscriber successfully activated");
+        System.out.println("Response: " + jsonResponse);
+
+        // Handle response
+        if (jsonResponse.contains("Pushed")) {
+            // Update client status to 'active'
+            client.setSubsStatus("ACTIVE");
             subscriberRepo.save(client);
 
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.OK.value()));
-            response.put("message", "HiveConnect: account terminated successfully");
+            response.put("message", "HiveConnect:subscriver successfully activated");
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", jsonResponse != null ? jsonResponse : "Unknown error");
+            response.put("message", jsonResponse);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-    } catch (Exception e) {
-        response.put("timestamp", timestamp);
-        response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-        response.put("message", "Exception occurred: " + e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
-}
 
-//  @Async("AsyncExecutor")
-//  @PostMapping("/terminateSubscriber")
-//  public ResponseEntity<Map<String, String>> permanentDisconnectClient(@RequestBody Map<String, String> params) {
-//      Map<String, String> response = new LinkedHashMap<>();
-//      String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-//      String subscriberAccountNumber = params.get("subscriberAccountNumber");
- 
-//      // Check if the subscriber account number is empty or null
-//      if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
-//          response.put("timestamp", timestamp);
-//          response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-//          response.put("message", "subscriber account number is empty");
-//          return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-//      }
- 
-//      // Fetch client from repository
-//      Optional<subscriberEntity> clientOptional = subscriberRepo.findBySubscriberAccountNumber(subscriberAccountNumber);
-//      if (!clientOptional.isPresent()) {
-//          response.put("timestamp", timestamp);
-//          response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-//          response.put("message", "subscriber does not exist for account number: " + subscriberAccountNumber);
-//          return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-//      }
- 
-//      subscriberEntity client = clientOptional.get();
- 
-//      // Check if the subscriber is deactivated
-//      if (client.getSubsStatus() == null || (!client.getSubsStatus().equals("DEACTIVATED"))) {
-//          response.put("timestamp", timestamp);
-//          response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-//          response.put("message", "subscriber not Inactive (need to deactivate account first)");
-//          return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-//      }
- 
-//      // Get the serial number from the client
-//      String serialNumber = client.getOnuSerialNumber();
-//      if (serialNumber == null) {
-//          response.put("timestamp", timestamp);
-//          response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-//          response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
-//          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//      }
- 
-//      // Call to ACS to REMOVE WAN2
-//      String apiUrl = acsApiUrl + "deleteWanInstance";
-//      HttpHeaders headers = new HttpHeaders();
-//      headers.setContentType(MediaType.APPLICATION_JSON);
- 
-//      String instance = "2";
- 
-//      // Create a JSON request body
-//      StringBuilder jsonBody = new StringBuilder();
-//      jsonBody.append("{");
-//      jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
-//      jsonBody.append("\"Instance\":\"").append(instance).append("\"");
-//      jsonBody.append("}");
- 
-//      String jsonRequestBody = jsonBody.toString();
-//      System.out.println(jsonRequestBody);
- 
-//      HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-//      RestTemplate restTemplate = new RestTemplate();
-//      String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
- 
-//      System.out.println("HiveConnect: account terminated Successful");
-//      System.out.println("Response: " + jsonResponse);
- 
-//      // Handle response and update client status
-//      if (jsonResponse.contains("Successful")) {
-//          // Update client status to 'terminated'
-//          client.setSubsStatus("TERMINATED");
-//          subscriberRepo.save(client);
- 
-//          response.put("timestamp", timestamp);
-//          response.put("status", String.valueOf(HttpStatus.OK.value()));
-//          response.put("message", "HiveConnect: account terminated Successful");
-//          return ResponseEntity.status(HttpStatus.OK).body(response);
-//      } else {
-//          response.put("timestamp", timestamp);
-//          response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-//          response.put("message", jsonResponse);
-//          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//      }
-//  }
- 
+    // POST end point to Recconect Internet based on account NUmber sent from
+    // billing
+    // @Async("AsyncExecutor")
+    // @PostMapping("/activateSubscriber")
+    // public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody
+    // Map<String, String> params) {
+    // // Extract account number from request body
+    // String subscriberAccountNumber = params.get("subscriberAccountNumber");
 
-// @Async("AsyncExecutor")
-// @PostMapping("/terminateSubscriber")
-// public ResponseEntity<Map<String, String>> permanentDisconnectClient(@RequestBody Map<String, String> params) {
-//     // Extract account number from request body
-//     String subscriberAccountNumber = params.get("subscriberAccountNumber");
+    // // Fetch client from repository
+    // Optional<HiveClient> clientOptional =
+    // hiveClientRepository.findBySubscriberAccountNumber(subscriberAccountNumber);
+    // if (!clientOptional.isPresent()) {
+    // return ResponseEntity.status(HttpStatus.NOT_FOUND)
+    // .body(Collections.singletonMap("message", "Client not found for account
+    // number: " + subscriberAccountNumber));
+    // }
 
-//     // Fetch client from repository
-//     Optional<HiveClient> clientOptional = hiveClientRepository.findBySubscriberAccountNumber(subscriberAccountNumber);
-//     if (!clientOptional.isPresent()) {
-//         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//             .body(Collections.singletonMap("message", "Client not found for account number: " + subscriberAccountNumber));
-//     }
+    // HiveClient client = clientOptional.get();
 
-//     HiveClient client = clientOptional.get();
+    // // Get the serial number from the client
+    // String serialNumber = client.getOnuSerialNumber();
 
-//     // Get the serial number from the client
-//     String serialNumber = client.getOnuSerialNumber();
+    // // Call to ACS to Reconnect Wan2
+    // String apiUrl = acsApiUrl + "toggleWan";
 
-//     // Call to ACS to REMOVE WAN2
-//     String apiUrl = acsApiUrl + "deleteWanInstance";
+    // // Create headers with Content-Type set to application/json
+    // HttpHeaders headers = new HttpHeaders();
+    // headers.setContentType(MediaType.APPLICATION_JSON);
 
-//     // Create headers with Content-Type set to application/json
-//     HttpHeaders headers = new HttpHeaders();
-//     headers.setContentType(MediaType.APPLICATION_JSON);
+    // String instance = "2";
+    // String toggle = "1"; // Toggle value for reconnect
 
-//     String instance = "2";
+    // // Create a JSON request body
+    // StringBuilder jsonBody = new StringBuilder();
+    // jsonBody.append("{");
+    // jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
+    // jsonBody.append("\"Instance\":\"").append(instance).append("\",");
+    // jsonBody.append("\"Toggle\":\"").append(toggle).append("\"");
+    // jsonBody.append("}");
 
-//     // Create a JSON request body
-//     StringBuilder jsonBody = new StringBuilder();
-//     jsonBody.append("{");
-//     jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
-//     jsonBody.append("\"Instance\":\"").append(instance).append("\"");
-//     jsonBody.append("}");
+    // String jsonRequestBody = jsonBody.toString();
+    // System.out.println(jsonRequestBody);
 
-//     String jsonRequestBody = jsonBody.toString();
-//     System.out.println(jsonRequestBody);
+    // HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody,
+    // headers);
+    // RestTemplate restTemplate = new RestTemplate();
+    // String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity,
+    // String.class);
 
-//     HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-//     RestTemplate restTemplate = new RestTemplate();
-//     String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+    // System.out.println("HiveConnect: ACS Push: WAN2 Enable Task Pushed");
+    // System.out.println("Response: " + jsonResponse);
 
-//     System.out.println("HiveConnect: ACS Push: WAN2 Delete Task Pushed");
-//     System.out.println("Response: " + jsonResponse);
+    // // Handle response
+    // if (jsonResponse.contains("Pushed")) {
+    // // Update client status to 'active'
+    // client.setStatus("active");
+    // hiveClientRepository.save(client);
 
-//     // Handle response and update client status
-//     if (jsonResponse.contains("Successful")) {
-//         // Update client status to 'terminated'
-//         client.setStatus("terminated");
-//         hiveClientRepository.save(client);
+    // Map<String, String> response = new HashMap<>();
+    // response.put("status", "200");
+    // response.put("message", "HiveConnect: ACS Push: WAN2 Enable Task Pushed");
+    // return ResponseEntity.status(HttpStatus.OK).body(response);
+    // } else {
+    // Map<String, String> response = new HashMap<>();
+    // response.put("status", "500");
+    // response.put("message", jsonResponse);
+    // return
+    // ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    // }
+    // }
 
-//         Map<String, String> response = new HashMap<>();
-//         response.put("status", "200");
-//         response.put("message", "HiveConnect: ACS Push: WAN2 Delete Task Pushed");
-//         return ResponseEntity.status(HttpStatus.OK).body(response);
-//     } else {
-//         Map<String, String> response = new HashMap<>();
-//         response.put("status", "500");
-//         response.put("message", "HiveConnect: ACS Push: WAN2 Delete Task Pushed");
-//         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//     }
-// }
-//----------------end for permanent disconnection
+    // ----------------UPDATE PACKAGE----no function yet [USED FOR BILLING]
+    @Async("AsyncExecutor")
+    @PostMapping("/updateSubscriberPackage")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Map<String, String>> updateSubscriberPackage(@RequestBody Map<String, String> params) {
+        Map<String, String> response = new LinkedHashMap<>();
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String subscriberAccountNumber = params.get("subscriberAccountNumber");
+        String packageType = params.get("packageType");
 
+        // Check if the subscriber account number is empty or null
+        if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Subscriber account number is empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Check if the package type is empty or null
+        if (packageType == null || packageType.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Package type is empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // // Fetch package from repository
+        // Optional<subscriberEntity> packageOptional =
+        // subscriberRepo.findByPackageType(packageType);
+        // if (!packageOptional.isPresent()) {
+        // response.put("timestamp", timestamp);
+        // response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
+        // response.put("message", "Package does not exist for type: " + packageType);
+        // return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        // }
+
+        // Fetch client from repository
+        Optional<subscriberEntity> clientOptional = subscriberRepo
+                .findBySubscriberAccountNumber(subscriberAccountNumber);
+        if (!clientOptional.isPresent()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
+            response.put("message", "subscriber account number does not exist ");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        try {
+            // Get the client entity
+            subscriberEntity client = clientOptional.get();
+
+            // Update the client entity with new package type
+            client.setPackageType(packageType);
+
+            // Optionally, update other relevant fields if necessary
+            // Example: client.setUpdatedAt(LocalDateTime.now());
+
+            // Save the updated client entity
+            subscriberRepo.save(client);
+
+            // Prepare success response
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.OK.value()));
+            response.put("message", "subscriber package successfully updated");
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            // Handle any unexpected exceptions
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            response.put("message", "An unexpected error occurred: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // ----------------UPDATE PROVISION STATUS---no function yet [USED FOR BILLING]
+    @Async("AsyncExecutor")
+    @PostMapping("/updateSubscriberProvision")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Map<String, String>> updateSubscriberProvision(@RequestBody Map<String, String> params) {
+        Map<String, String> response = new LinkedHashMap<>();
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String subscriberAccountNumber = params.get("subscriberAccountNumber");
+        String provision = params.get("provision");
+
+        // Check if the subscriber account number is empty or null
+        if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Subscriber account number is empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Check if the provision is empty or null
+        if (provision == null || provision.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Provision is empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Validate provision type
+        String provisionUpperCase = provision.toUpperCase();
+        if (!(provisionUpperCase.equals("HIVECONNECT") || provisionUpperCase.equals("HIVE")
+                || provisionUpperCase.equals("BUCKET"))) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Provision type does not exist");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Fetch subscriber from repository
+        Optional<subscriberEntity> clientOptional = subscriberRepo
+                .findBySubscriberAccountNumber(subscriberAccountNumber);
+        if (!clientOptional.isPresent()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
+            response.put("message", "Subscriber does not exist for account number: " + subscriberAccountNumber);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        try {
+            // Get the client entity
+            subscriberEntity client = clientOptional.get();
+            String currentProvisionUpperCase = client.getProvision().toUpperCase();
+            String subsStatus = client.getSubsStatus();
+            System.out.println("Current Status: " + subsStatus);
+
+            // Check if provision contains specific words, ignoring case
+            if (provisionUpperCase.contains("HIVECONNECT") || provisionUpperCase.contains("HIVE")) {
+                if ("NEW".equalsIgnoreCase(subsStatus)) {
+                    response.put("timestamp", timestamp);
+                    response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+                    response.put("message", "This account number is not yet provisioned");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                } else {
+                    if (currentProvisionUpperCase.contains("HIVECONNECT") || currentProvisionUpperCase.contains("HIVE")) {
+                        response.put("timestamp", timestamp);
+                        response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+                        response.put("message", "Subscriber is already provisioned to HiveConnect");
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    } else {
+                        client.setProvision("HiveConnect");
+                    }
+                }
+            } else if ("BUCKET".equalsIgnoreCase(provision)) {
+                if ("NEW".equalsIgnoreCase(subsStatus)) {
+                    response.put("timestamp", timestamp);
+                    response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+                    response.put("message", "This account number is not yet provisioned");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                } else {
+                    if ("BUCKET".equalsIgnoreCase(currentProvisionUpperCase)) {
+                        response.put("timestamp", timestamp);
+                        response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+                        response.put("message", "Subscriber is already provisioned to Bucket");
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    } else {
+                        client.setProvision("Bucket");
+                    }
+                }
+            }
+
+            // Save the updated client entity
+            subscriberRepo.save(client);
+
+            // Prepare success response
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.OK.value()));
+            response.put("message", "Subscriber provision successfully updated to " + client.getProvision());
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        } catch (Exception e) {
+            // Handle any unexpected exceptions
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            response.put("message", "An unexpected error occurred: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // permanently disconnect [USED FOR BILLING]
+    @Async("AsyncExecutor")
+    @PostMapping("/terminateSubscriber")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Map<String, String>> permanentDisconnectClient(@RequestBody Map<String, String> params) {
+        Map<String, String> response = new LinkedHashMap<>();
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String subscriberAccountNumber = params.get("subscriberAccountNumber");
+
+        if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Subscriber account number is empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        Optional<subscriberEntity> clientOptional = subscriberRepo
+                .findBySubscriberAccountNumber(subscriberAccountNumber);
+        if (!clientOptional.isPresent()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
+            response.put("message", "Subscriber does not exist for account number: " + subscriberAccountNumber);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        subscriberEntity client = clientOptional.get();
+
+        if (client.getSubsStatus() == null || !client.getSubsStatus().equals("DEACTIVATED")) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
+            response.put("message", "Subscriber not inactive (need to deactivate account first)");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        }
+
+        String serialNumber = client.getOnuSerialNumber();
+        if (serialNumber == null) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+
+        try {
+            String apiUrl = acsApiUrl + "deleteWanInstance";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String instance = "2";
+            String jsonBody = String.format("{\"serialNumber\":\"%s\",\"Instance\":\"%s\"}", serialNumber, instance);
+
+            HttpEntity<String> requestEntity = new HttpEntity<>(jsonBody, headers);
+            RestTemplate restTemplate = new RestTemplate(); // Consider using a RestTemplate bean
+            String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+
+            if (jsonResponse != null && jsonResponse.contains("Successful")) {
+                client.setSubsStatus("TERMINATED");
+                subscriberRepo.save(client);
+
+                response.put("timestamp", timestamp);
+                response.put("status", String.valueOf(HttpStatus.OK.value()));
+                response.put("message", "HiveConnect: account terminated successfully");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            } else {
+                response.put("timestamp", timestamp);
+                response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+                response.put("message", jsonResponse != null ? jsonResponse : "Unknown error");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
+        } catch (Exception e) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            response.put("message", "Exception occurred: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // @Async("AsyncExecutor")
+    // @PostMapping("/terminateSubscriber")
+    // public ResponseEntity<Map<String, String>>
+    // permanentDisconnectClient(@RequestBody Map<String, String> params) {
+    // Map<String, String> response = new LinkedHashMap<>();
+    // String timestamp =
+    // LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd
+    // HH:mm:ss"));
+    // String subscriberAccountNumber = params.get("subscriberAccountNumber");
+
+    // // Check if the subscriber account number is empty or null
+    // if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
+    // response.put("timestamp", timestamp);
+    // response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+    // response.put("message", "subscriber account number is empty");
+    // return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    // }
+
+    // // Fetch client from repository
+    // Optional<subscriberEntity> clientOptional =
+    // subscriberRepo.findBySubscriberAccountNumber(subscriberAccountNumber);
+    // if (!clientOptional.isPresent()) {
+    // response.put("timestamp", timestamp);
+    // response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
+    // response.put("message", "subscriber does not exist for account number: " +
+    // subscriberAccountNumber);
+    // return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    // }
+
+    // subscriberEntity client = clientOptional.get();
+
+    // // Check if the subscriber is deactivated
+    // if (client.getSubsStatus() == null ||
+    // (!client.getSubsStatus().equals("DEACTIVATED"))) {
+    // response.put("timestamp", timestamp);
+    // response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
+    // response.put("message", "subscriber not Inactive (need to deactivate account
+    // first)");
+    // return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    // }
+
+    // // Get the serial number from the client
+    // String serialNumber = client.getOnuSerialNumber();
+    // if (serialNumber == null) {
+    // response.put("timestamp", timestamp);
+    // response.put("status",
+    // String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+    // response.put("message", "Serial number is not available for account number: "
+    // + subscriberAccountNumber);
+    // return
+    // ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    // }
+
+    // // Call to ACS to REMOVE WAN2
+    // String apiUrl = acsApiUrl + "deleteWanInstance";
+    // HttpHeaders headers = new HttpHeaders();
+    // headers.setContentType(MediaType.APPLICATION_JSON);
+
+    // String instance = "2";
+
+    // // Create a JSON request body
+    // StringBuilder jsonBody = new StringBuilder();
+    // jsonBody.append("{");
+    // jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
+    // jsonBody.append("\"Instance\":\"").append(instance).append("\"");
+    // jsonBody.append("}");
+
+    // String jsonRequestBody = jsonBody.toString();
+    // System.out.println(jsonRequestBody);
+
+    // HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody,
+    // headers);
+    // RestTemplate restTemplate = new RestTemplate();
+    // String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity,
+    // String.class);
+
+    // System.out.println("HiveConnect: account terminated Successful");
+    // System.out.println("Response: " + jsonResponse);
+
+    // // Handle response and update client status
+    // if (jsonResponse.contains("Successful")) {
+    // // Update client status to 'terminated'
+    // client.setSubsStatus("TERMINATED");
+    // subscriberRepo.save(client);
+
+    // response.put("timestamp", timestamp);
+    // response.put("status", String.valueOf(HttpStatus.OK.value()));
+    // response.put("message", "HiveConnect: account terminated Successful");
+    // return ResponseEntity.status(HttpStatus.OK).body(response);
+    // } else {
+    // response.put("timestamp", timestamp);
+    // response.put("status",
+    // String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+    // response.put("message", jsonResponse);
+    // return
+    // ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    // }
+    // }
+
+    // @Async("AsyncExecutor")
+    // @PostMapping("/terminateSubscriber")
+    // public ResponseEntity<Map<String, String>>
+    // permanentDisconnectClient(@RequestBody Map<String, String> params) {
+    // // Extract account number from request body
+    // String subscriberAccountNumber = params.get("subscriberAccountNumber");
+
+    // // Fetch client from repository
+    // Optional<HiveClient> clientOptional =
+    // hiveClientRepository.findBySubscriberAccountNumber(subscriberAccountNumber);
+    // if (!clientOptional.isPresent()) {
+    // return ResponseEntity.status(HttpStatus.NOT_FOUND)
+    // .body(Collections.singletonMap("message", "Client not found for account
+    // number: " + subscriberAccountNumber));
+    // }
+
+    // HiveClient client = clientOptional.get();
+
+    // // Get the serial number from the client
+    // String serialNumber = client.getOnuSerialNumber();
+
+    // // Call to ACS to REMOVE WAN2
+    // String apiUrl = acsApiUrl + "deleteWanInstance";
+
+    // // Create headers with Content-Type set to application/json
+    // HttpHeaders headers = new HttpHeaders();
+    // headers.setContentType(MediaType.APPLICATION_JSON);
+
+    // String instance = "2";
+
+    // // Create a JSON request body
+    // StringBuilder jsonBody = new StringBuilder();
+    // jsonBody.append("{");
+    // jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
+    // jsonBody.append("\"Instance\":\"").append(instance).append("\"");
+    // jsonBody.append("}");
+
+    // String jsonRequestBody = jsonBody.toString();
+    // System.out.println(jsonRequestBody);
+
+    // HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody,
+    // headers);
+    // RestTemplate restTemplate = new RestTemplate();
+    // String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity,
+    // String.class);
+
+    // System.out.println("HiveConnect: ACS Push: WAN2 Delete Task Pushed");
+    // System.out.println("Response: " + jsonResponse);
+
+    // // Handle response and update client status
+    // if (jsonResponse.contains("Successful")) {
+    // // Update client status to 'terminated'
+    // client.setStatus("terminated");
+    // hiveClientRepository.save(client);
+
+    // Map<String, String> response = new HashMap<>();
+    // response.put("status", "200");
+    // response.put("message", "HiveConnect: ACS Push: WAN2 Delete Task Pushed");
+    // return ResponseEntity.status(HttpStatus.OK).body(response);
+    // } else {
+    // Map<String, String> response = new HashMap<>();
+    // response.put("status", "500");
+    // response.put("message", "HiveConnect: ACS Push: WAN2 Delete Task Pushed");
+    // return
+    // ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    // }
+    // }
+    // ----------------end for permanent disconnection
 
     // ]]]]]]---------------Exposed APIs for Connect-Disconnect
 
@@ -949,7 +1004,4 @@ public ResponseEntity<Map<String, String>> permanentDisconnectClient(@RequestBod
 
     // ]]]]]]-------------- Database Interactions
 
-
-
-   
-}  
+}

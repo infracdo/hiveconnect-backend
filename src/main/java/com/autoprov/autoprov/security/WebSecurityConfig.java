@@ -203,7 +203,7 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
             .requestMatchers("/api/test/**").permitAll()
             // .requestMatchers("/executeProvision").permitAll()
             // .requestMatchers("/executeAutoConfig").permitAll()
-            .requestMatchers("/preprovisionCheck").permitAll()
+            // .requestMatchers("/preprovisionCheck").permitAll()
             // .requestMatchers("/executeMonitoring").permitAll()
             // .requestMatchers("/lastJobStatus").permitAll()
             // .requestMatchers("/getOltInterface").permitAll()
