@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
+import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 
 @Service
@@ -48,11 +49,13 @@ public class HiveClientService {
         return "Successful";
     }
 
-    public static String addHiveMigratedClient(String accountNo, String clientName, String serialNumber, String deviceName,
+    public static String addHiveMigratedClient(String accountNo, String clientName, String serialNumber,
+            String deviceName,
             String macAddress, String status,
             String oltIp,
-            String oltInterface, String ipAddress, String provision, String ssidName, String packageType, String upstream,
-            String downstream) {
+            String oltInterface, String ipAddress, String provision, String ssidName, String packageType,
+            String upstream,
+            String downstream) throws Exception {
 
         HiveClient newHiveClient = HiveClient.builder()
                 .subscriberAccountNumber(accountNo)
@@ -69,24 +72,31 @@ public class HiveClientService {
                 .oltReportedUpstream(upstream)
                 .oltReportedDownstream(downstream)
                 .build();
+
+        Optional<HiveClient> existingSubscriber = hiveClientRepo
+                .findBySubscriberAccountNumber(newHiveClient.getSubscriberAccountNumber());
+        if (existingSubscriber.isPresent()) {
+            throw new Exception("Subscriber with this ACCOUNT number already exists.");
+        }
         hiveClientRepo.save(newHiveClient);
 
         return "Successful";
     }
 
-     public List<HiveClient> getAllHiveclients() {
+    public List<HiveClient> getAllHiveclients() {
         return hiveClientRepo.findAll();
     }
 
-
     public HiveClient getHiveClientByAccountNumber(String subscriberAccountNumber) {
         return hiveClientRepo.findBySubscriberAccountNumber(subscriberAccountNumber)
-                .orElseThrow(() -> new IllegalArgumentException("Subscriber not found with account number: " + subscriberAccountNumber));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Subscriber not found with account number: " + subscriberAccountNumber));
     }
 
     public HiveClient getHiveClientNetworkInfo(String subscriberAccountNumber) {
         return hiveClientRepo.findBySubscriberAccountNumber(subscriberAccountNumber)
-                .orElseThrow(() -> new IllegalArgumentException("Subscriber not found with account number: " + subscriberAccountNumber));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Subscriber not found with account number: " + subscriberAccountNumber));
     }
 
     @Async("asyncExecutor")
@@ -95,7 +105,6 @@ public class HiveClientService {
         return clients;
     }
 
-    
     public HiveClient getHiveClientById(Long id) {
         Optional<HiveClient> hiveClients = hiveClientRepo.findById(id);
         return hiveClients.orElse(null);
@@ -108,11 +117,11 @@ public class HiveClientService {
     public List<HiveClient> getActiveOnholdSubscribers() {
         return hiveClientRepo.findActiveHold();
     }
-    
+
     public List<HiveClient> getAllMigratingSubscribers() {
         return hiveClientRepo.findMigrating();
     }
-    
+
     public List<HiveClient> getAllSubscriberNetworkInfo() {
         return hiveClientRepo.findAll();
     }

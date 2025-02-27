@@ -519,6 +519,7 @@ public ResponseEntity<Map<String, String>> updateSubscriberProvision(@RequestBod
        subscriberEntity client = clientOptional.get();
        String currentProvision = client.getProvision();
        String subsStatus = client.getSubsStatus();
+       System.out.println("Current Status: " + subsStatus);
 
        // Check if provision contains specific words, ignoring case
        if (provisionUpperCase.contains("HIVECONNECT") || provisionUpperCase.contains("HIVE")) {

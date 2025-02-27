@@ -116,20 +116,6 @@ public class subscriberController {
                                 "clientName (client_name) is missing/invalid"));
             }
 
-            if (hiveClient.getOltReportedUpstream() == null || hiveClient.getOltReportedUpstream().trim().isEmpty()
-                    || hiveClient.getOltReportedUpstream().length() > 50) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "oltReportedUpstream (olt_upstream) is missing/invalid"));
-            }
-
-            if (hiveClient.getOltReportedDownstream() == null || hiveClient.getOltReportedDownstream().trim().isEmpty()
-                    || hiveClient.getOltReportedDownstream().length() > 50) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "oltReportedDownstream (olt_downstream) is missing/invalid"));
-            }
-
             if (hiveClient.getOnuDeviceName() == null || hiveClient.getOnuDeviceName().trim().isEmpty()
                     || hiveClient.getOnuDeviceName().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -287,7 +273,7 @@ public class subscriberController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
-    
+
     // EXPOSE THIS API [USED FOR MIGRATION]
     @Async("asyncExecutor")
     @GetMapping("/getmigratingsubscribers")
@@ -368,16 +354,19 @@ public class subscriberController {
         System.out.println("Authorization header");
         System.out.println(request.getHeader("Authorization"));
         // if (!request.getHeader("Authorization").equals(
-        //         "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0YWNjb3VudCIsImlhdCI6MTcyODk4MTA0MH0.6SGymGmjXsK1FgG7tqnirZEYc6r9ZyAvnJP1iEbtdsY")) {
-        //     Map<String, Object> errorResponse = new LinkedHashMap<>();
-        //     errorResponse.put("path", "/error");
-        //     errorResponse.put("error", "Unauthorized");
-        //     errorResponse.put("message", "Full authentication is required to access this resource");
-        //     errorResponse.put("status", HttpStatus.UNAUTHORIZED.value());
-        //     return CompletableFuture
-        //             .completedFuture(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse));
+        // "Bearer
+        // eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0YWNjb3VudCIsImlhdCI6MTcyODk4MTA0MH0.6SGymGmjXsK1FgG7tqnirZEYc6r9ZyAvnJP1iEbtdsY"))
+        // {
+        // Map<String, Object> errorResponse = new LinkedHashMap<>();
+        // errorResponse.put("path", "/error");
+        // errorResponse.put("error", "Unauthorized");
+        // errorResponse.put("message", "Full authentication is required to access this
+        // resource");
+        // errorResponse.put("status", HttpStatus.UNAUTHORIZED.value());
+        // return CompletableFuture
+        // .completedFuture(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse));
         // } else {
-        //     System.out.println("Authorized");
+        // System.out.println("Authorized");
         // }
         if (subscriberAccountNumber == null || subscriberAccountNumber.trim().isEmpty()) {
             Map<String, Object> errorResponse = new LinkedHashMap<>();
@@ -445,12 +434,12 @@ public class subscriberController {
                 return ResponseEntity.ok(responseList);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(createErrorResponse(HttpStatus.NOT_FOUND, "No clients/subscribers found"));
+                        .body(createErrorResponse(HttpStatus.NOT_FOUND, "No clients/subscribers found"));
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(createErrorResponse(HttpStatus.CONFLICT,
-                    "Error retrieving clients/subscribers: " + e.getMessage()));
+                    .body(createErrorResponse(HttpStatus.CONFLICT,
+                            "Error retrieving clients/subscribers: " + e.getMessage()));
         }
     }
 
@@ -473,12 +462,12 @@ public class subscriberController {
                 return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(createErrorResponse(HttpStatus.NOT_FOUND,
-                        "Subscriber not found with account number: " + accountNumber));
+                        .body(createErrorResponse(HttpStatus.NOT_FOUND,
+                                "Subscriber not found with account number: " + accountNumber));
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(createErrorResponse(HttpStatus.CONFLICT, "Error retrieving Subscriber: " + e.getMessage()));
+                    .body(createErrorResponse(HttpStatus.CONFLICT, "Error retrieving Subscriber: " + e.getMessage()));
         }
     }
 
@@ -504,11 +493,11 @@ public class subscriberController {
                 return ResponseEntity.ok(responseList);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(createErrorResponse(HttpStatus.NOT_FOUND, "No subscribers found"));
+                        .body(createErrorResponse(HttpStatus.NOT_FOUND, "No subscribers found"));
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(createErrorResponse(HttpStatus.CONFLICT, "Error retrieving subscribers: " + e.getMessage()));
+                    .body(createErrorResponse(HttpStatus.CONFLICT, "Error retrieving subscribers: " + e.getMessage()));
         }
     }
 
