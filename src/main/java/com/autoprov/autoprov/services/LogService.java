@@ -9,7 +9,7 @@ public class LogService {
         logger.info(message);
     }
 
-    public void logApi(String user, String ip, String action, String method, String endpoint, String payload, String status, String client, String agent) {
+    public void logApiAccess(String user, String ip, String action, String method, String endpoint, String payload, String status, String client, String agent) {
         logInfo(String.format(
             "User: %s | Action: %s | Method: %s | Endpoint: %s | Payload: %s | Status: %s | IP: %s | Client: %s | Agent: %s",
             user, action, method, endpoint, payload, status, ip, client, agent

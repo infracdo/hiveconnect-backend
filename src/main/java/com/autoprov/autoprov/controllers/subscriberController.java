@@ -116,20 +116,6 @@ public class subscriberController {
                                 "clientName (client_name) is missing/invalid"));
             }
 
-            if (hiveClient.getOltReportedUpstream() == null || hiveClient.getOltReportedUpstream().trim().isEmpty()
-                    || hiveClient.getOltReportedUpstream().length() > 50) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "oltReportedUpstream (olt_upstream) is missing/invalid"));
-            }
-
-            if (hiveClient.getOltReportedDownstream() == null || hiveClient.getOltReportedDownstream().trim().isEmpty()
-                    || hiveClient.getOltReportedDownstream().length() > 50) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "oltReportedDownstream (olt_downstream) is missing/invalid"));
-            }
-
             if (hiveClient.getOnuDeviceName() == null || hiveClient.getOnuDeviceName().trim().isEmpty()
                     || hiveClient.getOnuDeviceName().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)

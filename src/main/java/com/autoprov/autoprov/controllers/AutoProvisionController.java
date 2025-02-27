@@ -27,11 +27,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.ipamDomain.CidrIpAddress;
 import com.autoprov.autoprov.entity.subscriberDomain.PackageTypeEntity;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.acsRepositories.DevicesRepository;
+import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.repositories.ipamRepositories.CidrIpAddressRepository;
 import com.autoprov.autoprov.repositories.oltRepositories.oltRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.PackageRepository;
@@ -58,11 +60,17 @@ public class AutoProvisionController {
     @Value("${playbookGetJobUrl}")
     private static String playbookGetJobUrl;
 
+    @Value("${playbookMigrationUrl}")
+    private static String playbookMigrationUrl;
+
     @Value("${acsApiUrl}")
     private static String acsApiUrl;
 
     @Value("${ansibleAccessToken}")
     private static String ansibleAccessToken;
+
+    @Value("${ansibleMigrationToken}")
+    private static String ansibleMigrationToken;
 
 
     @Autowired
@@ -88,6 +96,8 @@ public class AutoProvisionController {
     @Autowired
     private DeviceRepository deviceRepo;
 
+    @Autowired
+    private HiveClientRepository hiveClientRepository;
     // General Exposed Endpoints ----------------------------
     // @Async("AsyncExecutor")
     // @GetMapping("/hello")
@@ -341,6 +351,36 @@ public class AutoProvisionController {
     }
     // API for INET (end) ----------------------------------------------
 
+    public String executeBucketHiveMigration(String accountNumber) {
+        // Define the API URL
+        String apiUrl = playbookMigrationUrl + "launch/";
+
+        // Create headers with Content-Type set to application/json
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Create a JSON request body
+        StringBuilder jsonBody = new StringBuilder();
+
+        jsonBody.append("{");
+        jsonBody.append("\"job_template\":\"28\",");
+        jsonBody.append("\"ask_variables_on_launch\":\"true\",");
+        jsonBody.append("\"extra_vars\":\"---\\" + accountNumber + "\"");
+        jsonBody.append("}");
+
+        String jsonRequestBody = jsonBody.toString();
+        if (showBody)
+            System.out.println(jsonRequestBody);
+        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+
+        System.out.println(">>> HiveConnect: finished Bucket to Hive Migration");
+        System.out.println("Response: " + jsonResponse);
+
+        return jsonResponse;
+    }
+
     // APIs for HiveApp ----------------------------------------------
     @Async("AsyncExecutor")
     @PostMapping("/executeAutoConfig")
@@ -405,7 +445,50 @@ public class AutoProvisionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
         // return acsPushResponse;
+    }
 
+    @Async("AsyncExecutor")
+    @PostMapping("/executeMigration")
+    // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Map<String, String>> executeMigration(@RequestBody Map<String, String> params)
+            throws JsonMappingException, JsonProcessingException, InterruptedException {
+
+        System.out.println(">>> HiveService: Bucket to Migration executed from HiveApp");
+
+        // Prepare RequestBody Values
+        String accountNo = params.get("accountNo");
+        if (accountNo == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "subscriber accountNo is missing/empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        Optional<HiveClient> clientOptional = hiveClientRepository
+                .findBySubscriberAccountNumber(accountNo);
+        if (!clientOptional.isPresent()) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
+            response.put("message", "subscriber for migration not found");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        String migrationResponse = executeBucketHiveMigration(accountNo);
+
+        if (migrationResponse.contains("Successful")) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "200");
+            response.put("message", migrationResponse);
+            // can put change admin creds here
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } else {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "500");
+            response.put("message", migrationResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+        // return acsPushResponse;
     }
 
     // APIs for HiveApp (end) ----------------------------------------------
