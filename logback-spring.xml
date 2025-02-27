@@ -9,7 +9,7 @@
 
     <!-- API Log Appender - audit logs -->
     <appender name="API_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/audit.log</file>
+        <file>./logs/audit.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- Roll files based on time, keep one file per day, and delete logs older than 7 days -->
             <fileNamePattern>logs/audit.%d{yyyy-MM-dd}.log</fileNamePattern>
@@ -17,13 +17,13 @@
             <totalSizeCap>70MB</totalSizeCap> <!-- Retain total size of log files up to 70MB -->
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} | %level | %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} | %msg%n</pattern>
         </encoder>
     </appender>
 
     <!-- Error Log Appender - error logs -->
     <appender name="ERROR_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/error.log</file>
+        <file>./logs/error.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeBasedRollingPolicy">
             <!-- Roll files based on size limit, max 10MB per log file -->
             <fileNamePattern>logs/error.%i.log</fileNamePattern>
@@ -31,7 +31,7 @@
             <maxHistory>7</maxHistory> <!-- Retain logs for 7 days -->
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} | %level | %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} | %msg%n</pattern>
         </encoder>
     </appender>
 

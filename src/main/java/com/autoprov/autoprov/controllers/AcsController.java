@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,6 +31,10 @@ import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
+import com.autoprov.autoprov.security.jwt.JwtUtils;
+import com.autoprov.autoprov.services.LogService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -44,6 +49,12 @@ public class AcsController {
     @Autowired
     private subscriberRepository subscriberRepo;
 
+    @Autowired
+    private LogService logService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
     @Value("${acsApiUrl}")
     private static String acsApiUrl;
 
@@ -51,19 +62,23 @@ public class AcsController {
     @Async("AsyncExecutor")
     @GetMapping("/getRogueDevices")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<Device>> getRougeDevices() {
+    public ResponseEntity<?> getRougeDevices(@RequestParam(required = false) String user, @RequestParam(required = false) String action, HttpServletRequest request) {
+        
+        String method = request.getMethod();
+        String endpoint = request.getRequestURI();
+        String ip = request.getRemoteAddr();
+        String token = request.getHeader("Authorization").substring(7);
+        System.out.println("Token in header: " + token);
+        String client = jwtUtils.getUserNameFromJwtToken(token);
+        String agent = request.getHeader("User-Agent");
 
         List<Device> Device = new ArrayList<>();
         DeviceRepo.findByGroup("unassigned").forEach(Device::add);
         System.out.println("backend hive api accessed");
+
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null, String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(), jwtUtils.getUserNameFromJwtToken(token), agent);
+
         return new ResponseEntity<>(Device, HttpStatus.OK);
-
-        // String apiUrl = acsApiUrl + "getRogueDevices";
-
-        // RestTemplate restTemplate = new RestTemplate();
-        // List response = restTemplate.getForObject(apiUrl, List.class);
-
-        // return ResponseEntity.status(HttpStatus.OK).body(response);
 
     }
 
