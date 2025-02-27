@@ -48,7 +48,7 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 
   private String jwkSetUri;
 
-  public WebSecurityConfig(@Value("${JWK_URI}") String jwkSetUri) {
+  public WebSecurityConfig(@Value("${app.jwkSetUri}") String jwkSetUri) {
     this.jwkSetUri = jwkSetUri;
   }
 
