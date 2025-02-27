@@ -366,7 +366,8 @@ public class AutoProvisionController {
         jsonBody.append("{");
         jsonBody.append("\"job_template\":\"28\",");
         jsonBody.append("\"ask_variables_on_launch\":\"true\",");
-        jsonBody.append("\"extra_vars\":\"---\\" + accountNumber + "\"");
+        jsonBody.append("\"extra_vars\":\"---\\" + 
+        "\\naccount_number: " + accountNumber+ "\"");
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
