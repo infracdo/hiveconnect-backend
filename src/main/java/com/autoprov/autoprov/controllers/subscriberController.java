@@ -131,11 +131,11 @@ public class subscriberController {
             }
 
             if (hiveClient.getStatus() == null || hiveClient.getStatus().trim().isEmpty()
-                    || hiveClient.getStatus().length() > 50) {
+                    || hiveClient.getStatus().length() > 50 || !(hiveClient.getStatus().trim().equalsIgnoreCase("onhold") || hiveClient.getStatus().trim().equalsIgnoreCase("active"))) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST, "status (status) is missing/invalid"));
             } else {
-                hiveClient.setStatus(hiveClient.getStatus() + "_PENDING_MIGRATION");
+                hiveClient.setStatus(hiveClient.getStatus().toUpperCase() + "_PENDING_MIGRATION");
             }
 
             HiveClientService.addHiveMigratedClient(hiveClient.getSubscriberAccountNumber(), hiveClient.getClientName(),
