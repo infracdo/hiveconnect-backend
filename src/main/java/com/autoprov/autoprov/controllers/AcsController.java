@@ -101,7 +101,7 @@ public class AcsController {
         if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "subscriber account number is empty");
+            response.put("message", "Subscriber account number is empty");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
@@ -111,7 +111,7 @@ public class AcsController {
         if (!optionalClient.isPresent()) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-            response.put("message", "subscriber account number does not exist: " + subscriberAccountNumber);
+            response.put("message", "Subscriber account number does not exist: " + subscriberAccountNumber);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
@@ -130,7 +130,7 @@ public class AcsController {
                 (!client.getSubsStatus().equals("ACTIVE") && !client.getSubsStatus().equals("Activated"))) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-            response.put("message", "subscriber not active");
+            response.put("message", "Subscriber not active");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
@@ -176,7 +176,7 @@ public class AcsController {
 
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.CREATED.value()));
-            response.put("message", "subscriber successfully deactivated");
+            response.put("message", "Subscriber successfully deactivated");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } else {
             response.put("timestamp", timestamp);
@@ -275,7 +275,7 @@ public class AcsController {
         if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "subscriber account number is empty");
+            response.put("message", "Subscriber account number is empty");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
@@ -285,7 +285,7 @@ public class AcsController {
         if (!clientOptional.isPresent()) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            response.put("message", "subscriber does not exist for account number: " + subscriberAccountNumber);
+            response.put("message", "Subscriber does not exist for account number: " + subscriberAccountNumber);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
@@ -295,7 +295,7 @@ public class AcsController {
         if (client.getSubsStatus() == null || !client.getSubsStatus().equals("DEACTIVATED")) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-            response.put("message", "subscriber not Inactive");
+            response.put("message", "Subscriber not Inactive");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
@@ -466,7 +466,7 @@ public class AcsController {
         if (!clientOptional.isPresent()) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            response.put("message", "subscriber account number does not exist ");
+            response.put("message", "Subscriber account number does not exist ");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
@@ -486,7 +486,7 @@ public class AcsController {
             // Prepare success response
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.OK.value()));
-            response.put("message", "subscriber package successfully updated");
+            response.put("message", "Subscriber package successfully updated");
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {

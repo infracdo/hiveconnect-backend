@@ -64,14 +64,14 @@ public class subscriberController {
             if (subscriberEntity.getSubscriberAccountNumber() == null
                     || subscriberEntity.getSubscriberAccountNumber().trim().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "subscriber account number is empty"));
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "Subscriber account number is empty"));
             }
 
             // Check if the subscriber name is empty or too long
             if (subscriberEntity.getSubscriberName() == null || subscriberEntity.getSubscriberName().trim().isEmpty()
                     || subscriberEntity.getSubscriberName().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "subscriber name is empty"));
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "Subscriber name is empty"));
             }
 
             // Set status to NEW
@@ -81,7 +81,7 @@ public class subscriberController {
             return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse());
         } catch (SubscriberAlreadyExistsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse(HttpStatus.UNAUTHORIZED, "subscriber account number already exist"));
+                    .body(createErrorResponse(HttpStatus.UNAUTHORIZED, "Subscriber account number already exist"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving the account: " + e.getMessage()));
@@ -99,13 +99,13 @@ public class subscriberController {
                     || hiveClient.getSubscriberAccountNumber().trim().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "subscriberAccountNumber (account_no) is missing/invalid"));
+                                "Subscriber account number is missing/invalid"));
             }
 
             if (hiveClient.getProvision() == null || hiveClient.getProvision().trim().isEmpty()
                     || hiveClient.getProvision().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "provision (backend) is missing/invalid"));
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "Provision is missing/invalid"));
             }
 
             // Check if the subscriber name is empty or too long
@@ -113,27 +113,27 @@ public class subscriberController {
                     || hiveClient.getClientName().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "clientName (client_name) is missing/invalid"));
+                                "Client name is missing/invalid"));
             }
 
             if (hiveClient.getOnuDeviceName() == null || hiveClient.getOnuDeviceName().trim().isEmpty()
                     || hiveClient.getOnuDeviceName().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "onuDeviceName (subscription_name) is missing/invalid"));
+                                "ONU device name is missing/invalid"));
             }
 
             if (hiveClient.getPackageType() == null || hiveClient.getPackageType().trim().isEmpty()
                     || hiveClient.getPackageType().length() > 50) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "packageType (package_type) is missing/invalid"));
+                                "Package type is missing/invalid"));
             }
 
             if (hiveClient.getStatus() == null || hiveClient.getStatus().trim().isEmpty()
                     || hiveClient.getStatus().length() > 50 || !(hiveClient.getStatus().trim().equalsIgnoreCase("onhold") || hiveClient.getStatus().trim().equalsIgnoreCase("active"))) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "status (status) is missing/invalid"));
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "Status is missing/invalid"));
             } else {
                 hiveClient.setStatus(hiveClient.getStatus().toUpperCase() + "_PENDING_MIGRATION");
             }
@@ -149,7 +149,7 @@ public class subscriberController {
             return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse());
         } catch (SubscriberAlreadyExistsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse(HttpStatus.UNAUTHORIZED, "subscriber account number already exist"));
+                    .body(createErrorResponse(HttpStatus.UNAUTHORIZED, "Subscriber account number already exist"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving the account: " + e.getMessage()));
@@ -170,7 +170,7 @@ public class subscriberController {
                 || subscriberAccountNumber.trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                            "subscriberAccountNumber (account_no) is missing/invalid"));
+                            "Subscriber account number is missing/invalid"));
         }
 
         // Fetch client from repository todo: change to hiveclient
@@ -179,7 +179,7 @@ public class subscriberController {
         if (!clientOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(createErrorResponse(HttpStatus.NOT_FOUND,
-                            "subscriber does not exist"));
+                            "Subscriber does not exist"));
         }
 
         try {
@@ -187,9 +187,9 @@ public class subscriberController {
             HiveClient client = clientOptional.get();
 
             if (client.getStatus() == null || client.getStatus().trim().isEmpty()
-                    || client.getStatus().length() > 50) {
+                    || client.getStatus().length() > 50 || !client.getStatus().contains("_PENDING_MIGRATION")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "status (status) is missing/invalid"));
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST, "Subscriber is not for migration"));
             }
 
             if (client.getStatus().contains("_PENDING_MIGRATION")) {
@@ -204,12 +204,12 @@ public class subscriberController {
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "migrated subscriber status updated successfully");
+                response.put("message", "Migrated subscriber status updated successfully");
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             } else {
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-                response.put("message", "subscriber status cannot be updated");
+                response.put("message", "Subscriber status cannot be updated");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         } catch (Exception e) {
@@ -235,7 +235,7 @@ public class subscriberController {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("timestamp", LocalDateTime.now().format(DATE_TIME_FORMATTER));
         response.put("status", HttpStatus.CREATED.value());
-        response.put("message", "subscriber successfully created");
+        response.put("message", "Subscriber successfully created");
         return response;
     }
 
@@ -373,7 +373,7 @@ public class subscriberController {
             errorResponse.put("timestamp",
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             errorResponse.put("status", HttpStatus.BAD_REQUEST.value());
-            errorResponse.put("message", "subscriber account number is empty");
+            errorResponse.put("message", "Subscriber account number is empty");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
 
@@ -386,7 +386,7 @@ public class subscriberController {
                 response.put("timestamp",
                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
                 response.put("status", HttpStatus.OK.value());
-                response.put("message", "subscriber account info");
+                response.put("message", "Subscriber account info");
 
                 Map<String, Object> data = new LinkedHashMap<>();
                 data.put("subscriberAccountNumber", subscriber.getSubscriberAccountNumber());
@@ -402,7 +402,7 @@ public class subscriberController {
                 errorResponse.put("timestamp",
                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
                 errorResponse.put("status", HttpStatus.CONFLICT.value());
-                errorResponse.put("message", "subscriber account number does not exist");
+                errorResponse.put("message", "Subscriber account number does not exist");
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
             }
         } catch (Exception e) {
