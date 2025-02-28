@@ -134,36 +134,4 @@ public class AuthController {
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
-
-    // @PostMapping("/logaction")
-    // public ResponseEntity<?> logUserAction(HttpServletRequest request, @RequestBody Map<String, String> params) {
-    //     JwtUtils jwtutils = new JwtUtils();
-    //     String user = "N/A"; // admin - sent by frontend, empty if not via frontend
-    //     String ip = params.get("client_ip"); // 127.0.0.1 - sent by endpoint that invoked this method
-    //     String action = "API REQUEST TO BACKEND API"; // accessed hiveconnect rogue devices - sent by frontend, default value if not via frontend
-    //     String endpoint = params.get("accessed_endpoint"); // /test - sent by endpoint that invoked this method
-    //     String payload = params.get("payload"); // RES-123-456 - sent by endpoint that invoked this method
-    //     String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-    //     String response_status = params.get("response_status"); // 200 OK - sent by endpoint that invoked this method
-    //     String token_info = jwtutils.getUserNameFromJwtToken(params.get("token_info")); // used static token of frontendaccount - sent by endpoint that invoked this method
-    //     String user_agent = request.getHeader("User-Agent"); // sent by endpoint that invoked this method
-
-    //     if (params.containsKey("user") && params.get("user") != null) {
-    //         user = params.get("user");
-    //     }
-
-    //     if (params.containsKey("action") && params.get("action") != null) {
-    //         action = params.get("action");
-    //     }
-
-    //     String responseMessage = String.format("[%s]: User %s %s %s from %s. Additional info: %s.", timestamp, user, action, endpoint, user_agent, token_info);
-    //     System.out.println("responseMessage: " + responseMessage);
-    //    try {
-    //         ApiResponse response = new ApiResponse(HttpStatus.CREATED.value(), responseMessage);
-    //         return new ResponseEntity<>(response, HttpStatus.CREATED);
-    //     } catch (Exception e) {
-    //         ApiResponse response = new ApiResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-    //         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    //     }
-    // }
 }

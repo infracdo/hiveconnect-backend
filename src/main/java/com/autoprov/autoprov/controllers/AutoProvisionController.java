@@ -354,13 +354,6 @@ public class AutoProvisionController {
     }
     // API for INET (end) ----------------------------------------------
 
-    @Async("AsyncExecutor")
-    @GetMapping("/buckethivemigration")
-    public String executeBucketHiveMigration(String accountNumber) {
-        // Define the API URL
-
-    }
-
     // APIs for HiveApp ----------------------------------------------
     @Async("AsyncExecutor")
     @PostMapping("/executeAutoConfig")
@@ -550,7 +543,8 @@ public class AutoProvisionController {
         }
         // return acsPushResponse;
     }
-
+    
+    // EXPOSE THIS API [USED FOR MIGRATION]
     @Async("AsyncExecutor")
     @PostMapping("/executeMigration")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
