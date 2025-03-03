@@ -11,7 +11,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,6 +27,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
@@ -40,6 +46,12 @@ import jakarta.validation.Valid;
 @CrossOrigin(origins = "*")
 @RestController
 public class subscriberController {
+
+    @Value("${absApiUrl}")
+    private String absApiUrl;
+
+    @Value("${absApiKey}")
+    private String absApiKey;
 
     @Autowired
     private final subscriberService SubscriberService;
@@ -308,43 +320,59 @@ public class subscriberController {
 
             if (client.getStatus().contains("_PENDING_MIGRATION")) {
                 // Update the client entity with new status
-                client.setStatus(client.getStatus().replace("_PENDING_MIGRATION", ""));
+                String newStatus = client.getStatus().replace("_PENDING_MIGRATION", "");
+                client.setStatus(newStatus);
 
-                // Optionally, update other relevant fields if necessary
-                // Example: client.setUpdatedAt(LocalDateTime.now());
+                String absStatus;
+                if ("Active".equalsIgnoreCase(newStatus)) {
+                    absStatus = "Activate";
+                } else if ("Onhold".equalsIgnoreCase(newStatus)) {
+                    absStatus = "Deactivate";
+                } else {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid status for migration"));
+                }
 
-                // Save the updated client entity
-                hiveClientRepository.save(client);
+                String absUrl = absApiUrl + subscriberAccountNumber;
+                System.out.println(absUrl);
 
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
-                    request.getHeader("User-Agent"));
+                RestTemplate restTemplate = new RestTemplate();
 
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "Migrated subscriber status updated successfully");
-                return ResponseEntity.status(HttpStatus.OK).body(response);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                headers.set("ABS-API-KEY", absApiKey);
+
+                Map<String, String> requestBody = new HashMap<>();
+                requestBody.put("status", absStatus);
+
+                HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
+
+                ResponseEntity<String> absResponse = restTemplate.exchange(absUrl,HttpMethod.POST, entity, String.class);
+
+                if (absResponse.getStatusCode() == HttpStatus.OK) {
+                    // Optionally, update other relevant fields if necessary
+                    // Example: client.setUpdatedAt(LocalDateTime.now());
+
+                    // Save the updated client entity
+                    hiveClientRepository.save(client);
+
+                    response.put("timestamp", timestamp);
+                    response.put("status", String.valueOf(HttpStatus.OK.value()));
+                    response.put("message", "Migrated subscriber status both in ABS and Hive updated successfully");
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                } else {
+                    response.put("timestamp", timestamp);
+                    response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+                    response.put("message", "Subscriber status cannot be updated in ABS");
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+                }
             } else {
-
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
-                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
-                    request.getHeader("User-Agent"));
-
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
                 response.put("message", "Subscriber status cannot be updated");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         } catch (Exception e) {
-
-            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
-                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
-                    request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
-                    request.getHeader("User-Agent"));
-
             // Handle any unexpected exceptions
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
