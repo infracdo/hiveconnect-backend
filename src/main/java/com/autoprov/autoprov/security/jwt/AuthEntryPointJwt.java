@@ -1,6 +1,5 @@
 package com.autoprov.autoprov.security.jwt;
 
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,10 +21,12 @@ import jakarta.servlet.http.HttpServletResponse;
 public class AuthEntryPointJwt implements AuthenticationEntryPoint {
 
   private static final Logger logger = LoggerFactory.getLogger(AuthEntryPointJwt.class);
-  
-  @Override 
+
+  @Override
   public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
       throws IOException, ServletException {
+
+    System.err.println("accessed path: {}" + request.getServletPath());
     logger.error("Unauthorized error: {}", authException.getMessage());
 
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
