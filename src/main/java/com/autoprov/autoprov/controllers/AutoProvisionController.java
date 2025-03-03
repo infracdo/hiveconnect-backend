@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -39,11 +40,15 @@ import com.autoprov.autoprov.repositories.ipamRepositories.CidrIpAddressReposito
 import com.autoprov.autoprov.repositories.oltRepositories.oltRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.PackageRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
+import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.services.HiveClientService;
+import com.autoprov.autoprov.services.LogService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @PropertySource("classpath:application.properties")
 @CrossOrigin(origins = "*")
@@ -102,6 +107,13 @@ public class AutoProvisionController {
 
     @Autowired
     private HiveClientRepository hiveClientRepository;
+
+    @Autowired
+    private LogService logService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
     // General Exposed Endpoints ----------------------------
     // @Async("AsyncExecutor")
     // @GetMapping("/hello")
@@ -116,7 +128,9 @@ public class AutoProvisionController {
     @PostMapping("/executeProvision")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> executeInetProvision(@RequestBody Map<String, String> params)
+    public ResponseEntity<Map<String, String>> executeInetProvision(@RequestBody Map<String, String> params,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String networkType = "";
@@ -164,11 +178,22 @@ public class AutoProvisionController {
                     ipAddress, packageType, upstream,
                     downstream, oltIp);
 
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(responseEntity.getStatusCode().value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return responseEntity;
 
         } else {
             // AcsController.deleteWanInstance(serialNumber);
             AcsController.rollbackSsid(serialNumber);
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             Map<String, String> response = new HashMap<>();
             response.put("Status", "500");
             response.put("Error", acsPushResponse);
@@ -265,10 +290,11 @@ public class AutoProvisionController {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             if (showBody)
                 System.out.println(response.getBody());
+            
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        ResponseEntity lastJobStatus = lastJobStatus(accountNo, jobId, false);
+        ResponseEntity lastJobStatus = jobStatus(accountNo, jobId, false);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
             // finalize and mark everything to be activated
@@ -278,9 +304,9 @@ public class AutoProvisionController {
 
             String ssidName = accountNo.replace(" ", "_");
 
-            String oltInterface = getOltInterface(jobId);
+            String oltInterface = getOltDetails(jobId);
 
-            String[] bandwidth = getOltBandwidth(jobId);
+            String[] bandwidth = getOltBandwidthRate(jobId);
 
             Optional<subscriberEntity> optionalClient = clientRepo.findBySubscriberAccountNumber(accountNo);
             if (optionalClient.isPresent()) {
@@ -359,7 +385,9 @@ public class AutoProvisionController {
     @PostMapping("/executeAutoConfig")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> executeHiveAutoConfig(@RequestBody Map<String, String> params)
+    public ResponseEntity<Map<String, String>> executeHiveAutoConfig(@RequestBody Map<String, String> params,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String networkType = "";
@@ -474,10 +502,16 @@ public class AutoProvisionController {
                 System.out.println("Request failed. Response: " + response.getStatusCode());
                 if (showBody)
                     System.out.println(response.getBody());
+
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
-            ResponseEntity lastJobStatus = lastJobStatus(accountNo, jobId, true);
+            ResponseEntity lastJobStatus = jobStatus(accountNo, jobId, true);
 
             if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
                 // COMMENT FROM HERE
@@ -488,8 +522,8 @@ public class AutoProvisionController {
 
                 String ssidName = accountNo.replace(" ", "_");
 
-                String oltInterface = getOltInterface(jobId);
-                String[] bandwidth = getOltBandwidth(jobId);
+                String oltInterface = getOltDetails(jobId);
+                String[] bandwidth = getOltBandwidthRate(jobId);
 
                 Optional<subscriberEntity> optionalClient = clientRepo.findBySubscriberAccountNumber(accountNo);
                 if (optionalClient.isPresent()) {
@@ -517,6 +551,12 @@ public class AutoProvisionController {
                     deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
                 }
                 // END HERE
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return lastJobStatus;
 
                 // OLD CODE
@@ -530,12 +570,23 @@ public class AutoProvisionController {
                 AcsController.deleteWanInstance(serialNumber);
                 AcsController.rollbackSsid(serialNumber);
 
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return lastJobStatus;
             }
 
         } else {
             AcsController.deleteWanInstance(serialNumber);
             AcsController.rollbackSsid(serialNumber);
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             Map<String, String> response = new HashMap<>();
             response.put("status", "500");
             response.put("message", acsResponse);
@@ -543,13 +594,15 @@ public class AutoProvisionController {
         }
         // return acsPushResponse;
     }
-    
+
     // EXPOSE THIS API [USED FOR MIGRATION]
     @Async("AsyncExecutor")
     @PostMapping("/executeMigration")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> executeMigration(@RequestBody Map<String, String> params)
+    public ResponseEntity<Map<String, String>> executeMigration(@RequestBody Map<String, String> params,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         System.out.println(">>> HiveService: Bucket to Migration executed from HiveApp");
@@ -557,6 +610,12 @@ public class AutoProvisionController {
         // Prepare RequestBody Values
         String accountNo = params.get("accountNo");
         if (accountNo == null) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
             response.put("message", "Subscriber accountNo is missing/empty");
@@ -567,6 +626,12 @@ public class AutoProvisionController {
                 .findBySubscriberAccountNumber(accountNo);
 
         if (!clientOptional.isPresent()) { // if subscriber does not exist in database
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
             response.put("message", "Subscriber not found with account number: " + accountNo);
@@ -575,6 +640,12 @@ public class AutoProvisionController {
             HiveClient client = clientOptional.get();
             System.out.println(">>> HiveService: Subscriber found in database with status " + client.getStatus());
             if (!client.getStatus().contains("_PENDING_MIGRATION")) { // if subscriber is not pending for migration
+                
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 Map<String, String> response = new HashMap<>();
                 response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
                 response.put("message", "Cannot find any subscriber with account number: " + accountNo
@@ -604,7 +675,7 @@ public class AutoProvisionController {
         if (showBody)
             System.out.println(requestBody);
 
-         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.exchange(apiUrl,
@@ -629,15 +700,32 @@ public class AutoProvisionController {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             if (showBody)
                 System.out.println(response.getBody());
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                request.getHeader("User-Agent"));
+
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        ResponseEntity lastJobStatus = lastJobStatus(accountNo, jobId, false);
+        ResponseEntity lastJobStatus = jobStatus(accountNo, jobId, false);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
 
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return lastJobStatus;
         } else {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return lastJobStatus;
         }
         // return acsPushResponse;
@@ -651,7 +739,9 @@ public class AutoProvisionController {
     @PostMapping("/executeMonitoring")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> executeHiveMonitoring(@RequestBody Map<String, String> params)
+    public ResponseEntity<Map<String, String>> executeHiveMonitoring(@RequestBody Map<String, String> params,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
         String accountNo = params.get("accountNo");
         String clientName = params.get("clientName");
@@ -752,10 +842,16 @@ public class AutoProvisionController {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             if (showBody)
                 System.out.println(response.getBody());
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                request.getHeader("User-Agent"));
+
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        ResponseEntity lastJobStatus = lastJobStatus(accountNo, jobId, false);
+        ResponseEntity lastJobStatus = jobStatus(accountNo, jobId, false);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
             // finalize and mark everything to be activated
@@ -765,8 +861,8 @@ public class AutoProvisionController {
 
             // String ssidName = accountNo.replace(" ", "_");
 
-            // String oltInterface = getOltInterface(jobId);
-            // String[] bandwidth = getOltBandwidth(jobId);
+            // String oltInterface = getOltDetails(jobId);
+            // String[] bandwidth = getOltBandwidthRate(jobId);
 
             // Optional<subscriberEntity> optionalClient =
             // clientRepo.findBySubscriberAccountNumber(accountNo);
@@ -804,10 +900,20 @@ public class AutoProvisionController {
             // deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
             // }
 
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return lastJobStatus;
         } else {
             AcsController.deleteWanInstance(serialNumber);
             AcsController.rollbackSsid(serialNumber);
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
 
             return lastJobStatus;
         }
@@ -849,7 +955,9 @@ public class AutoProvisionController {
     @PostMapping("/preprovisionCheck")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> preprovisionCheck(@RequestBody Map<String, String> params)
+    public ResponseEntity<Map<String, String>> preprovisionCheck(@RequestBody Map<String, String> params,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request)
             throws InterruptedException, JsonMappingException, JsonProcessingException {
 
         String jobId;
@@ -981,6 +1089,12 @@ public class AutoProvisionController {
             }
 
             if (!errorExisting) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 Map<String, String> response = new HashMap<>();
                 response.put("status", "200");
                 response.put("message", "All Clear. Proceed to Provisioning!");
@@ -991,6 +1105,11 @@ public class AutoProvisionController {
 
             else {
 
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                request.getHeader("User-Agent"));
+
                 Map<String, String> response = new HashMap<>();
                 response.put("status", "500");
                 response.put("message", errors.toString());
@@ -999,8 +1118,13 @@ public class AutoProvisionController {
             }
         }
 
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
         Map<String, String> response = new HashMap<>();
-        response.put("status", "500");
+        response.put("status", "200");
         response.put("message", "No Result");
         response.put("body", checkingResponse);
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -1011,6 +1135,45 @@ public class AutoProvisionController {
     @Async("AsyncExecutor")
     @GetMapping("/lastJobStatus")
     public ResponseEntity<Map<String, String>> lastJobStatus(String accountNo, String jobId,
+            boolean generateCredentials,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request)
+            throws JsonMappingException, JsonProcessingException, InterruptedException {
+
+        // Monitor the job status
+        String lastJobStatus = monitorJobStatus(jobId);
+
+        // Handle job failure
+        if (lastJobStatus.contains("fail")) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
+            return handleJobFailure(jobId);
+        }
+
+        // Generate credentials if requested
+        if (generateCredentials) {
+            return generateCredentials(accountNo, jobId, user, action, request);
+        }
+
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
+        // Default response for successful job completion without credential generation
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "200");
+        response.put("message", "Job completed successfully.");
+        response.put("awx_job_id", jobId);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+
+    }
+
+    public ResponseEntity<Map<String, String>> jobStatus(String accountNo, String jobId,
             boolean generateCredentials)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
@@ -1024,7 +1187,7 @@ public class AutoProvisionController {
 
         // Generate credentials if requested
         if (generateCredentials) {
-            return generateCredentials(accountNo, jobId);
+            return generateCreds(accountNo, jobId);
         }
 
         // Default response for successful job completion without credential generation
@@ -1158,7 +1321,72 @@ public class AutoProvisionController {
     }
 
     // Method to generate credentials
-    private ResponseEntity<Map<String, String>> generateCredentials(String accountNo, String jobId) {
+    private ResponseEntity<Map<String, String>> generateCredentials(String accountNo, String jobId, @RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
+        try {
+            String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
+            String accessToken = ansibleAccessToken;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + accessToken);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String requestBody = "";
+            HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+                    String.class);
+
+            String responseBody = responseEntity.getBody();
+
+            // Define the pattern
+            Pattern pattern = Pattern.compile("\"olt_interface_bind\\.stdout\"\\s*:\\s*\"([^\"]+)\"");
+
+            // Create a matcher
+            Matcher matcher = pattern.matcher(responseBody);
+
+            // Find the match
+            if (matcher.find()) {
+                // Extract the desired value
+                String oltInterfaceBind = matcher.group(1);
+                System.out.println("olt_interface_bind.stdout: " + oltInterfaceBind);
+            } else {
+                System.out.println("Match not found");
+            }
+
+            String newSsid = accountNo.replace(" ", "_");
+            String password = "" + newSsid + "1234";
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
+            Map<String, String> response = new HashMap<>();
+            response.put("awx_job_id", jobId);
+            response.put("status", "200");
+            response.put("message", "Provisioning Successful!");
+            response.put("ssid_name", newSsid + "2.4G/5G");
+            response.put("ssid_pw", password);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), jobId,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "500");
+            response.put("message", "An error occurred while generating credentials.");
+            response.put("awx_job_id", jobId);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    private ResponseEntity<Map<String, String>> generateCreds(String accountNo, String jobId) {
         try {
             String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
             String accessToken = ansibleAccessToken;
@@ -1370,7 +1598,81 @@ public class AutoProvisionController {
     @GetMapping("/getOltInterface")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
     @PreAuthorize("hasRole('USER')")
-    public String getOltInterface(String jobId) {
+    public String getOltInterface(String jobId,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request) {
+
+        String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
+        String accessToken = ansibleAccessToken;
+        String error = "";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String requestBody = "";
+        HttpEntity requestEntity = new HttpEntity<>(requestBody, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+                String.class);
+
+        String responseBody = responseEntity.getBody();
+
+        // ------------Guangda OLT Interface Check
+        System.out.println("OLT Interface Check: Guangda");
+        Pattern guangdaInterfaceBindPattern = Pattern.compile("\"olt_interface_bind\\.stdout\"\\s*:\\s*\"([^\"]+)\"");
+
+        // Create a matcher
+        Matcher guangdaMatcher = guangdaInterfaceBindPattern.matcher(responseBody);
+
+        // Find the match
+        if (guangdaMatcher.find()) {
+            // Extract the desired value
+            String guangdaOltInterface = guangdaMatcher.group(1);
+            System.out.println("Guangda olt_interface_bind.stdout: " + guangdaOltInterface);
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
+            return guangdaOltInterface;
+        } else {
+            System.out.println("OLT Interface Check: Guangda OLT Interface Match not found");
+        }
+
+        System.out.println(responseBody);
+        Pattern pattern = Pattern.compile("\"stdout\": \"(.*?)\"");
+
+        // Create a matcher with the input string
+        Matcher matcher = pattern.matcher(responseBody);
+
+        // Find the first match
+        if (matcher.find()) {
+            // Extract the EPON value
+            String vsolOltInterface = matcher.group(1);
+            System.out.println("EPON Value: " + vsolOltInterface);
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+                    
+            return vsolOltInterface;
+        } else {
+            System.out.println("OLT Interface Check: VSOL OLT Interface Match not found");
+        }
+
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
+        return "No OLT Interface found";
+    }
+
+    public String getOltDetails(String jobId) {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
         String accessToken = ansibleAccessToken;
@@ -1430,7 +1732,63 @@ public class AutoProvisionController {
     @GetMapping("/getOltBandwidth")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
     @PreAuthorize("hasRole('USER')")
-    public String[] getOltBandwidth(String jobId) {
+    public String[] getOltBandwidth(String jobId,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request) {
+
+        String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
+        String accessToken = ansibleAccessToken;
+        String error = "";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String requestBody = "";
+        HttpEntity requestEntity = new HttpEntity<>(requestBody, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+                String.class);
+
+        String responseBody = responseEntity.getBody();
+        System.out.println(responseBody);
+
+        String upstreamValue = "";
+        String downstreamValue = "";
+
+        // Pattern pattern = Pattern.compile("\"msg\".*?\"Upstream\":
+        // \"(\\d+\\.\\d+)\".*?\"Downstream\": \"(\\d+\\.\\d+)\"");
+        // Matcher matcher = pattern.matcher(responseBody);
+
+        // while (matcher.find()) {
+        // upstreamValue = matcher.group(1);
+        // downstreamValue = matcher.group(2);
+
+        // System.out.println("Upstream: " + upstreamValue);
+        // System.out.println("Downstream: " + downstreamValue);
+        // }
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        upstreamValue = parseValue(responseBody, "Upstream");
+        downstreamValue = parseValue(responseBody, "Downstream");
+
+        System.out.println("Upstream Value: " + upstreamValue);
+        System.out.println("Downstream Value: " + downstreamValue);
+
+        String[] bandwidth = new String[2];
+        bandwidth[0] = upstreamValue;
+        bandwidth[1] = downstreamValue;
+
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
+        return bandwidth;
+    }
+
+    public String[] getOltBandwidthRate(String jobId) {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
         String accessToken = ansibleAccessToken;
@@ -1485,7 +1843,15 @@ public class AutoProvisionController {
     @PostMapping("/simulateHiveMonitoringError")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> simulateError(String jobId) {
+    public ResponseEntity<Map<String, String>> simulateError(String jobId,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
         Map<String, String> response = new HashMap<>();
         response.put("awx_job_id", jobId);
         response.put("status", "500");
@@ -1529,15 +1895,25 @@ public class AutoProvisionController {
     @GetMapping("/getOltInterface/{jobId}")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
     @PreAuthorize("hasRole('USER')")
-    public String testGetOltInterface(@PathVariable("jobId") String jobId) {
-        return getOltInterface(jobId);
+    public String testGetOltInterface(@PathVariable("jobId") String jobId,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
+        return getOltDetails(jobId);
     }
 
     @Async("asyncExecutor")
     @GetMapping("/testExecuteMonitoring")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
     @PreAuthorize("hasRole('USER')")
-    public String testExecuteMonitoring(@RequestBody Map<String, String> params) {
+    public String testExecuteMonitoring(@RequestBody Map<String, String> params,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request) {
 
         String accountNo = params.get("accountNo");
         String clientName = params.get("clientName");
@@ -1563,9 +1939,9 @@ public class AutoProvisionController {
 
         String ssidName = accountNo.replace(" ", "_");
 
-        String oltInterface = getOltInterface("1424");
+        String oltInterface = getOltDetails("1424");
 
-        String[] bandwidth = getOltBandwidth("1424");
+        String[] bandwidth = getOltBandwidthRate("1424");
 
         Optional<subscriberEntity> optionalClient = clientRepo.findBySubscriberAccountNumber(accountNo);
         if (optionalClient.isPresent()) {
@@ -1599,6 +1975,12 @@ public class AutoProvisionController {
             // }
 
         }
+        
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+                    
         return "Check database";
     }
 

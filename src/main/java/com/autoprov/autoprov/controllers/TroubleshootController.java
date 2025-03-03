@@ -1,20 +1,27 @@
 package com.autoprov.autoprov.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.autoprov.autoprov.security.jwt.JwtUtils;
+import com.autoprov.autoprov.services.LogService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -23,9 +30,16 @@ public class TroubleshootController {
     @Value("${prometheusApiUrl}")
     private static String prometheusApiUrl;
 
+    @Autowired
+    private LogService logService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
     @Async("asyncExecutor")
     @GetMapping("/getStatus/{device}")
-    public String getOnuStatus(@PathVariable("device") String device) {
+    public String getOnuStatus(@PathVariable("device") String device, @RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
 
         String device_name = "{job=\"ip_address\",site_tenant=\"DCTECH\",device_name=\""
                 + device + "\"}";
@@ -62,12 +76,22 @@ public class TroubleshootController {
             // return "Offline";
             // }
 
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), device,
+                    String.valueOf(response.getStatusCode().value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return value;
         } catch (Exception e) {
             e.printStackTrace();
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), device,
+                    String.valueOf(response.getStatusCode().value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
         }
 
         return responseBody;
-
     }
 }

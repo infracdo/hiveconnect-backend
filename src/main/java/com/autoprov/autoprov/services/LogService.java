@@ -15,6 +15,15 @@ public class LogService {
     }
 
     public void logApiAccess(String user, String action, String method, String endpoint, String payload, String status, String ip, String client, String agent) {
+        if (user == null || user.trim().equals("")) {
+            user = "unknown";
+        }
+        if (action == null || action.trim().equals("")) {
+            action = "accessed api endpoint";
+        }
+        if (payload == null || payload.trim().equals("")) {
+            payload = "none";
+        }
         apiLogger.info(String.format(
             "User: %s | Action: %s | Method: %s | Endpoint: %s | Payload: %s | Status: %s | IP: %s | Client: %s | Agent: %s",
             user, action, method, endpoint, payload, status, ip, client, agent
@@ -22,10 +31,19 @@ public class LogService {
         System.out.println("created access log");
     }
 
-    public void logApiError(String user, String ip, String action, String method, String endpoint, String payload, String status, String message, String stacktrace, String client, String agent) {
-        apiErrorLogger.warn(String.format(
+    public void logApiError(String user, String action, String method, String endpoint, String payload, String status, String message, StackTraceElement[] stacktrace, String ip, String client, String agent) {
+        if (user == null || user.trim().equals("")) {
+            user = "unknown";
+        }
+        if (action == null || action.trim().equals("")) {
+            action = "accessed api endpoint";
+        }
+        if (payload == null || payload.trim().equals("")) {
+            payload = "none";
+        }
+        apiErrorLogger.error(String.format(
             "User: %s | Action: %s | Method: %s | Endpoint: %s | Payload: %s | Status: %s | Message: %s | StackTrace: %s | IP: %s | Client: %s | Agent: %s",
-            user, action, method, endpoint, payload, status, message, stacktrace, ip, client, agent
+            user, action, method, endpoint, payload, status, message, stacktrace[stacktrace.length - 1], ip, client, agent
         ));
         System.out.println("created error log");
     }

@@ -62,24 +62,29 @@ public class AcsController {
     @Async("AsyncExecutor")
     @GetMapping("/getRogueDevices")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> getRougeDevices(@RequestParam(required = false) String user, @RequestParam(required = false) String action, HttpServletRequest request) {
-        
-        String method = request.getMethod();
-        String endpoint = request.getRequestURI();
-        String ip = request.getRemoteAddr();
-        String token = request.getHeader("Authorization").substring(7);
-        System.out.println("Token in header: " + token);
-        String client = jwtUtils.getUserNameFromJwtToken(token);
-        String agent = request.getHeader("User-Agent");
+    public ResponseEntity<?> getRougeDevices(@RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
+        try {
+            List<Device> Device = new ArrayList<>();
+            DeviceRepo.findByGroup("unassigned").forEach(Device::add);
+            System.out.println("backend hive api accessed");
 
-        List<Device> Device = new ArrayList<>();
-        DeviceRepo.findByGroup("unassigned").forEach(Device::add);
-        System.out.println("backend hive api accessed");
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
 
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null, String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(), jwtUtils.getUserNameFromJwtToken(token), agent);
+            return new ResponseEntity<>(Device, HttpStatus.OK);
+        } catch (Exception e) {
 
-        return new ResponseEntity<>(Device, HttpStatus.OK);
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
 
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // Exposed for HiveApp (end) ----------------------------------------
@@ -92,13 +97,22 @@ public class AcsController {
     @Async("AsyncExecutor")
     @PostMapping("/deactivateSubscriber")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> disconnectClient(@RequestBody Map<String, String> params) {
+    public ResponseEntity<Map<String, String>> disconnectClient(@RequestBody Map<String, String> params,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request) {
+
         Map<String, String> response = new LinkedHashMap<>(); // Use String as the value type
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
 
         // Check if the subscriber account number is empty or null
         if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
             response.put("message", "Subscriber account number is empty");
@@ -109,13 +123,19 @@ public class AcsController {
         Optional<subscriberEntity> optionalClient = subscriberRepo
                 .findBySubscriberAccountNumber(subscriberAccountNumber);
         if (!optionalClient.isPresent()) {
+            
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
             response.put("message", "Subscriber account number does not exist: " + subscriberAccountNumber);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
-        subscriberEntity client = optionalClient.get();
+        subscriberEntity subscriber = optionalClient.get();
 
         // Check if the subscriber is active
         // if (client.getSubsStatus() == null ||
@@ -126,8 +146,14 @@ public class AcsController {
         // response.put("message", "subscriber not active");
         // return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         // }
-        if (client.getSubsStatus() == null ||
-                (!client.getSubsStatus().equals("ACTIVE") && !client.getSubsStatus().equals("Activated"))) {
+        if (subscriber.getSubsStatus() == null ||
+                (!subscriber.getSubsStatus().equals("ACTIVE") && !subscriber.getSubsStatus().equals("Activated"))) {
+            
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
             response.put("message", "Subscriber not active");
@@ -135,8 +161,14 @@ public class AcsController {
         }
 
         // Get the serial number from the client
-        String serialNumber = client.getOnuSerialNumber();
+        String serialNumber = subscriber.getOnuSerialNumber();
         if (serialNumber == null) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
             response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
@@ -171,14 +203,25 @@ public class AcsController {
 
         // Handle the response and update the client status
         if (jsonResponse.contains("Pushed")) {
-            client.setSubsStatus("DEACTIVATED");
-            subscriberRepo.save(client);
+            subscriber.setSubsStatus("DEACTIVATED");
+            subscriberRepo.save(subscriber);
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
 
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.CREATED.value()));
             response.put("message", "Subscriber successfully deactivated");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } else {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
             response.put("message", jsonResponse);
@@ -266,13 +309,21 @@ public class AcsController {
     @Async("AsyncExecutor")
     @PostMapping("/activateSubscriber")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<String, String> params) {
+    public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<String, String> params,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request) {
         Map<String, String> response = new LinkedHashMap<>();
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
 
         // Check if the subscriber account number is empty or null
         if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
             response.put("message", "Subscriber account number is empty");
@@ -283,6 +334,12 @@ public class AcsController {
         Optional<subscriberEntity> clientOptional = subscriberRepo
                 .findBySubscriberAccountNumber(subscriberAccountNumber);
         if (!clientOptional.isPresent()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
             response.put("message", "Subscriber does not exist for account number: " + subscriberAccountNumber);
@@ -293,6 +350,12 @@ public class AcsController {
 
         // Check if the subscriber is deactivated
         if (client.getSubsStatus() == null || !client.getSubsStatus().equals("DEACTIVATED")) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
             response.put("message", "Subscriber not Inactive");
@@ -302,6 +365,12 @@ public class AcsController {
         // Get the serial number from the client
         String serialNumber = client.getOnuSerialNumber();
         if (serialNumber == null) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
             response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
@@ -340,11 +409,22 @@ public class AcsController {
             client.setSubsStatus("ACTIVE");
             subscriberRepo.save(client);
 
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.OK.value()));
-            response.put("message", "HiveConnect:subscriver successfully activated");
+            response.put("message", "HiveConnect: Subscriber successfully activated");
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+                    
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
             response.put("message", jsonResponse);
@@ -428,7 +508,9 @@ public class AcsController {
     @Async("AsyncExecutor")
     @PostMapping("/updateSubscriberPackage")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> updateSubscriberPackage(@RequestBody Map<String, String> params) {
+    public ResponseEntity<Map<String, String>> updateSubscriberPackage(@RequestBody Map<String, String> params,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request) {
         Map<String, String> response = new LinkedHashMap<>();
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
@@ -436,6 +518,12 @@ public class AcsController {
 
         // Check if the subscriber account number is empty or null
         if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
             response.put("message", "Subscriber account number is empty");
@@ -444,6 +532,12 @@ public class AcsController {
 
         // Check if the package type is empty or null
         if (packageType == null || packageType.isEmpty()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
             response.put("message", "Package type is empty");
@@ -464,6 +558,12 @@ public class AcsController {
         Optional<subscriberEntity> clientOptional = subscriberRepo
                 .findBySubscriberAccountNumber(subscriberAccountNumber);
         if (!clientOptional.isPresent()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
             response.put("message", "Subscriber account number does not exist ");
@@ -483,13 +583,24 @@ public class AcsController {
             // Save the updated client entity
             subscriberRepo.save(client);
 
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             // Prepare success response
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.OK.value()));
             response.put("message", "Subscriber package successfully updated");
-
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             // Handle any unexpected exceptions
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
@@ -502,7 +613,9 @@ public class AcsController {
     @Async("AsyncExecutor")
     @PostMapping("/updateSubscriberProvision")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> updateSubscriberProvision(@RequestBody Map<String, String> params) {
+    public ResponseEntity<Map<String, String>> updateSubscriberProvision(@RequestBody Map<String, String> params,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request) {
         Map<String, String> response = new LinkedHashMap<>();
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
@@ -510,6 +623,12 @@ public class AcsController {
 
         // Check if the subscriber account number is empty or null
         if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
             response.put("message", "Subscriber account number is empty");
@@ -518,6 +637,12 @@ public class AcsController {
 
         // Check if the provision is empty or null
         if (provision == null || provision.isEmpty()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
             response.put("message", "Provision is empty");
@@ -528,6 +653,12 @@ public class AcsController {
         String provisionUpperCase = provision.toUpperCase();
         if (!(provisionUpperCase.equals("HIVECONNECT") || provisionUpperCase.equals("HIVE")
                 || provisionUpperCase.equals("BUCKET"))) {
+
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
             response.put("message", "Provision type does not exist");
@@ -538,6 +669,12 @@ public class AcsController {
         Optional<subscriberEntity> clientOptional = subscriberRepo
                 .findBySubscriberAccountNumber(subscriberAccountNumber);
         if (!clientOptional.isPresent()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
             response.put("message", "Subscriber does not exist for account number: " + subscriberAccountNumber);
@@ -554,12 +691,25 @@ public class AcsController {
             // Check if provision contains specific words, ignoring case
             if (provisionUpperCase.contains("HIVECONNECT") || provisionUpperCase.contains("HIVE")) {
                 if ("NEW".equalsIgnoreCase(subsStatus)) {
+
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                     response.put("timestamp", timestamp);
                     response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
                     response.put("message", "This account number is not yet provisioned");
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 } else {
-                    if (currentProvisionUpperCase.contains("HIVECONNECT") || currentProvisionUpperCase.contains("HIVE")) {
+                    if (currentProvisionUpperCase.contains("HIVECONNECT")
+                            || currentProvisionUpperCase.contains("HIVE")) {
+
+                                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                         response.put("timestamp", timestamp);
                         response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
                         response.put("message", "Subscriber is already provisioned to HiveConnect");
@@ -570,12 +720,24 @@ public class AcsController {
                 }
             } else if ("BUCKET".equalsIgnoreCase(provision)) {
                 if ("NEW".equalsIgnoreCase(subsStatus)) {
+
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                     response.put("timestamp", timestamp);
                     response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
                     response.put("message", "This account number is not yet provisioned");
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 } else {
                     if ("BUCKET".equalsIgnoreCase(currentProvisionUpperCase)) {
+
+                        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                         response.put("timestamp", timestamp);
                         response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
                         response.put("message", "Subscriber is already provisioned to Bucket");
@@ -589,6 +751,11 @@ public class AcsController {
             // Save the updated client entity
             subscriberRepo.save(client);
 
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             // Prepare success response
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.OK.value()));
@@ -596,6 +763,13 @@ public class AcsController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
 
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+                    
             // Handle any unexpected exceptions
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
@@ -608,12 +782,20 @@ public class AcsController {
     @Async("AsyncExecutor")
     @PostMapping("/terminateSubscriber")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> permanentDisconnectClient(@RequestBody Map<String, String> params) {
+    public ResponseEntity<Map<String, String>> permanentDisconnectClient(@RequestBody Map<String, String> params,
+            @RequestParam(required = false) String user, @RequestParam(required = false) String action,
+            HttpServletRequest request) {
         Map<String, String> response = new LinkedHashMap<>();
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
 
         if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
             response.put("message", "Subscriber account number is empty");
@@ -623,6 +805,12 @@ public class AcsController {
         Optional<subscriberEntity> clientOptional = subscriberRepo
                 .findBySubscriberAccountNumber(subscriberAccountNumber);
         if (!clientOptional.isPresent()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
             response.put("message", "Subscriber does not exist for account number: " + subscriberAccountNumber);
@@ -632,6 +820,12 @@ public class AcsController {
         subscriberEntity client = clientOptional.get();
 
         if (client.getSubsStatus() == null || !client.getSubsStatus().equals("DEACTIVATED")) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
             response.put("message", "Subscriber not inactive (need to deactivate account first)");
@@ -640,6 +834,12 @@ public class AcsController {
 
         String serialNumber = client.getOnuSerialNumber();
         if (serialNumber == null) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
             response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
@@ -662,17 +862,35 @@ public class AcsController {
                 client.setSubsStatus("TERMINATED");
                 subscriberRepo.save(client);
 
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                        String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                        jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                        request.getHeader("User-Agent"));
+
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
                 response.put("message", "HiveConnect: account terminated successfully");
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             } else {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
                 response.put("message", jsonResponse != null ? jsonResponse : "Unknown error");
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
             response.put("message", "Exception occurred: " + e.getMessage());

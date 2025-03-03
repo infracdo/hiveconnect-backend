@@ -29,7 +29,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
+import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.services.HiveClientService;
+import com.autoprov.autoprov.services.LogService;
 import com.autoprov.autoprov.services.subscriberService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,6 +50,12 @@ public class subscriberController {
     @Autowired
     private HiveClientRepository hiveClientRepository;
 
+    @Autowired
+    private LogService logService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
     // POST END POINT add or create new subscriber endpoint
     public subscriberController(subscriberService SubscriberService, HiveClientService hiveclientService) {
         this.SubscriberService = SubscriberService;
@@ -58,11 +66,18 @@ public class subscriberController {
     @Async("asyncExecutor")
     @PostMapping("/createSubscriberForProvisioning")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> addSubscriberForProvisioning(@Valid @RequestBody subscriberEntity subscriberEntity) {
+    public ResponseEntity<?> addSubscriberForProvisioning(@Valid @RequestBody subscriberEntity subscriberEntity, @RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             // Check if the account number is empty
             if (subscriberEntity.getSubscriberAccountNumber() == null
                     || subscriberEntity.getSubscriberAccountNumber().trim().isEmpty()) {
+
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberEntity.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST, "Subscriber account number is empty"));
             }
@@ -70,6 +85,12 @@ public class subscriberController {
             // Check if the subscriber name is empty or too long
             if (subscriberEntity.getSubscriberName() == null || subscriberEntity.getSubscriberName().trim().isEmpty()
                     || subscriberEntity.getSubscriberName().length() > 50) {
+
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberEntity.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST, "Subscriber name is empty"));
             }
@@ -78,11 +99,31 @@ public class subscriberController {
             subscriberEntity.setSubsStatus("NEW");
 
             subscriberEntity savedSubscriber = SubscriberService.saveSubscriber(subscriberEntity);
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberEntity.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+                    
             return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse());
         } catch (SubscriberAlreadyExistsException e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberEntity.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.UNAUTHORIZED.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(createErrorResponse(HttpStatus.UNAUTHORIZED, "Subscriber account number already exist"));
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberEntity.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving the account: " + e.getMessage()));
         }
@@ -92,11 +133,18 @@ public class subscriberController {
     @Async("asyncExecutor")
     @PostMapping("/createSubscriberForMigration")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> addSubscriberForMigration(@Valid @RequestBody HiveClient hiveClient) {
+    public ResponseEntity<?> addSubscriberForMigration(@Valid @RequestBody HiveClient hiveClient, @RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             // Check if the account number is empty
             if (hiveClient.getSubscriberAccountNumber() == null
                     || hiveClient.getSubscriberAccountNumber().trim().isEmpty()) {
+
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
                                 "Subscriber account number is missing/invalid"));
@@ -104,20 +152,36 @@ public class subscriberController {
 
             if (hiveClient.getProvision() == null || hiveClient.getProvision().trim().isEmpty()
                     || hiveClient.getProvision().length() > 50) {
+
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST, "Provision is missing/invalid"));
             }
 
             // Check if the subscriber name is empty or too long
-            if (hiveClient.getClientName() == null || hiveClient.getClientName().trim().isEmpty()
-                    || hiveClient.getClientName().length() > 50) {
+            if (hiveClient.getClientName() == null || hiveClient.getClientName().trim().isEmpty()) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
                                 "Client name is missing/invalid"));
             }
 
-            if (hiveClient.getOnuDeviceName() == null || hiveClient.getOnuDeviceName().trim().isEmpty()
-                    || hiveClient.getOnuDeviceName().length() > 50) {
+            if (hiveClient.getOnuDeviceName() == null || hiveClient.getOnuDeviceName().trim().isEmpty()) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
                                 "ONU device name is missing/invalid"));
@@ -125,6 +189,12 @@ public class subscriberController {
 
             if (hiveClient.getPackageType() == null || hiveClient.getPackageType().trim().isEmpty()
                     || hiveClient.getPackageType().length() > 50) {
+
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
                                 "Package type is missing/invalid"));
@@ -132,6 +202,12 @@ public class subscriberController {
 
             if (hiveClient.getStatus() == null || hiveClient.getStatus().trim().isEmpty()
                     || hiveClient.getStatus().length() > 50 || !(hiveClient.getStatus().trim().equalsIgnoreCase("onhold") || hiveClient.getStatus().trim().equalsIgnoreCase("active"))) {
+
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST, "Status is missing/invalid"));
             } else {
@@ -146,11 +222,30 @@ public class subscriberController {
                     hiveClient.getPackageType(), hiveClient.getOltReportedUpstream(),
                     hiveClient.getOltReportedDownstream());
 
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse());
         } catch (SubscriberAlreadyExistsException e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.UNAUTHORIZED.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(createErrorResponse(HttpStatus.UNAUTHORIZED, "Subscriber account number already exist"));
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
+                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving the account: " + e.getMessage()));
         }
@@ -160,7 +255,8 @@ public class subscriberController {
     @Async("asyncExecutor")
     @PostMapping("/updateMigrationSubscriberStatus")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> updateMigratedSubscriberStatus(@RequestBody Map<String, String> params) {
+    public ResponseEntity<?> updateMigratedSubscriberStatus(@RequestBody Map<String, String> params, @RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         Map<String, String> response = new LinkedHashMap<>();
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
@@ -168,6 +264,12 @@ public class subscriberController {
         // Check if the subscriber account number is empty or null
         if (subscriberAccountNumber == null
                 || subscriberAccountNumber.trim().isEmpty()) {
+
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(createErrorResponse(HttpStatus.BAD_REQUEST,
                             "Subscriber account number is missing/invalid"));
@@ -177,6 +279,12 @@ public class subscriberController {
         Optional<HiveClient> clientOptional = hiveClientRepository
                 .findBySubscriberAccountNumber(subscriberAccountNumber);
         if (!clientOptional.isPresent()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(createErrorResponse(HttpStatus.NOT_FOUND,
                             "Subscriber does not exist"));
@@ -188,6 +296,12 @@ public class subscriberController {
 
             if (client.getStatus() == null || client.getStatus().trim().isEmpty()
                     || client.getStatus().length() > 50 || !client.getStatus().contains("_PENDING_MIGRATION")) {
+
+                        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST, "Subscriber is not for migration"));
             }
@@ -202,17 +316,35 @@ public class subscriberController {
                 // Save the updated client entity
                 hiveClientRepository.save(client);
 
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
                 response.put("message", "Migrated subscriber status updated successfully");
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             } else {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
                 response.put("message", "Subscriber status cannot be updated");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             // Handle any unexpected exceptions
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
@@ -252,11 +384,25 @@ public class subscriberController {
     @GetMapping("/getsubscribers")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<subscriberEntity>> getAllSubscribers() {
+    public ResponseEntity<List<subscriberEntity>> getAllSubscribers(@RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             List<subscriberEntity> subscribers = SubscriberService.getAllSubscribers();
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.ok(subscribers);
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
@@ -265,11 +411,25 @@ public class subscriberController {
     @Async("asyncExecutor")
     @GetMapping("/getprovisionedsubscribers")
     // @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<HiveClient>> getProvisionedSubscribers() {
+    public ResponseEntity<List<HiveClient>> getProvisionedSubscribers(@RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             List<HiveClient> provisionedSubscribers = hiveclientService.getActiveOnholdSubscribers();
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.ok(provisionedSubscribers);
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
@@ -278,11 +438,25 @@ public class subscriberController {
     @Async("asyncExecutor")
     @GetMapping("/getmigratingsubscribers")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<HiveClient>> getMigratingSubscribers() {
+    public ResponseEntity<List<HiveClient>> getMigratingSubscribers(@RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             List<HiveClient> migratingSubscribers = hiveclientService.getAllMigratingSubscribers();
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.ok(migratingSubscribers);
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
@@ -290,16 +464,36 @@ public class subscriberController {
     // GET endpoint to retrieve subscriber by id
     @Async("asyncExecutor")
     @GetMapping("/getsubscriberbyid/{id}")
-    public ResponseEntity<?> getSubscriberById(@PathVariable Long id) {
+    public ResponseEntity<?> getSubscriberById(@PathVariable Long id, @RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             subscriberEntity subscriber = SubscriberService.getSubscriberById(id);
             if (subscriber != null) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), id.toString(),
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.ok(subscriber);
             } else {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), id.toString(),
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(createErrorResponse(HttpStatus.NOT_FOUND, "Subscriber not found with ID: " + id));
             }
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), id.toString(),
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
                             "Error retrieving subscriber: " + e.getMessage()));
@@ -311,16 +505,36 @@ public class subscriberController {
     // GET endpoint to retrieve subscriber by id
     @Async("asyncExecutor")
     @GetMapping("/getHiveClientById/{id}")
-    public ResponseEntity<?> getHiveClientById(@PathVariable Long id) {
+    public ResponseEntity<?> getHiveClientById(@PathVariable Long id, @RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             HiveClient hive = hiveclientService.getHiveClientById(id);
             if (hive != null) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), id.toString(),
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.ok(hive);
             } else {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), id.toString(),
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+                    
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(createErrorResponse(HttpStatus.NOT_FOUND, "Subscriber not found with ID: " + id));
             }
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), id.toString(),
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
                             "Error retrieving subscriber: " + e.getMessage()));
@@ -332,11 +546,25 @@ public class subscriberController {
     @GetMapping("/getHiveClients")
     // @PreAuthorize("hasAuthority('HIVECONNECT_TROUBLESHOOTING_READ')")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<HiveClient>> getAllHiveclients() {
+    public ResponseEntity<List<HiveClient>> getAllHiveclients(@RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             List<HiveClient> hiveclients = hiveclientService.getAllHiveclients();
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.ok(hiveclients);
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
@@ -350,7 +578,8 @@ public class subscriberController {
     @GetMapping("/subscriberAccountInfo")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> getSubscriberAccountInfo(
-            @RequestParam(required = false) String subscriberAccountNumber, HttpServletRequest request) {
+            @RequestParam(required = false) String subscriberAccountNumber, @RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
         System.out.println("Authorization header");
         System.out.println(request.getHeader("Authorization"));
         // if (!request.getHeader("Authorization").equals(
@@ -369,6 +598,12 @@ public class subscriberController {
         // System.out.println("Authorized");
         // }
         if (subscriberAccountNumber == null || subscriberAccountNumber.trim().isEmpty()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             Map<String, Object> errorResponse = new LinkedHashMap<>();
             errorResponse.put("timestamp",
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
@@ -382,6 +617,12 @@ public class subscriberController {
             subscriberEntity subscriber = SubscriberService.getSubscriberAccountInfo(subscriberAccountNumber);
 
             if (subscriber != null) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 Map<String, Object> response = new LinkedHashMap<>();
                 response.put("timestamp",
                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
@@ -398,6 +639,12 @@ public class subscriberController {
 
                 return ResponseEntity.ok(response);
             } else {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 Map<String, Object> errorResponse = new LinkedHashMap<>();
                 errorResponse.put("timestamp",
                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
@@ -406,6 +653,13 @@ public class subscriberController {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
             }
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             Map<String, Object> errorResponse = new LinkedHashMap<>();
             errorResponse.put("timestamp",
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
@@ -418,7 +672,8 @@ public class subscriberController {
     // GET ALL SUBSCRIBER INFO WITH THIS PARAMETERS
     @Async("asyncExecutor")
     @GetMapping("/getAllsubscribersAccountInfo")
-    public ResponseEntity<?> getAllHiveClgetAllSubscriberInfo() {
+    public ResponseEntity<?> getAllHiveClgetAllSubscriberInfo(@RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             List<HiveClient> hiveClients = hiveclientService.getAllSubscriberInfo(); // Fetch all clients
             if (hiveClients != null && !hiveClients.isEmpty()) {
@@ -431,12 +686,30 @@ public class subscriberController {
                     return response;
                 }).collect(Collectors.toList());
 
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.ok(responseList);
             } else {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(createErrorResponse(HttpStatus.NOT_FOUND, "No clients/subscribers found"));
             }
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+                    
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(createErrorResponse(HttpStatus.CONFLICT,
                             "Error retrieving clients/subscribers: " + e.getMessage()));
@@ -447,7 +720,8 @@ public class subscriberController {
     // provided
     @Async("asyncExecutor")
     @GetMapping("/getsubscriberNetworkInfoby/{accountNumber}")
-    public ResponseEntity<?> getHiveClientNetworkInfo(@PathVariable String accountNumber) {
+    public ResponseEntity<?> getHiveClientNetworkInfo(@PathVariable String accountNumber, @RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             HiveClient hiveClient = hiveclientService.getHiveClientByAccountNumber(accountNumber);
             if (hiveClient != null) {
@@ -459,13 +733,32 @@ public class subscriberController {
                 response.put("packageType", hiveClient.getPackageType());
                 response.put("oltReportedUpstream", hiveClient.getOltReportedUpstream());
                 response.put("oltReportedDownstream", hiveClient.getOltReportedDownstream());
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNumber,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+                    
                 return ResponseEntity.ok(response);
             } else {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNumber,
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+                    
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(createErrorResponse(HttpStatus.NOT_FOUND,
                                 "Subscriber not found with account number: " + accountNumber));
             }
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), accountNumber,
+                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(createErrorResponse(HttpStatus.CONFLICT, "Error retrieving Subscriber: " + e.getMessage()));
         }
@@ -474,7 +767,8 @@ public class subscriberController {
     // ---------------------
     @Async("asyncExecutor")
     @GetMapping("/getsubscribersNetworkInfo")
-    public ResponseEntity<?> getAllSubscriberNetworkInfo() {
+    public ResponseEntity<?> getAllSubscriberNetworkInfo(@RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             List<HiveClient> hiveClients = hiveclientService.getAllSubscriberNetworkInfo(); // Fetch all subscribers
             if (hiveClients != null && !hiveClients.isEmpty()) {
@@ -490,12 +784,30 @@ public class subscriberController {
                     return response;
                 }).collect(Collectors.toList());
 
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.ok(responseList);
             } else {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(createErrorResponse(HttpStatus.NOT_FOUND, "No subscribers found"));
             }
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(createErrorResponse(HttpStatus.CONFLICT, "Error retrieving subscribers: " + e.getMessage()));
         }
@@ -503,17 +815,37 @@ public class subscriberController {
 
     @Async("asyncExecutor")
     @GetMapping("/getallactiveAccount")
-    public ResponseEntity<?> getActiveAndActivatedClients() {
+    public ResponseEntity<?> getActiveAndActivatedClients(@RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             List<Map<String, Object>> clients = hiveclientService.getActiveAndActivatedClients();
             if (hiveclientService.getActiveAndActivatedClients() != null && !clients.isEmpty()) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.ok(clients);
             } else {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(createErrorResponse(HttpStatus.NOT_FOUND,
                                 "No clients found with status Active or Activated."));
             }
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(createErrorResponse(HttpStatus.CONFLICT, "Error retrieving clients: " + e.getMessage()));
         }
