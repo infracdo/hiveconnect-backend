@@ -13,36 +13,30 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/test")
 public class TestController {
-  // @Autowired
-  // private Dotenv dotenv;
 
-  // @Value("${JWK_URI}")
-  // String name;
+  // @GetMapping("/all")
+  // public String allAccess() {
+  //   return "Public Content.";
+  // }
 
-  @GetMapping("/all")
-  public String allAccess() {
-    return "Public Content.";
-  }
+  // @GetMapping("/user")
+  // // @PreAuthorize("hasAnyRole('HIVECONNECT_ADMIN', 'HIVECONNECT_NETWORK_SUPPORT',
+  // // 'HIVECONNECT_TECH_SUPPORT')")
+  // public String userAccess() {
+  //   return "User Content. ....congrats you can access this content.";
+  // }
 
-  @GetMapping("/user")
-  // @PreAuthorize("hasAnyRole('HIVECONNECT_ADMIN', 'HIVECONNECT_NETWORK_SUPPORT',
-  // 'HIVECONNECT_TECH_SUPPORT')")
-  public String userAccess() {
-    return "User Content. ....congrats you can access this content.";
-  }
+  // @GetMapping("/mod")
+  // // @PreAuthorize("hasRole('HIVECONNECT_NETWORK_SUPPORT')")
+  // @PreAuthorize("hasRole('MODERATOR')")
+  // public String moderatorAccess() {
+  //   return "Network Support Board.";
+  // }
 
-  @GetMapping("/mod")
-  // @PreAuthorize("hasRole('HIVECONNECT_NETWORK_SUPPORT')")
-  @PreAuthorize("hasRole('MODERATOR')")
-  public String moderatorAccess() {
-    return "Network Support Board.";
-  }
-
-  @GetMapping("/admin")
-  // @PreAuthorize("hasAuthority('ROLE_HIVECONNECT_ADMIN')")
-  @PreAuthorize("hasRole('ADMIN')")
-  public String adminAccess() {
-    return "Hiveconnect Admin Board.";
-  }
-
+  // @GetMapping("/admin")
+  // // @PreAuthorize("hasAuthority('ROLE_HIVECONNECT_ADMIN')")
+  // @PreAuthorize("hasRole('ADMIN')")
+  // public String adminAccess() {
+  //   return "Hiveconnect Admin Board.";
+  // }
 }

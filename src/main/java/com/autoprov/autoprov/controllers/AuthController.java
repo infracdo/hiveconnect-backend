@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autoprov.autoprov.dto.ApiResponse;
@@ -36,6 +37,7 @@ import com.autoprov.autoprov.repositories.subscriberRepositories.RoleRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.UserRepository;
 import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.security.services.UserDetailsImpl;
+import com.autoprov.autoprov.services.LogService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -59,8 +61,13 @@ public class AuthController {
     @Autowired
     JwtUtils jwtUtils;
 
+    @Autowired
+    private LogService logService;
+
     @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest,
+            @RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
@@ -73,6 +80,11 @@ public class AuthController {
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
 
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), loginRequest.getUsername(),
+                String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                request.getHeader("User-Agent"));
+
         return ResponseEntity.ok(new JwtResponse(jwt,
                 userDetails.getId(),
                 userDetails.getUsername(),
@@ -81,21 +93,35 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest,
+            @RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername(),
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity
                     .badRequest()
                     .body(new MessageResponse("Error: Username is already taken!"));
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername(),
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity
                     .badRequest()
                     .body(new MessageResponse("Error: Email is already in use!"));
         }
 
         // Create new user's account
-        User user = new User(signUpRequest.getUsername(),
+        User new_user = new User(signUpRequest.getUsername(),
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()));
 
@@ -129,9 +155,14 @@ public class AuthController {
             });
         }
 
-        user.setRoles(roles);
-        userRepository.save(user);
+        new_user.setRoles(roles);
+        userRepository.save(new_user);
 
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername(),
+                String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                request.getHeader("User-Agent"));
+                
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 }

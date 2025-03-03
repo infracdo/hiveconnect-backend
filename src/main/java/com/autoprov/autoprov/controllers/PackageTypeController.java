@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -29,6 +30,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.autoprov.autoprov.entity.subscriberDomain.PackageTypeEntity;
 import com.autoprov.autoprov.repositories.subscriberRepositories.PackageRepository;
+import com.autoprov.autoprov.security.jwt.JwtUtils;
+import com.autoprov.autoprov.services.LogService;
 import com.autoprov.autoprov.services.PackageTypeService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,6 +49,11 @@ public class PackageTypeController {
      @Autowired
     private PackageTypeService packageTypeService;
 
+    @Autowired
+    private LogService logService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
     
 // POST END POINT add or create new subscriber endpoint
 public PackageTypeController(PackageTypeService packageTypeService ){
@@ -55,14 +63,35 @@ public PackageTypeController(PackageTypeService packageTypeService ){
 
 @Async("asyncExecutor")
 @PostMapping("/createPackage")
-public ResponseEntity<?> createPackage(@Valid @RequestBody PackageTypeEntity packageTypeEntity) {
+public ResponseEntity<?> createPackage(@Valid @RequestBody PackageTypeEntity packageTypeEntity, @RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
     try {
         PackageTypeEntity savedPackage = packageTypeService.savePackage(packageTypeEntity);
+
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType(),
+                    String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
         return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse());
     } catch (SubscriberAlreadyExistsException e) {
+
+        logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType(),
+                    String.valueOf(HttpStatus.UNAUTHORIZED.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                              .body(createErrorResponse(HttpStatus.UNAUTHORIZED, "Error saving package. package already exists"));
     } catch (Exception e) {
+
+        logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType(),
+                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+                    
         return ResponseEntity.status(HttpStatus.CONFLICT)
                              .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving the package: " + e.getMessage()));
     }
@@ -77,6 +106,7 @@ public Map<String, String> handleValidationExceptions(MethodArgumentNotValidExce
         String errorMessage = error.getDefaultMessage();
         errors.put(fieldName, errorMessage);
     });
+    
     return errors;
 }
 
@@ -105,7 +135,13 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
     @Async("asyncExecutor")
     @GetMapping("/checkPackageDetails/{packageType}")
     public ResponseEntity<Optional<PackageTypeEntity>> findByPackageTypeId(
-            @PathVariable("packageType") String package_type) {
+            @PathVariable("packageType") String package_type, @RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), package_type,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
 
         return new ResponseEntity<>(packageRepo.findBypackageId(package_type), HttpStatus.OK);
     }
@@ -113,7 +149,8 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
     @Async("asyncExecutor")
     @GetMapping("/testGetPackageDetails/{packageType}")
     public ResponseEntity<String> testFindByPackageTypeId(
-            @PathVariable("packageType") String packageType) {
+            @PathVariable("packageType") String packageType, @RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
 
         String upstream = "";
         String downstream = "";
@@ -128,6 +165,11 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
             downstream = convertToKbps(packageT.getDownstream());
             packageName = packageT.getPackageType();
         }
+
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), packageType,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
 
         return new ResponseEntity<>("Upstream: " + upstream + " Downstream: " + downstream, HttpStatus.OK);
     }

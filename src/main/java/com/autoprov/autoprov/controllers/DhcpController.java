@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autoprov.autoprov.dto.ApiResponse;
@@ -23,8 +24,12 @@ import com.autoprov.autoprov.entity.ipamDomain.CidrBlock;
 import com.autoprov.autoprov.entity.ipamDomain.CidrIpAddress;
 import com.autoprov.autoprov.repositories.ipamRepositories.CidrBlockRepository;
 import com.autoprov.autoprov.repositories.ipamRepositories.CidrIpAddressRepository;
+import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.services.DhcpService;
 //import com.autoprov.autoprov.services.NetworkService;
+import com.autoprov.autoprov.services.LogService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -39,17 +44,37 @@ public class DhcpController {
     @Autowired
     private CidrIpAddressRepository ipAddRepo;
 
+    @Autowired
+    private LogService logService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
     // @Autowired
     // private NetworkService networkService;
 
     @Async("asyncExecutor")
     @PostMapping("/addnetwork")
-    public ResponseEntity<ApiResponse> createNetwork(@RequestBody CidrBlockDTO cidrBlockDTO) {
+    public ResponseEntity<ApiResponse> createNetwork(@RequestBody CidrBlockDTO cidrBlockDTO, @RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             dhcpService.createNetwork(cidrBlockDTO);
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getNetworkName(),
+                    String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             ApiResponse response = new ApiResponse(HttpStatus.CREATED.value(), "Network created successfully");
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getNetworkName(),
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
             ApiResponse response = new ApiResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
@@ -58,15 +83,29 @@ public class DhcpController {
     @Async("AsyncExecutor")
     @GetMapping("/getallnetworks")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<CidrBlock>> getallnetworks() {
+    public ResponseEntity<List<CidrBlock>> getallnetworks(@RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         System.out.println("backend hive api accessed");
+        
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
         return new ResponseEntity<>(CidrRepo.getAllNetworks(), HttpStatus.OK);
     }
 
     @Async("asyncExecutor")
     @GetMapping("/cidripaddresses")
-    public ResponseEntity<List<CidrIpAddress>> getAllCidrIpAddresses() {
+    public ResponseEntity<List<CidrIpAddress>> getAllCidrIpAddresses(@RequestParam(required = false) String user,
+    @RequestParam(required = false) String action, HttpServletRequest request) {
         List<CidrIpAddress> cidrIpAddresses = dhcpService.getAllCidrIpAddresses();
+
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
         return new ResponseEntity<>(cidrIpAddresses, HttpStatus.OK);
     }
 
@@ -76,11 +115,18 @@ public class DhcpController {
     // @PreAuthorize("hasAuthority('HIVECONNECT_NETWORK_ADDRESSES_READ')")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<CidrIpAddress>> getIpAddressesOfCidrBlockPath(
-            @PathVariable("cidrBlock") String cidrBlock) {
+            @PathVariable("cidrBlock") String cidrBlock, @RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
         List<CidrIpAddress> CidrBlockIps = new ArrayList<>();
         cidrBlock = cidrBlock.substring(0, (cidrBlock.lastIndexOf(".")));
         System.out.println(cidrBlock);
         ipAddRepo.findAllUnderCidrBlock(cidrBlock).forEach(CidrBlockIps::add);
+
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlock,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("User-Agent"));
+
         return new ResponseEntity<>(CidrBlockIps, HttpStatus.OK); 
 
     }

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
     <!-- Console Logging (Optional) -->
@@ -9,10 +10,11 @@
 
     <!-- API Log Appender - audit logs -->
     <appender name="API_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>./logs/audit.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <file>./logs/access/audit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- Roll files based on time, keep one file per day, and delete logs older than 7 days -->
-            <fileNamePattern>logs/audit.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>logs/audit.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize> <!-- Max size for each log file -->
             <maxHistory>7</maxHistory> <!-- Retain logs for 7 days -->
             <totalSizeCap>70MB</totalSizeCap> <!-- Retain total size of log files up to 70MB -->
         </rollingPolicy>
@@ -23,10 +25,10 @@
 
     <!-- Error Log Appender - error logs -->
     <appender name="ERROR_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>./logs/error.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeBasedRollingPolicy">
+        <file>./logs/error/error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- Roll files based on size limit, max 10MB per log file -->
-            <fileNamePattern>logs/error.%i.log</fileNamePattern>
+            <fileNamePattern>logs/error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>10MB</maxFileSize> <!-- Max size for each log file -->
             <maxHistory>7</maxHistory> <!-- Retain logs for 7 days -->
         </rollingPolicy>
@@ -36,7 +38,7 @@
     </appender>
 
     <!-- Root Logger (Optional) -->
-    <root level="info">
+    <root level="debug">
         <appender-ref ref="CONSOLE"/>
     </root>
 
