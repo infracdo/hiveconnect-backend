@@ -356,22 +356,11 @@ public class subscriberController {
                     // Save the updated client entity
                     hiveClientRepository.save(client);
 
-                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
-                    request.getHeader("User-Agent"));
-
                     response.put("timestamp", timestamp);
                     response.put("status", String.valueOf(HttpStatus.OK.value()));
                     response.put("message", "Migrated subscriber status both in ABS and Hive updated successfully");
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 } else {
-
-                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
-                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
-                    request.getHeader("User-Agent"));
-
                     response.put("timestamp", timestamp);
                     response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
                     response.put("message", "Subscriber status cannot be updated in ABS");
@@ -384,13 +373,6 @@ public class subscriberController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         } catch (Exception e) {
-
-            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
-                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
-                    request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
-                    request.getHeader("User-Agent"));
-                    
             // Handle any unexpected exceptions
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
