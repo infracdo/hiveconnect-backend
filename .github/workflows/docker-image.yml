@@ -3,7 +3,7 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-      - infra-test  # Trigger on pushes to the main branch
+      - infra-sbx  # Trigger on pushes to the main branch
 #  pull_request:  # Trigger on pull requests
 
 jobs:
@@ -27,10 +27,10 @@ jobs:
       - name: Build Docker Image
         run: 
           # docker build --target build -t my-image:build .
-          docker build -t hiveconnect-backend:test-0.10 .
+          docker build -t hiveconnect-backend:sbx-0.8 .
 
       # Step 4: Push the Docker image
       - name: Push Docker Image
         run: |
-          docker tag hiveconnect-backend:test-0.10 infracdo/hiveconnect-backend:test-0.10
-          docker push infracdo/hiveconnect-backend:test-0.10
+          docker tag hiveconnect-backend:sbx-0.8 infracdo/hiveconnect-backend:sbx-0.8
+          docker push infracdo/hiveconnect-backend:sbx-0.8
