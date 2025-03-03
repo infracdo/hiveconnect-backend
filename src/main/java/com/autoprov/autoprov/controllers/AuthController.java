@@ -82,7 +82,7 @@ public class AuthController {
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), loginRequest.getUsername(),
                 String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                null,
+                jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
                 request.getHeader("User-Agent"));
 
         return ResponseEntity.ok(new JwtResponse(jwt,
@@ -99,8 +99,8 @@ public class AuthController {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername(),
-                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    null,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity
@@ -111,8 +111,8 @@ public class AuthController {
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername(),
-                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    null,
+                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity
@@ -160,7 +160,7 @@ public class AuthController {
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername(),
                 String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                null,
+                jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
                 request.getHeader("User-Agent"));
                 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
