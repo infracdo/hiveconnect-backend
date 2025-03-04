@@ -3,7 +3,7 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-      - infra-sbx  # Trigger on pushes to the main branch
+      - talos-test  # Trigger on pushes to the main branch
 #  pull_request:  # Trigger on pull requests
 
 jobs:
@@ -27,10 +27,10 @@ jobs:
       - name: Build Docker Image
         run: 
           # docker build --target build -t my-image:build .
-          docker build -t hiveconnect-backend:sbx-0.9 .
+          docker build -t hiveconnect-backend:talos-test .
 
       # Step 4: Push the Docker image
       - name: Push Docker Image
         run: |
-          docker tag hiveconnect-backend:sbx-0.9 infracdo/hiveconnect-backend:sbx-0.9
-          docker push infracdo/hiveconnect-backend:sbx-0.9
+          docker tag hiveconnect-backend:talos-test infracdo/hiveconnect-backend:talos-test
+          docker push infracdo/hiveconnect-backend:talos-test
