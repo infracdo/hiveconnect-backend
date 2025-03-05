@@ -3,6 +3,7 @@ package com.autoprov.autoprov.controllers;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +32,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.ipamDomain.CidrIpAddress;
+import com.autoprov.autoprov.entity.oltDomain.oltEntity;
 import com.autoprov.autoprov.entity.subscriberDomain.PackageTypeEntity;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
@@ -972,12 +974,36 @@ public class AutoProvisionController {
         String macAddress = params.get("macAddress");
         String oltIp = params.get("olt");
         Long oltId = Long.parseLong(params.get("oltId"));
-        String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
+        // String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
         // String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
-        String ipAddress = ipAddRepo
-                .getOneAvailableIpAddressUnderSite(site, "Private")
-                .get(0)
-                .getIpAddress();
+
+        Optional<oltEntity> siteOlt = oltRepo.findByOlt_ip(oltId);
+        // Return error response if there's no existing data in site_olt table to prevent returning Index out of Bound error for user-friendly frontend error messages
+        if (siteOlt.isEmpty()) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
+            response.put("message", "No existing site olt data found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        String site = siteOlt.get().getOltNetworksite();
+
+        // String ipAddress = ipAddRepo
+        //         .getOneAvailableIpAddressUnderSite(site, "Private")
+        //         .get(0)
+        //         .getIpAddress();
+
+        List<CidrIpAddress> availableIpAddresses = ipAddRepo.getOneAvailableIpAddressUnderSite(site, "Private");
+ 
+        // Return error response if there's no available IP address to prevent returning Index out of Bound error for user-friendly frontend error messages
+        if (availableIpAddresses.isEmpty()) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
+            response.put("message", "No available IP address with type 'Private' found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        String ipAddress = availableIpAddresses.get(0).getIpAddress();
 
         String packageType = params.get("packageType");
         // String upstream = params.get("upstream");
@@ -1098,7 +1124,7 @@ public class AutoProvisionController {
                     request.getHeader("User-Agent"));
 
                 Map<String, String> response = new HashMap<>();
-                response.put("status", "200");
+                response.put("status", String.valueOf(HttpStatus.OK.value()));
                 response.put("message", "All Clear. Proceed to Provisioning!");
                 response.put("body", checkingResponse);
                 return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -1113,7 +1139,7 @@ public class AutoProvisionController {
                 request.getHeader("User-Agent"));
 
                 Map<String, String> response = new HashMap<>();
-                response.put("status", "500");
+                response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
                 response.put("message", errors.toString());
                 response.put("body", checkingResponse);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -1126,7 +1152,7 @@ public class AutoProvisionController {
                     request.getHeader("User-Agent"));
 
         Map<String, String> response = new HashMap<>();
-        response.put("status", "200");
+        response.put("status", String.valueOf(HttpStatus.OK.value()));
         response.put("message", "No Result");
         response.put("body", checkingResponse);
         return ResponseEntity.status(HttpStatus.OK).body(response);
