@@ -77,13 +77,13 @@ public ResponseEntity<?> createPackage(@Valid @RequestBody PackageTypeEntity pac
     } catch (SubscriberAlreadyExistsException e) {
 
         logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType(),
-                    String.valueOf(HttpStatus.UNAUTHORIZED.value()), e.getMessage(), e.getStackTrace(),
+                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
                     request.getHeader("User-Agent"));
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                             .body(createErrorResponse(HttpStatus.UNAUTHORIZED, "Error saving package. package already exists"));
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                             .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving package. package already exists"));
     } catch (Exception e) {
 
         logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType(),

@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -121,13 +122,13 @@ public class subscriberController {
         } catch (SubscriberAlreadyExistsException e) {
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberEntity.getSubscriberAccountNumber(),
-                    String.valueOf(HttpStatus.UNAUTHORIZED.value()), e.getMessage(), e.getStackTrace(),
+                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse(HttpStatus.UNAUTHORIZED, "Subscriber account number already exist"));
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(createErrorResponse(HttpStatus.CONFLICT, "Subscriber account number already exist"));
         } catch (Exception e) {
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberEntity.getSubscriberAccountNumber(),
@@ -243,13 +244,13 @@ public class subscriberController {
         } catch (SubscriberAlreadyExistsException e) {
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
-                    String.valueOf(HttpStatus.UNAUTHORIZED.value()), e.getMessage(), e.getStackTrace(),
+                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse(HttpStatus.UNAUTHORIZED, "Subscriber account number already exist"));
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(createErrorResponse(HttpStatus.CONFLICT, "Subscriber account number already exist"));
         } catch (Exception e) {
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
@@ -290,6 +291,7 @@ public class subscriberController {
         // Fetch client from repository todo: change to hiveclient
         Optional<HiveClient> clientOptional = hiveClientRepository
                 .findBySubscriberAccountNumber(subscriberAccountNumber);
+        System.out.println("Account No: " + clientOptional);
         if (!clientOptional.isPresent()) {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
@@ -327,7 +329,7 @@ public class subscriberController {
                 if ("Active".equalsIgnoreCase(newStatus)) {
                     absStatus = "Activate";
                 } else if ("Onhold".equalsIgnoreCase(newStatus)) {
-                    absStatus = "Deactivate";
+                    absStatus = "on-hold";
                 } else {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                 .body(createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid status for migration"));
@@ -349,29 +351,27 @@ public class subscriberController {
 
                 ResponseEntity<String> absResponse = restTemplate.exchange(absUrl,HttpMethod.POST, entity, String.class);
 
-                if (absResponse.getStatusCode() == HttpStatus.OK) {
-                    // Optionally, update other relevant fields if necessary
-                    // Example: client.setUpdatedAt(LocalDateTime.now());
+                // Optionally, update other relevant fields if necessary
+                // Example: client.setUpdatedAt(LocalDateTime.now());
 
-                    // Save the updated client entity
-                    hiveClientRepository.save(client);
+                // Save the updated client entity
+                hiveClientRepository.save(client);
 
-                    response.put("timestamp", timestamp);
-                    response.put("status", String.valueOf(HttpStatus.OK.value()));
-                    response.put("message", "Migrated subscriber status both in ABS and Hive updated successfully");
-                    return ResponseEntity.status(HttpStatus.OK).body(response);
-                } else {
-                    response.put("timestamp", timestamp);
-                    response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-                    response.put("message", "Subscriber status cannot be updated in ABS");
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-                }
+                response.put("timestamp", timestamp);
+                response.put("status", String.valueOf(absResponse.getStatusCode().value()));
+                response.put("message", absResponse.getBody());
+                return ResponseEntity.status(absResponse.getStatusCode()).body(response);
             } else {
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-                response.put("message", "Subscriber status cannot be updated");
+                response.put("message", "Subscriber is not for migration");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
+        } catch (HttpStatusCodeException e) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(e.getStatusCode().value()));
+            response.put("message", e.getResponseBodyAsString());
+            return ResponseEntity.status(e.getStatusCode()).body(response);
         } catch (Exception e) {
             // Handle any unexpected exceptions
             response.put("timestamp", timestamp);
