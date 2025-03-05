@@ -349,30 +349,33 @@ public class subscriberController {
 
                 HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
 
-                ResponseEntity<String> absResponse = restTemplate.exchange(absUrl,HttpMethod.POST, entity, String.class);
+                try {
+                    ResponseEntity<String> absResponse = restTemplate.exchange(absUrl,HttpMethod.POST, entity, String.class);
 
-                // Optionally, update other relevant fields if necessary
-                // Example: client.setUpdatedAt(LocalDateTime.now());
+                    // Optionally, update other relevant fields if necessary
+                    // Example: client.setUpdatedAt(LocalDateTime.now());
 
-                // Save the updated client entity
-                hiveClientRepository.save(client);
+                    // Save the updated client entity
+                    hiveClientRepository.save(client);
 
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(absResponse.getStatusCode().value()));
-                response.put("message", absResponse.getBody());
-                return ResponseEntity.status(absResponse.getStatusCode()).body(response);
+                    response.put("timestamp", timestamp);
+                    response.put("status", String.valueOf(absResponse.getStatusCode().value()));
+                    response.put("message", absResponse.getBody());
+                    return ResponseEntity.status(absResponse.getStatusCode()).body(response);
+                } catch (HttpStatusCodeException e) {
+                    String absErrorMessage = e.getResponseBodyAsString();
+                    response.put("timestamp", timestamp);
+                    response.put("status", String.valueOf(e.getStatusCode().value()));
+                    response.put("message", absErrorMessage);
+                    return ResponseEntity.status(e.getStatusCode()).body(response);
+                }
             } else {
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
                 response.put("message", "Subscriber is not for migration");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
-        } catch (HttpStatusCodeException e) {
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(e.getStatusCode().value()));
-            response.put("message", e.getResponseBodyAsString());
-            return ResponseEntity.status(e.getStatusCode()).body(response);
-        } catch (Exception e) {
+        }  catch (Exception e) {
             // Handle any unexpected exceptions
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
