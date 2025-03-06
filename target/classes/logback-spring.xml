@@ -37,6 +37,21 @@
         </encoder>
     </appender>
 
+    <!-- Frontend Action Log Appende - user action logs -->
+    <appender name="FRONTEND_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>./logs/frontend/frontend.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- Roll files based on size limit, max 10MB per log file -->
+            <fileNamePattern>logs/frontend.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize> <!-- Max size for each log file -->
+            <maxHistory>7</maxHistory> <!-- Retain logs for 7 days -->
+            <totalSizeCap>70MB</totalSizeCap> <!-- Retain total size of log files up to 70MB -->
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} | %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <!-- Root Logger (Optional) -->
     <root level="debug">
         <appender-ref ref="CONSOLE"/>
@@ -50,6 +65,11 @@
     <!-- Error Logger - Logs for API errors (error logs) -->
     <logger name="apiErrorLogger" level="warn">
         <appender-ref ref="ERROR_LOG"/>
+    </logger>
+
+    <!-- Frontend Logger - Logs for Frontend actions (user action logs) -->
+    <logger name="frontendLogger" level="info">
+        <appender-ref ref="FRONTEND_LOG" />
     </logger>
 
 </configuration>

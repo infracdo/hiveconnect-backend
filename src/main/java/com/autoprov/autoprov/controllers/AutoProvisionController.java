@@ -673,8 +673,6 @@ public class AutoProvisionController {
         jsonBody.append("\"extra_vars\":\"---\\n" + "account_number: \\\"" + accountNo + "\\\"\""); // NOTE: gi add nalang nako syag double quotes sa account number mismo kay naay tendencies na if ang account no kay numbers lng (e.g. 12345), ang ma send pud dayon na request sa playbook kay gina treat as integer ang account no even though naka define na as string pagkuha sa params. i think ire-check nalng siguro ni soon
         jsonBody.append("}");
 
-        System.out.println("Check accountNo if string: " + accountNo);
-
         String requestBody = jsonBody.toString();
         if (showBody)
             System.out.println(requestBody);
@@ -1220,7 +1218,7 @@ public class AutoProvisionController {
 
         // Default response for successful job completion without credential generation
         Map<String, String> response = new HashMap<>();
-        response.put("status", "200");
+        response.put("status", String.valueOf(HttpStatus.OK.value()));
         response.put("message", "Job completed successfully.");
         response.put("awx_job_id", jobId);
         return ResponseEntity.status(HttpStatus.OK).body(response);

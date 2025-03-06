@@ -3,16 +3,22 @@ package com.autoprov.autoprov.controllers;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,12 +39,29 @@ import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
 import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.services.LogService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+@PropertySource("classpath:application.properties")
 @CrossOrigin(origins = "*")
 @RestController
 public class AcsController {
+
+    @Value("${playbookActivateClient}")
+    private String playbookActivateClientApiUrl;
+
+    @Value("${playbookDeactivateClient}")
+    private String playbookDeactivateClientApiUrl;
+
+    @Value("${ansibleAccessToken}")
+    private String ansibleAccessToken;
+
+    @Value("${playbookGetJobUrl}")
+    private String playbookGetJobUrl;
 
     @Autowired
     private DeviceRepository DeviceRepo;
@@ -99,7 +122,7 @@ public class AcsController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, String>> disconnectClient(@RequestBody Map<String, String> params,
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
-            HttpServletRequest request) {
+            HttpServletRequest request) throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         Map<String, String> response = new LinkedHashMap<>(); // Use String as the value type
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -161,34 +184,46 @@ public class AcsController {
         }
 
         // Get the serial number from the client
-        String serialNumber = subscriber.getOnuSerialNumber();
-        if (serialNumber == null) {
+        // String serialNumber = subscriber.getOnuSerialNumber();
+        // if (serialNumber == null) {
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
-                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
-                    request.getHeader("User-Agent"));
+        //     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+        //             String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+        //             jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+        //             request.getHeader("User-Agent"));
 
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+        //     response.put("timestamp", timestamp);
+        //     response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+        //     response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
+        //     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        // }
 
         // Call to ACS to Disconnect Wan2
-        String apiUrl = acsApiUrl + "toggleWan";
+        // String apiUrl = acsApiUrl + "toggleWan";
+
+        // Execute playbook to deactivate client
+        String apiUrl = playbookDeactivateClientApiUrl + "launch/";
+        System.out.println("Deactivate Client API URL: " + apiUrl);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Bearer " + ansibleAccessToken);
 
-        String instance = "2";
-        String toggle = "0";
+        // String instance = "2";
+        // String toggle = "0";
 
         // Create a JSON request body
         StringBuilder jsonBody = new StringBuilder();
+        // jsonBody.append("{");
+        // jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
+        // jsonBody.append("\"Instance\":\"").append(instance).append("\",");
+        // jsonBody.append("\"Toggle\":\"").append(toggle).append("\"");
+        // jsonBody.append("}");
+
         jsonBody.append("{");
-        jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
-        jsonBody.append("\"Instance\":\"").append(instance).append("\",");
-        jsonBody.append("\"Toggle\":\"").append(toggle).append("\"");
+        jsonBody.append("\"job_template\":\"24\",");
+        jsonBody.append("\"ask_variables_on_launch\":\"true\",");
+        jsonBody.append("\"extra_vars\":\"---\\n" + "account_number: \\\"" + subscriberAccountNumber + "\\\"\""); // NOTE: gi add nalang nako syag double quotes sa account number mismo kay naay tendencies na if ang account no kay numbers lng (e.g. 12345), ang ma send pud dayon na request sa playbook kay gina treat as integer ang account no even though naka define na as string pagkuha sa params. i think ire-check nalng siguro ni soon
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
@@ -196,37 +231,61 @@ public class AcsController {
 
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
-        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+        // String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+        ResponseEntity<String> playbookResponse = restTemplate.exchange(apiUrl, HttpMethod.POST, requestEntity, String.class);
+        
+        // System.out.println("HiveConnect Pushed: subscriber successfully deactivated");
+        System.out.println("Response: " + playbookResponse);
 
-        System.out.println("HiveConnect Pushed: subscriber successfully deactivated");
-        System.out.println("Response: " + jsonResponse);
+        String jobId;
+        if (playbookResponse.getStatusCode() == HttpStatus.CREATED) {
+            System.out.println("Request Successful.");
+            String responseBody = playbookResponse.getBody();
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(responseBody);
+            jobId = jsonNode.get("id").asText();
 
-        // Handle the response and update the client status
-        if (jsonResponse.contains("Pushed")) {
+        } else {
+            System.out.println("Request failed. Response: " + playbookResponse.getStatusCode());
+            return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        ResponseEntity lastJobStatus = jobStatus(subscriberAccountNumber, jobId, false);
+
+        if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
             subscriber.setSubsStatus("DEACTIVATED");
             subscriberRepo.save(subscriber);
-
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
-                    String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
-                    request.getHeader("User-Agent"));
-
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.CREATED.value()));
-            response.put("message", "Subscriber successfully deactivated");
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return lastJobStatus;
         } else {
-
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
-                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
-                    request.getHeader("User-Agent"));
-
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", jsonResponse);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return lastJobStatus;
         }
+
+        // Handle the response and update the client status
+        // if (jsonResponse.contains("Pushed")) {
+        //     subscriber.setSubsStatus("DEACTIVATED");
+        //     subscriberRepo.save(subscriber);
+
+        //     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+        //             String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
+        //             jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+        //             request.getHeader("User-Agent"));
+
+        //     response.put("timestamp", timestamp);
+        //     response.put("status", String.valueOf(HttpStatus.CREATED.value()));
+        //     response.put("message", "Subscriber successfully deactivated");
+        //     return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        // } else {
+
+        //     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+        //             String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+        //             jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+        //             request.getHeader("User-Agent"));
+
+        //     response.put("timestamp", timestamp);
+        //     response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+        //     response.put("message", jsonResponse);
+        //     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        // }
     }
 
     // -------POST END POINT BASE ON ACCOUNT NUMBER SEND FOR TEMPORARY DISCONNECTION
@@ -311,7 +370,10 @@ public class AcsController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<String, String> params,
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
-            HttpServletRequest request) {
+            HttpServletRequest request) throws JsonMappingException, JsonProcessingException, InterruptedException {
+
+        System.out.println(">>> HiveService: Activate Subscriber executed from ABS");
+
         Map<String, String> response = new LinkedHashMap<>();
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
@@ -363,34 +425,46 @@ public class AcsController {
         }
 
         // Get the serial number from the client
-        String serialNumber = client.getOnuSerialNumber();
-        if (serialNumber == null) {
+        // String serialNumber = client.getOnuSerialNumber();
+        // if (serialNumber == null) {
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
-                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
-                    request.getHeader("User-Agent"));
+        //     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+        //             String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+        //             jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+        //             request.getHeader("User-Agent"));
 
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+        //     response.put("timestamp", timestamp);
+        //     response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+        //     response.put("message", "Serial number is not available for account number: " + subscriberAccountNumber);
+        //     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        // }
 
         // Call to ACS to Reconnect Wan2
-        String apiUrl = acsApiUrl + "toggleWan";
+        // String apiUrl = acsApiUrl + "toggleWan";
+        
+        // Execute playbook to activate client
+        String apiUrl = playbookActivateClientApiUrl + "launch/";
+        System.out.println("Activate Client Playbook API URL: " + apiUrl);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Bearer " + ansibleAccessToken);
 
-        String instance = "2";
-        String toggle = "1"; // Toggle value for reconnect
+        // String instance = "2";
+        // String toggle = "1"; // Toggle value for reconnect
 
         // Create a JSON request body
         StringBuilder jsonBody = new StringBuilder();
+        // jsonBody.append("{");
+        // jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
+        // jsonBody.append("\"Instance\":\"").append(instance).append("\",");
+        // jsonBody.append("\"Toggle\":\"").append(toggle).append("\"");
+        // jsonBody.append("}");
+
         jsonBody.append("{");
-        jsonBody.append("\"serialNumber\":\"").append(serialNumber).append("\",");
-        jsonBody.append("\"Instance\":\"").append(instance).append("\",");
-        jsonBody.append("\"Toggle\":\"").append(toggle).append("\"");
+        jsonBody.append("\"job_template\":\"23\",");
+        jsonBody.append("\"ask_variables_on_launch\":\"true\",");
+        jsonBody.append("\"extra_vars\":\"---\\n" + "account_number: \\\"" + subscriberAccountNumber + "\\\"\""); // NOTE: gi add nalang nako syag double quotes sa account number mismo kay naay tendencies na if ang account no kay numbers lng (e.g. 12345), ang ma send pud dayon na request sa playbook kay gina treat as integer ang account no even though naka define na as string pagkuha sa params. i think ire-check nalng siguro ni soon
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
@@ -398,36 +472,260 @@ public class AcsController {
 
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
-        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+        // String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
+        ResponseEntity<String> playbookResponse = restTemplate.exchange(apiUrl, HttpMethod.POST, requestEntity, String.class);
 
-        System.out.println("HiveConnect Pushed:subscriber successfully activated");
-        System.out.println("Response: " + jsonResponse);
+        // System.out.println("HiveConnect Pushed:subscriber successfully activated");
+        System.out.println("Response: " + playbookResponse);
 
-        // Handle response
-        if (jsonResponse.contains("Pushed")) {
-            // Update client status to 'active'
+        String jobId;
+        if (playbookResponse.getStatusCode() == HttpStatus.CREATED) {
+            System.out.println("Request Successful.");
+            String responseBody = playbookResponse.getBody();
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(responseBody);
+            jobId = jsonNode.get("id").asText();
+
+        } else {
+            System.out.println("Request failed. Response: " + playbookResponse.getStatusCode());
+            return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        ResponseEntity lastJobStatus = jobStatus(subscriberAccountNumber, jobId, false);
+
+        if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
             client.setSubsStatus("ACTIVE");
             subscriberRepo.save(client);
-
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
-                    request.getHeader("User-Agent"));
-
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.OK.value()));
-            response.put("message", "HiveConnect: Subscriber successfully activated");
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+            return lastJobStatus;
         } else {
+            return lastJobStatus;
+        }
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
-                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
-                    request.getHeader("User-Agent"));
+        // Handle response
+        // if (jsonResponse.contains("Pushed")) {
+        //     // Update client status to 'active'
+        //     client.setSubsStatus("ACTIVE");
+        //     subscriberRepo.save(client);
+
+        //     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+        //             String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+        //             jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+        //             request.getHeader("User-Agent"));
+
+        //     response.put("timestamp", timestamp);
+        //     response.put("status", String.valueOf(HttpStatus.OK.value()));
+        //     response.put("message", "HiveConnect: Subscriber successfully activated");
+        //     return ResponseEntity.status(HttpStatus.OK).body(response);
+        // } else {
+
+        //     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+        //             String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+        //             jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+        //             request.getHeader("User-Agent"));
                     
-            response.put("timestamp", timestamp);
+        //     response.put("timestamp", timestamp);
+        //     response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+        //     response.put("message", jsonResponse);
+        //     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        // }
+    }
+
+    // Method to check the job status
+    public ResponseEntity<Map<String, String>> jobStatus(String accountNo, String jobId,
+            boolean generateCredentials)
+            throws JsonMappingException, JsonProcessingException, InterruptedException {
+
+        // Monitor the job status
+        String lastJobStatus = monitorJobStatus(jobId);
+
+        // Handle job failure
+        if (lastJobStatus.contains("fail")) {
+            return handleJobFailure(jobId);
+        }
+
+        // Generate credentials if requested
+        if (generateCredentials) {
+            return generateCreds(accountNo, jobId);
+        }
+
+        // Default response for successful job completion without credential generation
+        Map<String, String> response = new HashMap<>();
+        response.put("status", String.valueOf(HttpStatus.OK.value()));
+        response.put("message", "Job completed successfully.");
+        response.put("awx_job_id", jobId);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+
+    }
+
+    // Method to monitor job status
+    private String monitorJobStatus(String jobId) throws InterruptedException {
+        String ansibleApiUrl = playbookGetJobUrl + jobId;
+        String accessToken = ansibleAccessToken;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String requestBody = "";
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> responseEntity = null;
+        String responseBody = null;
+
+        StringBuilder tries = new StringBuilder();
+
+        System.out.println("Trying to Get Job " + jobId);
+        while (responseBody == null || responseBody.contains("\"finished\":null")) {
+            TimeUnit.SECONDS.sleep(10);
+            responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity, String.class);
+
+            if (responseEntity.getStatusCode() == HttpStatus.NOT_FOUND) {
+                tries.append("|");
+                System.out.println(tries.toString());
+                continue;
+            }
+            responseBody = responseEntity.getBody();
+            if (responseBody == null || responseBody.contains("\"finished\":null")) {
+                tries.append("|");
+                System.out.println(tries.toString());
+                continue;
+            }
+        }
+
+        // if (showBody)
+        //     System.out.println(responseBody);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode;
+        try {
+            jsonNode = objectMapper.readTree(responseBody);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            // Handle the exception appropriately, e.g., return a default status or throw a
+            // custom exception
+            return "error";
+        }
+
+        // Extract last job details
+        String lastJobStatus = jsonNode.get("status").asText();
+
+        // Print the results
+        System.out.println("Job ID: " + jobId);
+        System.out.println("Job Status: " + lastJobStatus);
+
+        return lastJobStatus;
+    }
+
+    // Method to handle job failure
+    private ResponseEntity<Map<String, String>> handleJobFailure(String jobId) {
+        String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/job_events/?failed=True";
+        String accessToken = ansibleAccessToken;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String requestBody = "";
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+                String.class);
+        String stderr = responseEntity.getBody().toString();
+
+        // if (showBody)
+        //     System.out.println(stderr);
+        StringBuilder error = new StringBuilder();
+
+        try {
+            if (stderr.contains("Pseudo-terminal will not be allocated because stdin is not a terminal"))
+                error.append("Bad OLT-IP.");
+
+            if (stderr.contains("name: OLT Vendor"))
+                error.append("Bad OLT-IP; OLT-IP not live.");
+
+            if (stderr.contains("Host with the same visible name"))
+                error.append("Client's device is already provisioned.");
+
+            if (stderr.contains("UnboundLocalError: local variable 'name' referenced before assignment"))
+                error.append("Device on the OLT Interface already provisioned.");
+
+            if (stderr.contains("Duplicate termination found"))
+                error.append("IP Address already assigned to someone.");
+
+            if (stderr.contains("[prometheus]: UNREACHABLE! =>"))
+                error.append("Monitoring platform Prometheus is unreachable. Try again later.");
+
+            if (stderr.contains("FAILED!") && stderr.contains("mac-address-table"))
+                error.append("Error on MAC Address Filtering.");
+
+            System.out.println("Errors: " + stderr);
+
+            Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", jsonResponse);
+            response.put("message", error.toString());
+            response.put("awx_job_id: ", jobId.toString());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, String> response = new HashMap<>();
+            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            response.put("message", "An error occurred while processing the job status.");
+            response.put("awx_job_id: ", jobId.toString());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    private ResponseEntity<Map<String, String>> generateCreds(String accountNo, String jobId) {
+        try {
+            String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
+            String accessToken = ansibleAccessToken;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + accessToken);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String requestBody = "";
+            HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
+                    String.class);
+
+            String responseBody = responseEntity.getBody();
+
+            // Define the pattern
+            Pattern pattern = Pattern.compile("\"olt_interface_bind\\.stdout\"\\s*:\\s*\"([^\"]+)\"");
+
+            // Create a matcher
+            Matcher matcher = pattern.matcher(responseBody);
+
+            // Find the match
+            if (matcher.find()) {
+                // Extract the desired value
+                String oltInterfaceBind = matcher.group(1);
+                System.out.println("olt_interface_bind.stdout: " + oltInterfaceBind);
+            } else {
+                System.out.println("Match not found");
+            }
+
+            String newSsid = accountNo.replace(" ", "_");
+            String password = "" + newSsid + "1234";
+
+            Map<String, String> response = new HashMap<>();
+            response.put("awx_job_id", jobId);
+            response.put("status", String.valueOf(HttpStatus.OK.value()));
+            response.put("message", "Provisioning Successful!");
+            response.put("ssid_name", newSsid + "2.4G/5G");
+            response.put("ssid_pw", password);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            response.put("message", "An error occurred while generating credentials.");
+            response.put("awx_job_id", jobId);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

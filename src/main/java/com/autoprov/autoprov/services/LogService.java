@@ -9,6 +9,7 @@ public class LogService {
     private static final Logger logger = LoggerFactory.getLogger(LogService.class);
     private static final Logger apiLogger = LoggerFactory.getLogger("apiLogger"); // For audit logs (API_LOG)
     private static final Logger apiErrorLogger = LoggerFactory.getLogger("apiErrorLogger"); // For error logs (ERROR_LOG)
+    private static final Logger frontendLogger = LoggerFactory.getLogger("frontendLogger"); // For frontend logs
 
     public void logInfo(String message) {
         logger.info(message);
@@ -48,6 +49,24 @@ public class LogService {
         System.out.println("created error log");
     }
 
+    // Method for frontend logs
+    public void logFrontendAction(String user, String action, String page, String details, String ip, String client, String agent) {
+        if (user == null || user.trim().equals("")) {
+            user = "unknown";
+        }
+        if (action == null || action.trim().equals("")) {
+            action = "performed action";
+        }
+        if (details == null || details.trim().equals("")) {
+            details = "none";
+        }
+        frontendLogger.info(String.format(
+            "User: %s | Action: %s | Page: %s | Details: %s | IP: %s | Client: %s | Agent: %s",
+            user, action, page, details, ip, client, agent
+        ));
+        System.out.println("created frontend log");
+    }
+
     public void logError(String message, Throwable throwable) {
         logger.error(message, throwable);
     }
@@ -59,4 +78,5 @@ public class LogService {
     public void logWarn(String message) {
         logger.warn(message);
     }
+
 }
