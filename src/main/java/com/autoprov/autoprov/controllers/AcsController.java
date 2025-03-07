@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.autoprov.autoprov.entity.acsDomain.Device;
+import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
@@ -67,7 +68,7 @@ public class AcsController {
     private DeviceRepository DeviceRepo;
 
     @Autowired
-    private HiveClientRepository hiveClientRepository;
+    private HiveClientRepository hiveClientRepo;
 
     @Autowired
     private subscriberRepository subscriberRepo;
@@ -143,7 +144,7 @@ public class AcsController {
         }
 
         // Fetch the client from the repository based on the account number
-        Optional<subscriberEntity> optionalClient = subscriberRepo
+        Optional<HiveClient> optionalClient = hiveClientRepo
                 .findBySubscriberAccountNumber(subscriberAccountNumber);
         if (!optionalClient.isPresent()) {
             
@@ -158,7 +159,7 @@ public class AcsController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
-        subscriberEntity subscriber = optionalClient.get();
+        HiveClient subscriber = optionalClient.get();
 
         // Check if the subscriber is active
         // if (client.getSubsStatus() == null ||
@@ -169,8 +170,8 @@ public class AcsController {
         // response.put("message", "subscriber not active");
         // return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         // }
-        if (subscriber.getSubsStatus() == null ||
-                (!subscriber.getSubsStatus().equals("ACTIVE") && !subscriber.getSubsStatus().equals("Activated"))) {
+        if (subscriber.getStatus() == null ||
+                (!subscriber.getStatus().equalsIgnoreCase("ACTIVE") && !subscriber.getStatus().equalsIgnoreCase("Activated"))) {
             
                     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
@@ -179,7 +180,7 @@ public class AcsController {
 
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-            response.put("message", "Subscriber not active");
+            response.put("message", "Subscriber is not active");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
@@ -225,7 +226,7 @@ public class AcsController {
         jsonBody.append("\"ask_variables_on_launch\":\"true\",");
         jsonBody.append("\"extra_vars\":\"---\\n" + "account_number: \\\"" + subscriberAccountNumber + "\\\"\""); // NOTE: gi add nalang nako syag double quotes sa account number mismo kay naay tendencies na if ang account no kay numbers lng (e.g. 12345), ang ma send pud dayon na request sa playbook kay gina treat as integer ang account no even though naka define na as string pagkuha sa params. i think ire-check nalng siguro ni soon
         jsonBody.append("}");
-
+        
         String jsonRequestBody = jsonBody.toString();
         System.out.println(jsonRequestBody);
 
@@ -253,8 +254,8 @@ public class AcsController {
         ResponseEntity lastJobStatus = jobStatus(subscriberAccountNumber, jobId, false);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
-            subscriber.setSubsStatus("DEACTIVATED");
-            subscriberRepo.save(subscriber);
+            subscriber.setStatus("ONHOLD");
+            hiveClientRepo.save(subscriber);
             return lastJobStatus;
         } else {
             return lastJobStatus;
@@ -393,7 +394,7 @@ public class AcsController {
         }
 
         // Fetch client from repository
-        Optional<subscriberEntity> clientOptional = subscriberRepo
+        Optional<HiveClient> clientOptional = hiveClientRepo
                 .findBySubscriberAccountNumber(subscriberAccountNumber);
         if (!clientOptional.isPresent()) {
 
@@ -408,10 +409,10 @@ public class AcsController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
-        subscriberEntity client = clientOptional.get();
+        HiveClient client = clientOptional.get();
 
         // Check if the subscriber is deactivated
-        if (client.getSubsStatus() == null || !client.getSubsStatus().equals("DEACTIVATED")) {
+        if (client.getStatus() == null || !client.getStatus().equalsIgnoreCase("ONHOLD")) {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
@@ -420,7 +421,7 @@ public class AcsController {
 
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-            response.put("message", "Subscriber not Inactive");
+            response.put("message", "Subscriber not on hold");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
@@ -494,8 +495,8 @@ public class AcsController {
         ResponseEntity lastJobStatus = jobStatus(subscriberAccountNumber, jobId, false);
 
         if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
-            client.setSubsStatus("ACTIVE");
-            subscriberRepo.save(client);
+            client.setStatus("ACTIVE");
+            hiveClientRepo.save(client);
             return lastJobStatus;
         } else {
             return lastJobStatus;
@@ -1100,7 +1101,7 @@ public class AcsController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        Optional<subscriberEntity> clientOptional = subscriberRepo
+        Optional<HiveClient> clientOptional = hiveClientRepo
                 .findBySubscriberAccountNumber(subscriberAccountNumber);
         if (!clientOptional.isPresent()) {
 
@@ -1115,9 +1116,9 @@ public class AcsController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
-        subscriberEntity client = clientOptional.get();
+        HiveClient client = clientOptional.get();
 
-        if (client.getSubsStatus() == null || !client.getSubsStatus().equals("DEACTIVATED")) {
+        if (client.getStatus() == null || !client.getStatus().equalsIgnoreCase("ONHOLD")) {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
@@ -1156,9 +1157,10 @@ public class AcsController {
             RestTemplate restTemplate = new RestTemplate(); // Consider using a RestTemplate bean
             String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
 
-            if (jsonResponse != null && jsonResponse.contains("Successful")) {
-                client.setSubsStatus("TERMINATED");
-                subscriberRepo.save(client);
+            if (jsonResponse != null && jsonResponse.toLowerCase().contains("successful")) {
+                // client.setStatus("TERMINATED");
+                // hiveClientRepo.save(client);
+                hiveClientRepo.delete(client);
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                         String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),

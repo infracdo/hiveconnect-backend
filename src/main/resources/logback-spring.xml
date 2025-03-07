@@ -13,7 +13,7 @@
         <file>./logs/access/audit.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- Roll files based on time, keep one file per day, and delete logs older than 7 days -->
-            <fileNamePattern>logs/audit.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>logs/access/audit.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>10MB</maxFileSize> <!-- Max size for each log file -->
             <maxHistory>7</maxHistory> <!-- Retain logs for 7 days -->
             <totalSizeCap>70MB</totalSizeCap> <!-- Retain total size of log files up to 70MB -->
@@ -28,7 +28,7 @@
         <file>./logs/error/error.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- Roll files based on size limit, max 10MB per log file -->
-            <fileNamePattern>logs/error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>logs/access/error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>10MB</maxFileSize> <!-- Max size for each log file -->
             <maxHistory>7</maxHistory> <!-- Retain logs for 7 days -->
         </rollingPolicy>

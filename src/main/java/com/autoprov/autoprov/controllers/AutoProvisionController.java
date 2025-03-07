@@ -175,7 +175,7 @@ public class AutoProvisionController {
         String acsPushResponse = executeInetAutoProv(accountNo, clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
 
-        if (acsPushResponse.contains("Successful")) { // TODO: revert to monitoring for INET
+        if (acsPushResponse.toLowerCase().contains("successful")) { // TODO: revert to monitoring for INET
             ResponseEntity responseEntity = executeInetMonitoring(accountNo, serialNumber, macAddress, clientName,
                     ipAddress, packageType, upstream,
                     downstream, oltIp);
@@ -449,7 +449,7 @@ public class AutoProvisionController {
         String acsResponse = executeInetAutoProv(accountNo, clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
 
-        if (acsResponse.contains("Successful")) {
+        if (acsResponse.toLowerCase().contains("successful")) {
             // SET BANDWIDTH LIMIT HERE
             String ansibleApiUrl = playbookBandwidthLimitationApiUrl + "launch/";
             String accessToken = ansibleAccessToken;
@@ -530,20 +530,20 @@ public class AutoProvisionController {
                 Optional<subscriberEntity> optionalClient = clientRepo.findBySubscriberAccountNumber(accountNo);
                 if (optionalClient.isPresent()) {
                     subscriberEntity client = optionalClient.get();
-                    client.setOnuDeviceName(deviceName);
-                    client.setOnuMacAddress(macAddress);
-                    client.setSubsStatus("ACTIVE");
-                    client.setIpAssigned(ipAddress);
-                    client.setBucketId("100");
-                    client.setOltReportedUpstream(upstream);
-                    client.setOltReportedDownstream(downstream);
-                    client.setOnuSerialNumber(serialNumber);
-                    client.setOltIp(oltIp);
-                    client.setPackageType(packageType);
-                    client.setSsidName(ssidName);
-                    client.setSite(site);
-                    client.setProvision("HiveConnect");
-                    clientRepo.save(client);
+                    // client.setOnuDeviceName(deviceName);
+                    // client.setOnuMacAddress(macAddress);
+                    // client.setSubsStatus("ACTIVE");
+                    // client.setIpAssigned(ipAddress);
+                    // client.setBucketId("100");
+                    // client.setOltReportedUpstream(upstream);
+                    // client.setOltReportedDownstream(downstream);
+                    // client.setOnuSerialNumber(serialNumber);
+                    // client.setOltIp(oltIp);
+                    // client.setPackageType(packageType);
+                    // client.setSsidName(ssidName);
+                    // client.setSite(site);
+                    // client.setProvision("HiveConnect");
+                    // clientRepo.save(client);
 
                     HiveClientService.addHiveNewClient(accountNo, client.getSubscriberName(), serialNumber, deviceName,
                             macAddress, oltIp, oltInterface,
@@ -551,6 +551,7 @@ public class AutoProvisionController {
                             ssidName, packageType, bandwidth[0], bandwidth[1]);
 
                     deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
+                    clientRepo.delete(client);
                 }
                 // END HERE
 
@@ -1972,25 +1973,28 @@ public class AutoProvisionController {
         Optional<subscriberEntity> optionalClient = clientRepo.findBySubscriberAccountNumber(accountNo);
         if (optionalClient.isPresent()) {
             subscriberEntity client = optionalClient.get();
-            client.setOnuDeviceName(deviceName);
-            client.setOnuMacAddress(macAddress);
-            client.setSubsStatus("ACTIVE");
-            client.setIpAssigned(ipAddress);
-            client.setBucketId("100");
-            client.setOltReportedUpstream(upstream);
-            client.setOltReportedDownstream(downstream);
-            client.setOnuSerialNumber(serialNumber);
-            client.setOltIp(oltIp);
-            client.setPackageType(packageType);
-            client.setSsidName(ssidName);
-            client.setSite(site);
-            client.setProvision("HiveConnect");
-            clientRepo.save(client);
+            // client.setOnuDeviceName(deviceName);
+            // client.setOnuMacAddress(macAddress);
+            // client.setSubsStatus("ACTIVE");
+            // client.setIpAssigned(ipAddress);
+            // client.setBucketId("100");
+            // client.setOltReportedUpstream(upstream);
+            // client.setOltReportedDownstream(downstream);
+            // client.setOnuSerialNumber(serialNumber);
+            // client.setOltIp(oltIp);
+            // client.setPackageType(packageType);
+            // client.setSsidName(ssidName);
+            // client.setSite(site);
+            // client.setProvision("HiveConnect");
+            // clientRepo.save(client);
 
             HiveClientService.addHiveNewClient(accountNo, client.getSubscriberName(), serialNumber, deviceName,
                     macAddress, oltIp, oltInterface,
                     ipAddress,
                     ssidName, packageType, bandwidth[0], bandwidth[1]);
+
+            clientRepo.delete(client);
+            
 
             // Optional<ClientDetail> optionalClientDetail =
             // clientDetailRepo.findByClientId(client.getId());
