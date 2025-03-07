@@ -51,9 +51,6 @@ public class PackageTypeController {
 
     @Autowired
     private LogService logService;
-
-    @Autowired
-    private JwtUtils jwtUtils;
     
 // POST END POINT add or create new subscriber endpoint
 public PackageTypeController(PackageTypeService packageTypeService ){
@@ -70,7 +67,7 @@ public ResponseEntity<?> createPackage(@Valid @RequestBody PackageTypeEntity pac
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType(),
                     String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse());
@@ -79,7 +76,7 @@ public ResponseEntity<?> createPackage(@Valid @RequestBody PackageTypeEntity pac
         logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType(),
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -89,7 +86,7 @@ public ResponseEntity<?> createPackage(@Valid @RequestBody PackageTypeEntity pac
         logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType(),
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
                     
         return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -140,7 +137,7 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), package_type,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         return new ResponseEntity<>(packageRepo.findBypackageId(package_type), HttpStatus.OK);
@@ -168,7 +165,7 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), packageType,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         return new ResponseEntity<>("Upstream: " + upstream + " Downstream: " + downstream, HttpStatus.OK);

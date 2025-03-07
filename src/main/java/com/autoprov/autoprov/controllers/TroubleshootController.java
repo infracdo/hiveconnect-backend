@@ -33,9 +33,6 @@ public class TroubleshootController {
     @Autowired
     private LogService logService;
 
-    @Autowired
-    private JwtUtils jwtUtils;
-
     @Async("asyncExecutor")
     @GetMapping("/getStatus/{device}")
     public String getOnuStatus(@PathVariable("device") String device, @RequestParam(required = false) String user,
@@ -78,7 +75,7 @@ public class TroubleshootController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), device,
                     String.valueOf(response.getStatusCode().value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return value;
@@ -87,7 +84,7 @@ public class TroubleshootController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), device,
                     String.valueOf(response.getStatusCode().value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         }

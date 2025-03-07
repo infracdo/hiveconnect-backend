@@ -66,9 +66,6 @@ public class subscriberController {
     @Autowired
     private LogService logService;
 
-    @Autowired
-    private JwtUtils jwtUtils;
-
     // POST END POINT add or create new subscriber endpoint
     public subscriberController(subscriberService SubscriberService, HiveClientService hiveclientService) {
         this.SubscriberService = SubscriberService;
@@ -88,7 +85,7 @@ public class subscriberController {
 
                     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberEntity.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -101,7 +98,7 @@ public class subscriberController {
 
                     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberEntity.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -115,7 +112,7 @@ public class subscriberController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberEntity.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
                     
             return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse());
@@ -124,7 +121,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberEntity.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -134,7 +131,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberEntity.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -155,7 +152,7 @@ public class subscriberController {
 
                     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -168,7 +165,7 @@ public class subscriberController {
 
                     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -180,7 +177,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -192,7 +189,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -205,7 +202,7 @@ public class subscriberController {
 
                     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -218,7 +215,7 @@ public class subscriberController {
 
                     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -237,7 +234,7 @@ public class subscriberController {
 
                     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse());
@@ -246,7 +243,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -256,7 +253,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), hiveClient.getSubscriberAccountNumber(),
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -280,7 +277,7 @@ public class subscriberController {
 
                     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -296,7 +293,7 @@ public class subscriberController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -313,7 +310,7 @@ public class subscriberController {
 
                         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -422,7 +419,7 @@ public class subscriberController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.ok(subscribers);
@@ -431,7 +428,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
@@ -449,7 +446,7 @@ public class subscriberController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.ok(provisionedSubscribers);
@@ -458,7 +455,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
@@ -476,7 +473,7 @@ public class subscriberController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.ok(migratingSubscribers);
@@ -485,7 +482,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
@@ -503,7 +500,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), id.toString(),
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.ok(subscriber);
@@ -511,7 +508,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), id.toString(),
                     String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -522,7 +519,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), id.toString(),
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -544,7 +541,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), id.toString(),
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.ok(hive);
@@ -552,7 +549,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), id.toString(),
                     String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
                     
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -563,7 +560,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), id.toString(),
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -584,7 +581,7 @@ public class subscriberController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.ok(hiveclients);
@@ -593,7 +590,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
@@ -632,7 +629,7 @@ public class subscriberController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             Map<String, Object> errorResponse = new LinkedHashMap<>();
@@ -651,7 +648,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 Map<String, Object> response = new LinkedHashMap<>();
@@ -673,7 +670,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 Map<String, Object> errorResponse = new LinkedHashMap<>();
@@ -688,7 +685,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             Map<String, Object> errorResponse = new LinkedHashMap<>();
@@ -719,7 +716,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.ok(responseList);
@@ -727,7 +724,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -738,7 +735,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
                     
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -767,7 +764,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNumber,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
                     
                 return ResponseEntity.ok(response);
@@ -775,7 +772,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNumber,
                     String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
                     
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -787,7 +784,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), accountNumber,
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -817,7 +814,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.ok(responseList);
@@ -825,7 +822,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -836,7 +833,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -854,7 +851,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.ok(clients);
@@ -862,7 +859,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -874,7 +871,7 @@ public class subscriberController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.CONFLICT)

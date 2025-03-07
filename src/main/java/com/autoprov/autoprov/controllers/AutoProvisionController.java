@@ -113,9 +113,6 @@ public class AutoProvisionController {
     @Autowired
     private LogService logService;
 
-    @Autowired
-    private JwtUtils jwtUtils;
-
     // General Exposed Endpoints ----------------------------
     // @Async("AsyncExecutor")
     // @GetMapping("/hello")
@@ -182,7 +179,7 @@ public class AutoProvisionController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(responseEntity.getStatusCode().value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return responseEntity;
@@ -193,7 +190,7 @@ public class AutoProvisionController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             Map<String, String> response = new HashMap<>();
@@ -507,7 +504,7 @@ public class AutoProvisionController {
 
                     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -557,7 +554,7 @@ public class AutoProvisionController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return lastJobStatus;
@@ -575,7 +572,7 @@ public class AutoProvisionController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 return lastJobStatus;
@@ -587,7 +584,7 @@ public class AutoProvisionController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             Map<String, String> response = new HashMap<>();
@@ -616,7 +613,7 @@ public class AutoProvisionController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             Map<String, String> response = new HashMap<>();
@@ -632,7 +629,7 @@ public class AutoProvisionController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             Map<String, String> response = new HashMap<>();
@@ -646,7 +643,7 @@ public class AutoProvisionController {
                 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 Map<String, String> response = new HashMap<>();
@@ -706,7 +703,7 @@ public class AutoProvisionController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                 String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                request.getHeader("Authorization"),
                 request.getHeader("User-Agent"));
 
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -718,7 +715,7 @@ public class AutoProvisionController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return lastJobStatus;
@@ -726,7 +723,7 @@ public class AutoProvisionController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return lastJobStatus;
@@ -848,7 +845,7 @@ public class AutoProvisionController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                 String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                request.getHeader("Authorization"),
                 request.getHeader("User-Agent"));
 
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -905,7 +902,7 @@ public class AutoProvisionController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return lastJobStatus;
@@ -915,7 +912,7 @@ public class AutoProvisionController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return lastJobStatus;
@@ -1119,7 +1116,7 @@ public class AutoProvisionController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
                 Map<String, String> response = new HashMap<>();
@@ -1134,7 +1131,7 @@ public class AutoProvisionController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                 String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                request.getHeader("Authorization"),
                 request.getHeader("User-Agent"));
 
                 Map<String, String> response = new HashMap<>();
@@ -1147,7 +1144,7 @@ public class AutoProvisionController {
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         Map<String, String> response = new HashMap<>();
@@ -1175,7 +1172,7 @@ public class AutoProvisionController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return handleJobFailure(jobId);
@@ -1188,7 +1185,7 @@ public class AutoProvisionController {
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         // Default response for successful job completion without credential generation
@@ -1387,7 +1384,7 @@ public class AutoProvisionController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             Map<String, String> response = new HashMap<>();
@@ -1402,7 +1399,7 @@ public class AutoProvisionController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), jobId,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             Map<String, String> response = new HashMap<>();
@@ -1661,7 +1658,7 @@ public class AutoProvisionController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return guangdaOltInterface;
@@ -1683,7 +1680,7 @@ public class AutoProvisionController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
                     
             return vsolOltInterface;
@@ -1693,7 +1690,7 @@ public class AutoProvisionController {
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
                     String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         return "No OLT Interface found";
@@ -1809,7 +1806,7 @@ public class AutoProvisionController {
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         return bandwidth;
@@ -1876,7 +1873,7 @@ public class AutoProvisionController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         Map<String, String> response = new HashMap<>();
@@ -1928,7 +1925,7 @@ public class AutoProvisionController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         return getOltDetails(jobId);
@@ -2008,7 +2005,7 @@ public class AutoProvisionController {
         
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
                     
         return "Check database";

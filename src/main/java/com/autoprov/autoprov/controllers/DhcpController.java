@@ -47,9 +47,6 @@ public class DhcpController {
     @Autowired
     private LogService logService;
 
-    @Autowired
-    private JwtUtils jwtUtils;
-
     // @Autowired
     // private NetworkService networkService;
 
@@ -62,7 +59,7 @@ public class DhcpController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getNetworkName(),
                     String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             ApiResponse response = new ApiResponse(HttpStatus.CREATED.value(), "Network created successfully");
@@ -72,7 +69,7 @@ public class DhcpController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getNetworkName(),
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             ApiResponse response = new ApiResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage());
@@ -89,7 +86,7 @@ public class DhcpController {
         
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         return new ResponseEntity<>(CidrRepo.getAllNetworks(), HttpStatus.OK);
@@ -103,7 +100,7 @@ public class DhcpController {
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         return new ResponseEntity<>(cidrIpAddresses, HttpStatus.OK);
@@ -124,7 +121,7 @@ public class DhcpController {
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlock,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         return new ResponseEntity<>(CidrBlockIps, HttpStatus.OK); 

@@ -2,20 +2,28 @@ package com.autoprov.autoprov.services;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.autoprov.autoprov.security.jwt.JwtUtils;
 
 @Service
 public class LogService {
     private static final Logger logger = LoggerFactory.getLogger(LogService.class);
     private static final Logger apiLogger = LoggerFactory.getLogger("apiLogger"); // For audit logs (API_LOG)
-    private static final Logger apiErrorLogger = LoggerFactory.getLogger("apiErrorLogger"); // For error logs (ERROR_LOG)
+    private static final Logger apiErrorLogger = LoggerFactory.getLogger("apiErrorLogger"); // For error logs
+                                                                                            // (ERROR_LOG)
     private static final Logger frontendLogger = LoggerFactory.getLogger("frontendLogger"); // For frontend logs
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     public void logInfo(String message) {
         logger.info(message);
     }
 
-    public void logApiAccess(String user, String action, String method, String endpoint, String payload, String status, String ip, String client, String agent) {
+    public void logApiAccess(String user, String action, String method, String endpoint, String payload, String status,
+            String ip, String client, String agent) {
         if (user == null || user.trim().equals("")) {
             user = "unknown";
         }
@@ -25,14 +33,20 @@ public class LogService {
         if (payload == null || payload.trim().equals("")) {
             payload = "none";
         }
+
+        if (client != null && client.contains("Bearer ")) {
+            client = jwtUtils.getUserNameFromJwtToken(client.substring(7));
+        } else {
+            client = "none";
+        }
         apiLogger.info(String.format(
-            "User: %s | Action: %s | Method: %s | Endpoint: %s | Payload: %s | Status: %s | IP: %s | Client: %s | Agent: %s",
-            user, action, method, endpoint, payload, status, ip, client, agent
-        ));
+                "User: %s | Action: %s | Method: %s | Endpoint: %s | Payload: %s | Status: %s | IP: %s | Client: %s | Agent: %s",
+                user, action, method, endpoint, payload, status, ip, client, agent));
         System.out.println("created access log");
     }
 
-    public void logApiError(String user, String action, String method, String endpoint, String payload, String status, String message, StackTraceElement[] stacktrace, String ip, String client, String agent) {
+    public void logApiError(String user, String action, String method, String endpoint, String payload, String status,
+            String message, StackTraceElement[] stacktrace, String ip, String client, String agent) {
         if (user == null || user.trim().equals("")) {
             user = "unknown";
         }
@@ -42,15 +56,21 @@ public class LogService {
         if (payload == null || payload.trim().equals("")) {
             payload = "none";
         }
+        if (client != null && client.contains("Bearer ")) {
+            client = jwtUtils.getUserNameFromJwtToken(client.substring(7));
+        } else {
+            client = "none";
+        }
         apiErrorLogger.error(String.format(
-            "User: %s | Action: %s | Method: %s | Endpoint: %s | Payload: %s | Status: %s | Message: %s | StackTrace: %s | IP: %s | Client: %s | Agent: %s",
-            user, action, method, endpoint, payload, status, message, stacktrace[stacktrace.length - 1], ip, client, agent
-        ));
+                "User: %s | Action: %s | Method: %s | Endpoint: %s | Payload: %s | Status: %s | Message: %s | StackTrace: %s | IP: %s | Client: %s | Agent: %s",
+                user, action, method, endpoint, payload, status, message, stacktrace[stacktrace.length - 1], ip, client,
+                agent));
         System.out.println("created error log");
     }
 
     // Method for frontend logs
-    public void logFrontendAction(String user, String action, String page, String details, String ip, String client, String agent) {
+    public void logFrontendAction(String user, String action, String page, String details, String ip, String client,
+            String agent) {
         if (user == null || user.trim().equals("")) {
             user = "unknown";
         }
@@ -61,9 +81,8 @@ public class LogService {
             details = "none";
         }
         frontendLogger.info(String.format(
-            "User: %s | Action: %s | Page: %s | Details: %s | IP: %s | Client: %s | Agent: %s",
-            user, action, page, details, ip, client, agent
-        ));
+                "User: %s | Action: %s | Page: %s | Details: %s | IP: %s | Client: %s | Agent: %s",
+                user, action, page, details, ip, client, agent));
         System.out.println("created frontend log");
     }
 

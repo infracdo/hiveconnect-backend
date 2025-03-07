@@ -32,9 +32,6 @@ public class oltController {
 
     @Autowired
     private LogService logService;
-
-    @Autowired
-    private JwtUtils jwtUtils;
     
     @Async("asyncExecutor")
     @PostMapping("/addnewolt")
@@ -45,7 +42,7 @@ public class oltController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltEntity.getOltName(),
                     String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.CREATED).body(createdOlt);
@@ -54,7 +51,7 @@ public class oltController {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), oltEntity.getOltName(),
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
@@ -71,7 +68,7 @@ public class oltController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltName,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.OK).body(oltEntity.get());
@@ -79,7 +76,7 @@ public class oltController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltName,
                     String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
@@ -96,7 +93,7 @@ public class oltController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltIp,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.OK).body(oltEntity.get());
@@ -104,7 +101,7 @@ public class oltController {
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltIp,
                     String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
@@ -122,7 +119,7 @@ public class oltController {
         
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    jwtUtils.getUserNameFromJwtToken(request.getHeader("Authorization").substring(7)),
+                    request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         return ResponseEntity.status(HttpStatus.OK).body(olts);
