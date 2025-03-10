@@ -787,7 +787,7 @@ public class AcsController {
 
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", error.toString());
+            response.put("message", "Job failed. " + error.toString());
             response.put("awx_job_id: ", jobId.toString());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 
@@ -1363,7 +1363,11 @@ public class AcsController {
                 jobId = jsonNode.get("id").asText();
 
             } else {
-                System.out.println("Request failed. Response: " + playbookResponse.getStatusCode());
+                System.out.println("Request failed. Response: " + playbookResponse.getStatusCode() + " - "
+                        + playbookResponse.getBody());
+                
+                response.put("timestamp", timestamp);
+                response.put("message", "Playbook error. " + playbookResponse.getBody());
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -1371,7 +1375,7 @@ public class AcsController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+                return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
 
             ResponseEntity lastJobStatus = jobStatus(subscriberAccountNumber, jobId, false);
