@@ -642,7 +642,7 @@ public class subscriberController {
 
         try {
             // Fetch subscriber details from the service
-            subscriberEntity subscriber = SubscriberService.getSubscriberAccountInfo(subscriberAccountNumber);
+            HiveClient subscriber = hiveclientService.getHiveClientByAccountNumber(subscriberAccountNumber);
 
             if (subscriber != null) {
 
@@ -660,8 +660,8 @@ public class subscriberController {
                 Map<String, Object> data = new LinkedHashMap<>();
                 data.put("subscriberAccountNumber", subscriber.getSubscriberAccountNumber());
                 data.put("packageType", subscriber.getPackageType());
-                data.put("fullName", subscriber.getSubscriberName());
-                data.put("status", subscriber.getSubsStatus());
+                data.put("fullName", subscriber.getClientName());
+                data.put("status", subscriber.getStatus());
 
                 response.put("data", data);
 
