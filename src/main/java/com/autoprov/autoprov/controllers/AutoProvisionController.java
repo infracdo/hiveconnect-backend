@@ -1124,7 +1124,6 @@ public class AutoProvisionController {
                 response.put("message", "All Clear. Proceed to Provisioning!");
                 response.put("body", checkingResponse);
                 return ResponseEntity.status(HttpStatus.OK).body(response);
-
             }
 
             else {
@@ -1220,7 +1219,6 @@ public class AutoProvisionController {
         response.put("message", "Job completed successfully.");
         response.put("awx_job_id", jobId);
         return ResponseEntity.status(HttpStatus.OK).body(response);
-
     }
 
     // Method to monitor job status
