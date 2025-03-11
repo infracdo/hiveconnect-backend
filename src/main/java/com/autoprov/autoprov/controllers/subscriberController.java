@@ -114,8 +114,7 @@ public class subscriberController {
             }
 
             // Check if the subscriber name is empty or too long
-            if (subscriberEntity.getSubscriberName() == null || subscriberEntity.getSubscriberName().trim().isEmpty()
-                    || subscriberEntity.getSubscriberName().length() > 50) {
+            if (subscriberEntity.getSubscriberName() == null || subscriberEntity.getSubscriberName().trim().isEmpty()) {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberEntity.getSubscriberAccountNumber(),
@@ -463,6 +462,7 @@ public class subscriberController {
     }
 
     // GET endpoint to retrieve all subscribers
+    // USED IN FRONTEND TO GET FOR PROVISIONED SUBSCRIBERS
     @Async("asyncExecutor")
     @GetMapping("/getsubscribers")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
@@ -545,6 +545,7 @@ public class subscriberController {
     }
 
     // GET endpoint to retrieve subscriber by id
+    // USED IN FRONTEND TO GET SUBSCRIBERS FOR PROVISIONING 
     @Async("asyncExecutor")
     @GetMapping("/getsubscriberbyid/{id}")
     public ResponseEntity<?> getSubscriberById(@PathVariable Long id, @RequestParam(required = false) String user,

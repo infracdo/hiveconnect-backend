@@ -221,7 +221,7 @@ public class AcsController {
 
             // Execute playbook to deactivate client
             String apiUrl = playbookOnholdClientApiUrl + "launch/";
-            System.out.println("Deactivate Client API URL: " + apiUrl);
+            System.out.println("Onhold Client API URL: " + apiUrl);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -976,7 +976,7 @@ public class AcsController {
         // }
 
         // Fetch client from repository
-        Optional<subscriberEntity> clientOptional = subscriberRepo
+        Optional<HiveClient> clientOptional = hiveClientRepo
                 .findBySubscriberAccountNumber(subscriberAccountNumber);
         if (!clientOptional.isPresent()) {
 
@@ -993,7 +993,7 @@ public class AcsController {
 
         try {
             // Get the client entity
-            subscriberEntity client = clientOptional.get();
+            HiveClient client = clientOptional.get();
 
             // Update the client entity with new package type
             client.setPackageType(packageType);
@@ -1002,7 +1002,7 @@ public class AcsController {
             // Example: client.setUpdatedAt(LocalDateTime.now());
 
             // Save the updated client entity
-            subscriberRepo.save(client);
+            hiveClientRepo.save(client);
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
