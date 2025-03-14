@@ -432,7 +432,6 @@ public class AutoProvisionController {
             upstream = packageT.getUpstream();
             downstream = packageT.getDownstream();
             packageName = packageT.getPackageType();
-
         }
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
@@ -500,7 +499,7 @@ public class AutoProvisionController {
             } else {
                 System.out.println("Request failed. Response: " + response.getStatusCode());
                 if (showBody)
-                    System.out.println(response.getBody());
+                    System.out.println("Request failed. Response body: " + response.getBody());
 
                     logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
@@ -1068,16 +1067,20 @@ public class AutoProvisionController {
 
             checkingResponse = responseEntity.getBody();
 
-            if (checkingResponse == null || !checkingResponse.contains("PLAY RECAP")) {
+            if (checkingResponse.contains("ERROR!") && checkingResponse.contains("the playbook:") && checkingResponse.contains("could not be found")) {
+                break;
+            }
 
+            if (checkingResponse == null || !checkingResponse.contains("PLAY RECAP")) {
                 tries.append("|");
                 System.out.println(tries.toString());
                 continue;
             }
+            
         }
 
         if (showBody)
-            System.out.println(checkingResponse);
+            System.out.println("checking response " + checkingResponse);
         StringBuilder errors = new StringBuilder();
         Boolean errorExisting = false;
 
@@ -1090,7 +1093,10 @@ public class AutoProvisionController {
         String subscriberExistsString = "Subscriber '" + deviceName + "' already exist in Netbox";
         String ipAddressExistsString = "IP Address '" + ipAddress + " ' already exist in Netbox";
 
-        if (checkingResponse.contains("PLAY RECAP")) {
+        if (checkingResponse.contains("ERROR!") && checkingResponse.contains("the playbook:") && checkingResponse.contains("could not be found")) {
+            errors.append("Cannot locate the playbook.");
+            errorExisting = true;
+        } else if (checkingResponse.contains("PLAY RECAP")) {
             if (checkingResponse.contains(onuCheckString) || checkingResponse.contains(onuCheckStringAlt))
                 System.out.println("Onu OK");
             else {
@@ -1113,7 +1119,6 @@ public class AutoProvisionController {
             }
 
             if (!errorExisting) {
-
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
@@ -1125,7 +1130,6 @@ public class AutoProvisionController {
                 response.put("body", checkingResponse);
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             }
-
             else {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
@@ -1151,7 +1155,6 @@ public class AutoProvisionController {
         response.put("message", "No Result");
         response.put("body", checkingResponse);
         return ResponseEntity.status(HttpStatus.OK).body(response);
-
     }
 
     // Troubleshooting
@@ -1168,7 +1171,7 @@ public class AutoProvisionController {
 
         // Handle job failure
         if (lastJobStatus.contains("fail")) {
-
+            System.out.println("lastJobStatus " + lastJobStatus);
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
@@ -1205,6 +1208,7 @@ public class AutoProvisionController {
 
         // Handle job failure
         if (lastJobStatus.contains("fail")) {
+            System.out.println("lastJobStatus " + lastJobStatus);
             return handleJobFailure(jobId);
         }
 
@@ -1296,10 +1300,12 @@ public class AutoProvisionController {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
                 String.class);
+        System.out.println("handle job failure response " + responseEntity);
+        
         String stderr = responseEntity.getBody().toString();
 
         if (showBody)
-            System.out.println(stderr);
+            System.out.println("Failure " + stderr);
         StringBuilder error = new StringBuilder();
 
         try {
