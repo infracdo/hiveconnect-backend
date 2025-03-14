@@ -250,7 +250,7 @@ public class AcsController {
             jsonBody.append("}");
 
             String jsonRequestBody = jsonBody.toString();
-            System.out.println(jsonRequestBody);
+            System.out.println("request body " + jsonRequestBody);
 
             HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
             RestTemplate restTemplate = new RestTemplate();
@@ -550,7 +550,7 @@ public class AcsController {
             jsonBody.append("}");
 
             String jsonRequestBody = jsonBody.toString();
-            System.out.println(jsonRequestBody);
+            System.out.println("request body " + jsonRequestBody);
 
             HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
             RestTemplate restTemplate = new RestTemplate();
@@ -1341,7 +1341,7 @@ public class AcsController {
             jsonBody.append("}");
 
             String jsonRequestBody = jsonBody.toString();
-            System.out.println(jsonRequestBody);
+            System.out.println("request body " + jsonRequestBody);
 
             HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
             RestTemplate restTemplate = new RestTemplate();
@@ -1610,7 +1610,7 @@ public class AcsController {
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
-        System.out.println(jsonRequestBody);
+        System.out.println("request body " + jsonRequestBody);
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
@@ -1637,7 +1637,7 @@ public class AcsController {
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
-        System.out.println(jsonRequestBody);
+        System.out.println("request body " + jsonRequestBody);
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
@@ -1668,7 +1668,7 @@ public class AcsController {
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
-        System.out.println(jsonRequestBody);
+        System.out.println("request body " + jsonRequestBody);
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
@@ -1696,7 +1696,7 @@ public class AcsController {
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
-        System.out.println(jsonRequestBody);
+        System.out.println("request body " + jsonRequestBody);
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
@@ -1731,7 +1731,7 @@ public class AcsController {
         jsonBody.append("}");
 
         String jsonRequestBody = jsonBody.toString();
-        System.out.println(jsonRequestBody);
+        System.out.println("request body " + jsonRequestBody);
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);

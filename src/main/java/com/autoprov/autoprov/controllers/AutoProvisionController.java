@@ -220,7 +220,7 @@ public class AutoProvisionController {
             PackageTypeEntity packageT = optionalPackage.get();
 
             if (showBody)
-                System.out.println(packageT.toString());
+                System.out.println("package details " + packageT.toString());
 
             packageName = packageT.getPackageType();
             upstream = packageT.getUpstream();
@@ -234,7 +234,7 @@ public class AutoProvisionController {
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
 
         if (showBody)
-            System.out.println(deviceName);
+            System.out.println("device name " + deviceName);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -264,7 +264,7 @@ public class AutoProvisionController {
                 +
                 "}";
         if (showBody)
-            System.out.println(requestBody);
+            System.out.println("request body " + requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -278,7 +278,7 @@ public class AutoProvisionController {
         if (response.getStatusCode() == HttpStatus.CREATED) {
             System.out.println("Request successful.");
             if (showBody)
-                System.out.println(response.getBody());
+                System.out.println("response body " + response.getBody());
 
             String responseBody = response.getBody();
             ObjectMapper objectMapper = new ObjectMapper();
@@ -288,7 +288,7 @@ public class AutoProvisionController {
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             if (showBody)
-                System.out.println(response.getBody());
+                System.out.println("response body " + response.getBody());
             
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -367,7 +367,7 @@ public class AutoProvisionController {
 
         String jsonRequestBody = jsonBody.toString();
         if (showBody)
-            System.out.println(jsonRequestBody);
+            System.out.println("request body " + jsonRequestBody);
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
@@ -428,7 +428,7 @@ public class AutoProvisionController {
         if (optionalPackage.isPresent()) {
             PackageTypeEntity packageT = optionalPackage.get();
             if (showBody)
-                System.out.println(packageT.toString());
+                System.out.println("package details " + packageT.toString());
             upstream = packageT.getUpstream();
             downstream = packageT.getDownstream();
             packageName = packageT.getPackageType();
@@ -489,7 +489,7 @@ public class AutoProvisionController {
             if (response.getStatusCode() == HttpStatus.CREATED) {
                 System.out.println("Request successful.");
                 if (showBody)
-                    System.out.println(response.getBody());
+                    System.out.println("response body " + response.getBody());
 
                 String responseBody = response.getBody();
                 ObjectMapper objectMapper = new ObjectMapper();
@@ -654,7 +654,7 @@ public class AutoProvisionController {
         }
 
         String apiUrl = playbookMigrationUrl + "launch/";
-        System.out.println(apiUrl);
+        System.out.println("migration url " + apiUrl);
 
         // Create headers with Content-Type set to application/json
         HttpHeaders headers = new HttpHeaders();
@@ -672,7 +672,7 @@ public class AutoProvisionController {
 
         String requestBody = jsonBody.toString();
         if (showBody)
-            System.out.println(requestBody);
+            System.out.println("request body " + requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -688,7 +688,7 @@ public class AutoProvisionController {
         if (response.getStatusCode() == HttpStatus.CREATED) {
             System.out.println("Request successful.");
             if (showBody)
-                System.out.println(response.getBody());
+                System.out.println("response body " + response.getBody());
 
             String responseBody = response.getBody();
             ObjectMapper objectMapper = new ObjectMapper();
@@ -698,7 +698,7 @@ public class AutoProvisionController {
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             if (showBody)
-                System.out.println(response.getBody());
+                System.out.println("response body " + response.getBody());
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                 String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
@@ -756,7 +756,7 @@ public class AutoProvisionController {
                 .getIpAddress();
 
         if (showBody)
-            System.out.println(ipAddRepo
+            System.out.println("avaiable ip " + ipAddRepo
                     .getOneAvailableIpAddressUnderSite(site, "Private"));
 
         String packageType = params.get("packageType");
@@ -774,7 +774,7 @@ public class AutoProvisionController {
         if (optionalPackage.isPresent()) {
             PackageTypeEntity packageT = optionalPackage.get();
             if (showBody)
-                System.out.println(packageT.toString());
+                System.out.println("package details " + packageT.toString());
             upstream = packageT.getUpstream();
             downstream = packageT.getDownstream();
             packageName = packageT.getPackageType();
@@ -786,7 +786,7 @@ public class AutoProvisionController {
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
         if (showBody)
-            System.out.println(deviceName);
+            System.out.println("device name " + deviceName);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -816,7 +816,7 @@ public class AutoProvisionController {
                 +
                 "}";
         if (showBody)
-            System.out.println(requestBody);
+            System.out.println("request body " + requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -830,13 +830,12 @@ public class AutoProvisionController {
         if (response.getStatusCode() == HttpStatus.CREATED) {
             System.out.println("Request successful.");
             if (showBody)
-                System.out.println(response.getBody());
+                System.out.println("response body " + response.getBody());
 
             String responseBody = response.getBody();
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(responseBody);
             jobId = jsonNode.get("id").asText();
-
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             if (showBody)
@@ -906,8 +905,8 @@ public class AutoProvisionController {
 
             return lastJobStatus;
         } else {
-            AcsController.deleteWanInstance(serialNumber);
-            AcsController.rollbackSsid(serialNumber);
+            // AcsController.deleteWanInstance(serialNumber);
+            // AcsController.rollbackSsid(serialNumber);
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                     String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
@@ -1012,7 +1011,7 @@ public class AutoProvisionController {
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
 
         if (showBody)
-            System.out.println(deviceName);
+            System.out.println("device name " + deviceName);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -1035,7 +1034,7 @@ public class AutoProvisionController {
                 +
                 "}";
         if (showBody)
-            System.out.println(requestBody);
+            System.out.println("request body " + requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -1049,7 +1048,7 @@ public class AutoProvisionController {
         jobId = jsonNode.get("id").asText();
 
         if (showBody)
-            System.out.println(responseBody); // TODO: retrieve all string because limited string is printed
+            System.out.println("response body " + responseBody); // TODO: retrieve all string because limited string is printed
         System.out.println("Checking Job Id " + jobId);
 
         ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
@@ -1262,7 +1261,7 @@ public class AutoProvisionController {
         }
 
         if (showBody)
-            System.out.println(responseBody);
+            System.out.println("response body " + responseBody);
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode;
@@ -1670,7 +1669,7 @@ public class AutoProvisionController {
             System.out.println("OLT Interface Check: Guangda OLT Interface Match not found");
         }
 
-        System.out.println(responseBody);
+        System.out.println("response body " + responseBody);
         Pattern pattern = Pattern.compile("\"stdout\": \"(.*?)\"");
 
         // Create a matcher with the input string
@@ -1736,7 +1735,7 @@ public class AutoProvisionController {
             System.out.println("OLT Interface Check: Guangda OLT Interface Match not found");
         }
 
-        System.out.println(responseBody);
+        System.out.println("response body " + responseBody);
         Pattern pattern = Pattern.compile("\"stdout\": \"(.*?)\"");
 
         // Create a matcher with the input string
@@ -1780,7 +1779,7 @@ public class AutoProvisionController {
                 String.class);
 
         String responseBody = responseEntity.getBody();
-        System.out.println(responseBody);
+        System.out.println("response body " + responseBody);
 
         String upstreamValue = "";
         String downstreamValue = "";
@@ -1834,7 +1833,7 @@ public class AutoProvisionController {
                 String.class);
 
         String responseBody = responseEntity.getBody();
-        System.out.println(responseBody);
+        System.out.println("response body " + responseBody);
 
         String upstreamValue = "";
         String downstreamValue = "";

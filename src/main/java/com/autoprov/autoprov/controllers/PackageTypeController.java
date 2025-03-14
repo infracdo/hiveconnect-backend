@@ -157,7 +157,7 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
         if (optionalPackage.isPresent()) {
 
             PackageTypeEntity packageT = optionalPackage.get();
-            System.out.println(packageT.toString());
+            System.out.println("package details " + packageT.toString());
             upstream = convertToKbps(packageT.getUpstream());
             downstream = convertToKbps(packageT.getDownstream());
             packageName = packageT.getPackageType();

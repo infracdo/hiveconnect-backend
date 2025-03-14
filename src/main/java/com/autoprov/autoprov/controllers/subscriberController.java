@@ -434,7 +434,7 @@ public class subscriberController {
                 HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
 
                 try {
-                    System.out.println(entity);
+                    System.out.println("request entity " + entity);
                     ResponseEntity<String> absResponse = restTemplate.exchange(absUrl,
                             HttpMethod.POST, entity,
                             String.class);

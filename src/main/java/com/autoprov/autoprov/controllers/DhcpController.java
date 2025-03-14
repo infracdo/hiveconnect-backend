@@ -117,7 +117,7 @@ public class DhcpController {
         List<CidrIpAddress> CidrBlockIps = new ArrayList<>();
         String cidrBlockPath = cidrBlock;
         cidrBlock = cidrBlock.substring(0, (cidrBlock.lastIndexOf(".")));
-        System.out.println(cidrBlock);
+        System.out.println("cidrblock " + cidrBlock);
         ipAddRepo.findAllUnderCidrBlock(cidrBlock).forEach(CidrBlockIps::add);
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlockPath,
