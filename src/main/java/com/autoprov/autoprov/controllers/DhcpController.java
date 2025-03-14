@@ -57,7 +57,7 @@ public class DhcpController {
         try {
             dhcpService.createNetwork(cidrBlockDTO);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getNetworkName(),
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getCidrBlock(),
                     String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -66,7 +66,7 @@ public class DhcpController {
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (Exception e) {
 
-            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getNetworkName(),
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getCidrBlock(),
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),

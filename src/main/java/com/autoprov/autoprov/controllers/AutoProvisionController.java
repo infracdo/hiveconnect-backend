@@ -177,7 +177,7 @@ public class AutoProvisionController {
                     ipAddress, packageType, upstream,
                     downstream, oltIp);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                     String.valueOf(responseEntity.getStatusCode().value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -188,7 +188,7 @@ public class AutoProvisionController {
             // AcsController.deleteWanInstance(serialNumber);
             AcsController.rollbackSsid(serialNumber);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -436,7 +436,7 @@ public class AutoProvisionController {
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
         if (showBody)
-            System.out.println(deviceName);
+            System.out.println("device name" + deviceName);
 
         // ACS Processes
         Optional<CidrIpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
@@ -475,7 +475,7 @@ public class AutoProvisionController {
                     +
                     "}";
             if (showBody)
-                System.out.println(requestBody);
+                System.out.println("request body " + requestBody);
 
             HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -501,7 +501,7 @@ public class AutoProvisionController {
                 if (showBody)
                     System.out.println("Request failed. Response body: " + response.getBody());
 
-                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -551,7 +551,7 @@ public class AutoProvisionController {
                 }
                 // END HERE
 
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                     String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -569,7 +569,7 @@ public class AutoProvisionController {
                 AcsController.deleteWanInstance(serialNumber);
                 AcsController.rollbackSsid(serialNumber);
 
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                     String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -581,7 +581,7 @@ public class AutoProvisionController {
             AcsController.deleteWanInstance(serialNumber);
             AcsController.rollbackSsid(serialNumber);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -840,9 +840,9 @@ public class AutoProvisionController {
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             if (showBody)
-                System.out.println(response.getBody());
+                System.out.println("Request failed. Response body: " + response.getBody());
 
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                 String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
                 request.getHeader("Authorization"),
                 request.getHeader("User-Agent"));
@@ -899,7 +899,7 @@ public class AutoProvisionController {
             // deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
             // }
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                     String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -909,7 +909,7 @@ public class AutoProvisionController {
             AcsController.deleteWanInstance(serialNumber);
             AcsController.rollbackSsid(serialNumber);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                     String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -1067,7 +1067,7 @@ public class AutoProvisionController {
 
             checkingResponse = responseEntity.getBody();
 
-            if (checkingResponse.contains("ERROR!") && checkingResponse.contains("the playbook:") && checkingResponse.contains("could not be found")) {
+            if (checkingResponse.contains("ERROR!") && checkingResponse.contains("the playbook:") && checkingResponse.contains("could not be found")) { // added because of infinite loop if playbook cannot be found
                 break;
             }
 
@@ -1119,7 +1119,7 @@ public class AutoProvisionController {
             }
 
             if (!errorExisting) {
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -1132,7 +1132,7 @@ public class AutoProvisionController {
             }
             else {
 
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                 String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
                 request.getHeader("Authorization"),
                 request.getHeader("User-Agent"));
@@ -1145,7 +1145,7 @@ public class AutoProvisionController {
             }
         }
 
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -1172,7 +1172,7 @@ public class AutoProvisionController {
         // Handle job failure
         if (lastJobStatus.contains("fail")) {
             System.out.println("lastJobStatus " + lastJobStatus);
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ jobId,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -1185,7 +1185,7 @@ public class AutoProvisionController {
             return generateCredentials(accountNo, jobId, user, action, request);
         }
 
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ jobId,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -1330,7 +1330,7 @@ public class AutoProvisionController {
             if (stderr.contains("FAILED!") && stderr.contains("mac-address-table"))
                 error.append("Error on MAC Address Filtering.");
 
-            System.out.println("Errors: " + stderr);
+            System.out.println("errors found " + error);
 
             Map<String, String> response = new HashMap<>();
             response.put("status", "500");
@@ -1386,7 +1386,7 @@ public class AutoProvisionController {
             String newSsid = accountNo.replace(" ", "_");
             String password = "" + newSsid + "1234";
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ jobId,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -1400,7 +1400,7 @@ public class AutoProvisionController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
 
-            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), jobId,
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ jobId,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
@@ -2007,7 +2007,7 @@ public class AutoProvisionController {
 
         }
         
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo +"/"+ serialNumber +"/"+ oltIp +"/"+ packageType,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));

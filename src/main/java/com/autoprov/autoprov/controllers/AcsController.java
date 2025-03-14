@@ -940,7 +940,7 @@ public class AcsController {
         // Check if the subscriber account number is empty or null
         if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber +"/"+ packageType,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -954,7 +954,7 @@ public class AcsController {
         // Check if the package type is empty or null
         if (packageType == null || packageType.isEmpty()) {
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber +"/"+ packageType,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -980,7 +980,7 @@ public class AcsController {
                 .findBySubscriberAccountNumber(subscriberAccountNumber);
         if (!clientOptional.isPresent()) {
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber +"/"+ packageType,
                     String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -1004,7 +1004,7 @@ public class AcsController {
             // Save the updated client entity
             hiveClientRepo.save(client);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber +"/"+ packageType,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -1021,7 +1021,7 @@ public class AcsController {
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
             response.put("message", "An unexpected error occurred: " + e.getMessage());
 
-            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber +"/"+ packageType,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),

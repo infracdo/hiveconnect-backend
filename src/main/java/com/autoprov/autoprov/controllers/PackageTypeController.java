@@ -65,7 +65,7 @@ public ResponseEntity<?> createPackage(@Valid @RequestBody PackageTypeEntity pac
     try {
         PackageTypeEntity savedPackage = packageTypeService.savePackage(packageTypeEntity);
 
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType(),
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType() +"/"+ packageTypeEntity.getUpstream() +"/"+ packageTypeEntity.getDownstream(),
                     String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -73,7 +73,7 @@ public ResponseEntity<?> createPackage(@Valid @RequestBody PackageTypeEntity pac
         return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse());
     } catch (SubscriberAlreadyExistsException e) {
 
-        logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType(),
+        logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType() +"/"+ packageTypeEntity.getUpstream() +"/"+ packageTypeEntity.getDownstream(),
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
@@ -83,7 +83,7 @@ public ResponseEntity<?> createPackage(@Valid @RequestBody PackageTypeEntity pac
                              .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving package. package already exists"));
     } catch (Exception e) {
 
-        logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType(),
+        logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType() +"/"+ packageTypeEntity.getUpstream() +"/"+ packageTypeEntity.getDownstream(),
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),

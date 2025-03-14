@@ -98,7 +98,7 @@ public class AuthController {
             @RequestParam(required = false) String action, HttpServletRequest request) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername(),
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername() +"/"+ signUpRequest.getEmail() +"/"+ signUpRequest.getRole(),
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -110,7 +110,7 @@ public class AuthController {
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername(),
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername() +"/"+ signUpRequest.getEmail() +"/"+ signUpRequest.getRole(),
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -158,7 +158,7 @@ public class AuthController {
         new_user.setRoles(roles);
         userRepository.save(new_user);
 
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername(),
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername() +"/"+ signUpRequest.getEmail() +"/"+ signUpRequest.getRole(),
                 String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                 request.getHeader("Authorization"),
                 request.getHeader("User-Agent"));
