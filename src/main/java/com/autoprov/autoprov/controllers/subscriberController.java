@@ -108,22 +108,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "Subscriber account number is empty"));
-            }
-
-            Optional<HiveClient> clientOptional = hiveClientRepository
-                    .findBySubscriberAccountNumber(subscriberEntity.getSubscriberAccountNumber());
-            if (clientOptional.isPresent()) {
-
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
-                        subscriberEntity.getSubscriberAccountNumber() +"/"+ subscriberEntity.getSubscriberName() +"/"+ subscriberEntity.getPackageType() +"/"+ subscriberEntity.getProvision() +"/"+ subscriberEntity.getSubsStatus(),
-                        String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
-                        request.getHeader("Authorization"),
-                        request.getHeader("User-Agent"));
-
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(createErrorResponse(HttpStatus.CONFLICT,
-                                "Subscriber already exists"));
+                                "Subscriber account number is missing/invalid"));
             }
 
             // Check if the subscriber name is empty or too long
@@ -138,7 +123,22 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "Subscriber name is empty"));
+                                "Subscriber name is missing/invalid"));
+            }
+
+            Optional<HiveClient> clientOptional = hiveClientRepository
+                    .findBySubscriberAccountNumber(subscriberEntity.getSubscriberAccountNumber());
+            if (clientOptional.isPresent()) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                        subscriberEntity.getSubscriberAccountNumber() +"/"+ subscriberEntity.getSubscriberName() +"/"+ subscriberEntity.getPackageType() +"/"+ subscriberEntity.getProvision() +"/"+ subscriberEntity.getSubsStatus(),
+                        String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(createErrorResponse(HttpStatus.CONFLICT,
+                                "Subscriber with this account number already exists"));
             }
 
             // Set status to NEW
@@ -164,18 +164,18 @@ public class subscriberController {
 
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(createErrorResponse(HttpStatus.CONFLICT,
-                            "Subscriber account number already exist"));
+                            e.getMessage()));
         } catch (Exception e) {
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberEntity.getSubscriberAccountNumber() +"/"+ subscriberEntity.getSubscriberName() +"/"+ subscriberEntity.getPackageType() +"/"+ subscriberEntity.getProvision() +"/"+ subscriberEntity.getSubsStatus(),
-                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(createErrorResponse(HttpStatus.CONFLICT,
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
                             "Error saving the account: " + e.getMessage()));
         }
     }
@@ -324,13 +324,13 @@ public class subscriberController {
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
                     hiveClient.getSubscriberAccountNumber() +"/"+ hiveClient.getClientName() +"/"+ hiveClient.getOnuDeviceName() +"/"+ hiveClient.getPackageType() +"/"+ hiveClient.getProvision() +"/"+ hiveClient.getStatus(),
-                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(createErrorResponse(HttpStatus.CONFLICT,
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
                             "Error saving the account: " + e.getMessage()));
         }
     }
@@ -524,7 +524,7 @@ public class subscriberController {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("timestamp", LocalDateTime.now().format(DATE_TIME_FORMATTER));
         response.put("status", HttpStatus.CREATED.value());
-        response.put("message", "Subscriber successfully created");
+        response.put("message", "Subscriber created successfully");
         return response;
     }
 
@@ -781,7 +781,7 @@ public class subscriberController {
             errorResponse.put("timestamp",
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             errorResponse.put("status", HttpStatus.BAD_REQUEST.value());
-            errorResponse.put("message", "Subscriber account number is empty");
+            errorResponse.put("message", "Subscriber account number is missing/invalid");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
 
@@ -817,7 +817,7 @@ public class subscriberController {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
-                        String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
+                        String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
@@ -825,15 +825,15 @@ public class subscriberController {
                 errorResponse.put("timestamp",
                         LocalDateTime.now().format(
                                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                errorResponse.put("status", HttpStatus.CONFLICT.value());
-                errorResponse.put("message", "Subscriber account number does not exist");
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+                errorResponse.put("status", HttpStatus.NOT_FOUND.value());
+                errorResponse.put("message", "Subscriber does not exist");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
             }
         } catch (Exception e) {
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberAccountNumber,
-                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -841,9 +841,9 @@ public class subscriberController {
             Map<String, Object> errorResponse = new LinkedHashMap<>();
             errorResponse.put("timestamp",
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            errorResponse.put("status", HttpStatus.CONFLICT.value());
+            errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
             errorResponse.put("message", "Error retrieving Subscriber: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
@@ -887,13 +887,13 @@ public class subscriberController {
         } catch (Exception e) {
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
-                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(createErrorResponse(HttpStatus.CONFLICT,
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
                             "Error retrieving clients/subscribers: " + e.getMessage()));
         }
     }
@@ -941,13 +941,13 @@ public class subscriberController {
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
                     accountNumber,
-                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(createErrorResponse(HttpStatus.CONFLICT,
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
                             "Error retrieving Subscriber: " + e.getMessage()));
         }
     }
@@ -996,13 +996,13 @@ public class subscriberController {
         } catch (Exception e) {
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
-                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(createErrorResponse(HttpStatus.CONFLICT,
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
                             "Error retrieving subscribers: " + e.getMessage()));
         }
     }
@@ -1037,13 +1037,13 @@ public class subscriberController {
         } catch (Exception e) {
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
-                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(createErrorResponse(HttpStatus.CONFLICT,
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
                             "Error retrieving clients: " + e.getMessage()));
         }
     }

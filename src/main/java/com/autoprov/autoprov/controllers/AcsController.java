@@ -159,16 +159,16 @@ public class AcsController {
             if (!optionalClient.isPresent()) {
 
                 response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-                response.put("message", "Subscriber account number does not exist: " + subscriberAccountNumber);
+                response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
+                response.put("message", "Subscriber does not exist ");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
-                        String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
+                        String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
             HiveClient subscriber = optionalClient.get();
@@ -292,13 +292,17 @@ public class AcsController {
                 subscriber.setStatus("ONHOLD");
                 hiveClientRepo.save(subscriber);
 
+                response.put("timestamp", timestamp);
+                response.put("status", String.valueOf(HttpStatus.OK.value()));
+                response.put("message", "Subscriber status is now on hold");
+
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
                         String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return lastJobStatus;
+                return ResponseEntity.status(HttpStatus.OK).body(response);
             } else {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
@@ -312,7 +316,7 @@ public class AcsController {
         } catch (Exception e) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", "Exception occurred: " + e.getMessage());
+            response.put("message", "An error occurred. " + e.getMessage());
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
@@ -440,8 +444,6 @@ public class AcsController {
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
             HttpServletRequest request) throws JsonMappingException, JsonProcessingException, InterruptedException {
 
-        System.out.println(">>> HiveService: Activate Subscriber executed from Playbook");
-
         Map<String, String> response = new LinkedHashMap<>();
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
@@ -470,7 +472,7 @@ public class AcsController {
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-                response.put("message", "Subscriber does not exist for account number: " + subscriberAccountNumber);
+                response.put("message", "Subscriber does not exist");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -559,6 +561,8 @@ public class AcsController {
             RestTemplate restTemplate = new RestTemplate();
             // String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity,
             // String.class);
+            System.out.println(">>> HiveService: Activate Subscriber executed from Playbook");
+
             ResponseEntity<String> playbookResponse = restTemplate.exchange(apiUrl, HttpMethod.POST, requestEntity,
                     String.class);
 
@@ -591,13 +595,17 @@ public class AcsController {
                 client.setStatus("ACTIVE");
                 hiveClientRepo.save(client);
 
+                response.put("timestamp", timestamp);
+                response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
+                response.put("message", "Subscriber status is now active");
+
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
                         String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return lastJobStatus;
+                return ResponseEntity.status(HttpStatus.OK).body(response);
             } else {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
@@ -611,7 +619,7 @@ public class AcsController {
         } catch (Exception e) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", "Exception occurred: " + e.getMessage());
+            response.put("message", "An error occurred. " + e.getMessage());
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
@@ -928,7 +936,7 @@ public class AcsController {
     // }
     // }
 
-    // ----------------UPDATE PACKAGE----no function yet [USED FOR BILLING]
+    // ----------------UPDATE PACKAGE---- [USED FOR BILLING]
     @Async("AsyncExecutor")
     @PostMapping("/updateSubscriberPackage")
     @PreAuthorize("hasRole('USER')")
@@ -986,7 +994,7 @@ public class AcsController {
         if (!clientOptional.isPresent()) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            response.put("message", "Provisioned subscriber does not exist ");
+            response.put("message", "Provisioned subscriber does not exist");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberAccountNumber + "/" + packageType,
@@ -1008,21 +1016,22 @@ public class AcsController {
         // jsonBody.append("{");
         // jsonBody.append("\"job_template\":\"26\",");
         // jsonBody.append("\"ask_variables_on_launch\":\"true\",");
-        // jsonBody.append("\"extra_vars\":\"---\\n" + "account_no: \"" + subscriberAccountNumber + "\",");
+        // jsonBody.append("\"extra_vars\":\"---\\n" + "account_no: \"" +
+        // subscriberAccountNumber + "\",");
         // jsonBody.append("\"\\n" + "new_package: \"" + packageType + "\"");
         // jsonBody.append("}");
 
         // String jsonRequestBody = jsonBody.toString();
 
         String jsonRequestBody = "{\n" +
-                    "\"job_template\": \"26\",\n" +
-                    "\"ask_variables_on_launch\": \"true\",\n" +
-                    "\"extra_vars\": \"---" +
-                    "\\naccount_no: " + subscriberAccountNumber +
-                    "\\nnew_package: " + packageType + "\""
-                    +
-                    "}";
-                    
+                "\"job_template\": \"26\",\n" +
+                "\"ask_variables_on_launch\": \"true\",\n" +
+                "\"extra_vars\": \"---" +
+                "\\naccount_no: " + subscriberAccountNumber +
+                "\\nnew_package: " + packageType + "\""
+                +
+                "}";
+
         System.out.println("request body " + jsonRequestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
@@ -1478,7 +1487,6 @@ public class AcsController {
             ResponseEntity lastJobStatus = jobStatus(subscriberAccountNumber, jobId, false);
 
             if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
-                client.setStatus("ONHOLD");
                 hiveClientRepo.delete(client);
 
                 response.put("timestamp", timestamp);
