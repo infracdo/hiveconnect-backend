@@ -632,15 +632,15 @@ public class AutoProvisionController {
         // Prepare RequestBody Values
         String accountNo = params.get("accountNo");
         if (accountNo == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Subscriber accountNo is missing/empty");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            Map<String, String> response = new HashMap<>();
-            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "Subscriber accountNo is missing/empty");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
@@ -656,22 +656,22 @@ public class AutoProvisionController {
 
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            response.put("message", "Subscriber not found with account number: " + accountNo);
+            response.put("message", "Subscriber does not exist. ");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } else {
             HiveClient client = clientOptional.get();
             System.out.println(">>> HiveService: Subscriber found in database with status " + client.getStatus());
             if (!client.getStatus().contains("_PENDING_MIGRATION")) { // if subscriber is not pending for migration
+                Map<String, String> response = new HashMap<>();
+                response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+                response.put("message", "Subscriber does not exist " + accountNo
+                        + " that is pending for migration");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                         String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                Map<String, String> response = new HashMap<>();
-                response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-                response.put("message", "Cannot find any subscriber with account number: " + accountNo
-                        + " that is pending for migration");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         }
@@ -720,57 +720,79 @@ public class AutoProvisionController {
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> response = restTemplate.exchange(apiUrl,
-                HttpMethod.POST, requestEntity,
-                String.class);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(apiUrl,
+                    HttpMethod.POST, requestEntity,
+                    String.class);
 
-        System.out.println(">>> HiveConnect: finished Bucket to Hive Migration");
-        System.out.println("Response: " + response);
+            System.out.println(">>> HiveConnect: finished Bucket to Hive Migration");
+            System.out.println("Response: " + response);
 
-        String jobId;
-        if (response.getStatusCode() == HttpStatus.CREATED) {
-            System.out.println("Request successful.");
-            if (showBody)
-                System.out.println("response body " + response.getBody());
+            String jobId;
+            if (response.getStatusCode() == HttpStatus.CREATED) {
+                System.out.println("Request successful.");
+                if (showBody)
+                    System.out.println("response body " + response.getBody());
 
-            String responseBody = response.getBody();
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(responseBody);
-            jobId = jsonNode.get("id").asText();
+                String responseBody = response.getBody();
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonNode = objectMapper.readTree(responseBody);
+                jobId = jsonNode.get("id").asText();
 
-        } else {
-            System.out.println("Request failed. Response: " + response.getStatusCode());
-            if (showBody)
-                System.out.println("response body " + response.getBody());
+            } else {
+                System.out.println("Request failed. Response: " + response.getStatusCode());
+                if (showBody)
+                    System.out.println("response body " + response.getBody());
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                        String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            ResponseEntity lastJobStatus = jobStatus(accountNo, jobId, false);
+
+            if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
+                Map<String, String> responseBody = new HashMap<>();
+                responseBody.put("status", String.valueOf(HttpStatus.OK.value()));
+                responseBody.put("message", "Subscriber migrated successfully");
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                        String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+            } else {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                        String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return lastJobStatus;
+            }
+        } catch (Exception e) {
+            Map<String, String> response = new LinkedHashMap<>();
+            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            response.put("message", "An error occurred. " + e.getMessage());
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(),
+                    e.getStackTrace(),
+                    request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(response);
         }
+    }
 
-        ResponseEntity lastJobStatus = jobStatus(accountNo, jobId, false);
-
-        if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
-
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                    String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
-
-            return lastJobStatus;
-        } else {
-
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                    String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
-
-            return lastJobStatus;
-        }
-        // return acsPushResponse;
+    // return acsPushResponse;
     }
 
     // APIs for HiveApp (end) ----------------------------------------------
@@ -1454,6 +1476,10 @@ public class AutoProvisionController {
             response.put("ssid_pw", password);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "500");
+            response.put("message", "An error occurred while generating credentials.");
+            response.put("awx_job_id", jobId);
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), accountNo + "/" + jobId,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
@@ -1461,10 +1487,6 @@ public class AutoProvisionController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            Map<String, String> response = new HashMap<>();
-            response.put("status", "500");
-            response.put("message", "An error occurred while generating credentials.");
-            response.put("awx_job_id", jobId);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

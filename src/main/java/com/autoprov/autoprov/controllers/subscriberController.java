@@ -544,7 +544,7 @@ public class subscriberController {
             // Handle any unexpected exceptions
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", "An unexpected error occurred: " + e.getMessage());
+            response.put("message", "An error occurred. " + e.getMessage());
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberAccountNumber,
