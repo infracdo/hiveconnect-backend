@@ -1004,15 +1004,25 @@ public class AcsController {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", "Bearer " + ansibleAccessToken);
 
-        StringBuilder jsonBody = new StringBuilder();
-        jsonBody.append("{");
-        jsonBody.append("\"job_template\":\"26\",");
-        jsonBody.append("\"ask_variables_on_launch\":\"true\",");
-        jsonBody.append("\"extra_vars\":\"---\\n" + "account_no: \\\"" + subscriberAccountNumber + "\\\"\",");
-        jsonBody.append("\"\\n" + "new_package: \\\"" + packageType + "\\\"\"");
-        jsonBody.append("}");
+        // StringBuilder jsonBody = new StringBuilder();
+        // jsonBody.append("{");
+        // jsonBody.append("\"job_template\":\"26\",");
+        // jsonBody.append("\"ask_variables_on_launch\":\"true\",");
+        // jsonBody.append("\"extra_vars\":\"---\\n" + "account_no: \"" + subscriberAccountNumber + "\",");
+        // jsonBody.append("\"\\n" + "new_package: \"" + packageType + "\"");
+        // jsonBody.append("}");
 
-        String jsonRequestBody = jsonBody.toString();
+        // String jsonRequestBody = jsonBody.toString();
+
+        String jsonRequestBody = "{\n" +
+                    "\"job_template\": \"26\",\n" +
+                    "\"ask_variables_on_launch\": \"true\",\n" +
+                    "\"extra_vars\": \"---" +
+                    "\\naccount_no: " + subscriberAccountNumber +
+                    "\\nnew_package: " + packageType + "\""
+                    +
+                    "}";
+                    
         System.out.println("request body " + jsonRequestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
@@ -1057,7 +1067,7 @@ public class AcsController {
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "Subscriber package successfully updated");
+                response.put("message", "Subscriber package updated successfully");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber + "/" + packageType,
