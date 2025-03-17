@@ -3,12 +3,14 @@ package com.autoprov.autoprov.controllers;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,6 +43,7 @@ import com.autoprov.autoprov.security.services.UserDetailsImpl;
 import com.autoprov.autoprov.services.LogService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 @CrossOrigin(origins = "*")
@@ -98,7 +102,8 @@ public class AuthController {
             @RequestParam(required = false) String action, HttpServletRequest request) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername() +"/"+ signUpRequest.getEmail() +"/"+ signUpRequest.getRole(),
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    signUpRequest.getUsername() + "/" + signUpRequest.getEmail() + "/" + signUpRequest.getRole(),
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -110,7 +115,8 @@ public class AuthController {
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername() +"/"+ signUpRequest.getEmail() +"/"+ signUpRequest.getRole(),
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    signUpRequest.getUsername() + "/" + signUpRequest.getEmail() + "/" + signUpRequest.getRole(),
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -158,11 +164,12 @@ public class AuthController {
         new_user.setRoles(roles);
         userRepository.save(new_user);
 
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), signUpRequest.getUsername() +"/"+ signUpRequest.getEmail() +"/"+ signUpRequest.getRole(),
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                signUpRequest.getUsername() + "/" + signUpRequest.getEmail() + "/" + signUpRequest.getRole(),
                 String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                 request.getHeader("Authorization"),
                 request.getHeader("User-Agent"));
-                
+
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 }

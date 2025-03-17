@@ -793,7 +793,6 @@ public class AutoProvisionController {
     }
 
     // return acsPushResponse;
-    }
 
     // APIs for HiveApp (end) ----------------------------------------------
 
