@@ -1352,7 +1352,7 @@ public class AcsController {
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-                response.put("message", "Subscriber does not exist for account number: " + subscriberAccountNumber);
+                response.put("message", "Subscriber does not exist");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -1491,7 +1491,7 @@ public class AcsController {
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "HiveConnect: account terminated successfully");
+                response.put("message", "HiveConnect: Account terminated successfully");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -1513,7 +1513,7 @@ public class AcsController {
         } catch (Exception e) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", "Exception occurred: " + e.getMessage());
+            response.put("message", "An error occurred. " + e.getMessage());
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
