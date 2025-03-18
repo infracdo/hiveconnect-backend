@@ -57,7 +57,7 @@ public class DhcpController {
         try {
             dhcpService.createNetwork(cidrBlockDTO);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getNetworkName(),
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getCidrBlock(),
                     String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -66,7 +66,7 @@ public class DhcpController {
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (Exception e) {
 
-            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getNetworkName(),
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getCidrBlock(),
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
@@ -115,17 +115,17 @@ public class DhcpController {
             @PathVariable("cidrBlock") String cidrBlock, @RequestParam(required = false) String user,
             @RequestParam(required = false) String action, HttpServletRequest request) {
         List<CidrIpAddress> CidrBlockIps = new ArrayList<>();
+        String cidrBlockPath = cidrBlock;
         cidrBlock = cidrBlock.substring(0, (cidrBlock.lastIndexOf(".")));
-        System.out.println(cidrBlock);
+        System.out.println("cidrblock " + cidrBlock);
         ipAddRepo.findAllUnderCidrBlock(cidrBlock).forEach(CidrBlockIps::add);
 
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlock,
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlockPath,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
         return new ResponseEntity<>(CidrBlockIps, HttpStatus.OK); 
-
     }
 
 

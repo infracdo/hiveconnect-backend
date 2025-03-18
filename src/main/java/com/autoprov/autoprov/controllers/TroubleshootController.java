@@ -51,7 +51,7 @@ public class TroubleshootController {
                 String.class, device_name);
 
         String responseBody = response.getBody();
-        System.out.println(responseBody);
+        System.out.println("response body " + responseBody);
 
         try {
             ObjectMapper objectMapper = new ObjectMapper();

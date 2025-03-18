@@ -40,7 +40,7 @@ public class oltController {
         try {
             oltEntity createdOlt = oltService.createOlt(oltEntity);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltEntity.getOltName(),
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltEntity.getOltName() +"/"+ oltEntity.getOltIp(),
                     String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -48,7 +48,7 @@ public class oltController {
             return ResponseEntity.status(HttpStatus.CREATED).body(createdOlt);
         } catch (Exception e) {
 
-            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), oltEntity.getOltName(),
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), oltEntity.getOltName() +"/"+ oltEntity.getOltIp(),
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),

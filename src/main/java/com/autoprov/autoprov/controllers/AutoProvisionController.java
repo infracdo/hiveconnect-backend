@@ -1,8 +1,10 @@
 package com.autoprov.autoprov.controllers;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -177,7 +179,8 @@ public class AutoProvisionController {
                     ipAddress, packageType, upstream,
                     downstream, oltIp);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                     String.valueOf(responseEntity.getStatusCode().value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -188,7 +191,8 @@ public class AutoProvisionController {
             // AcsController.deleteWanInstance(serialNumber);
             AcsController.rollbackSsid(serialNumber);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -220,7 +224,7 @@ public class AutoProvisionController {
             PackageTypeEntity packageT = optionalPackage.get();
 
             if (showBody)
-                System.out.println(packageT.toString());
+                System.out.println("package details " + packageT.toString());
 
             packageName = packageT.getPackageType();
             upstream = packageT.getUpstream();
@@ -234,7 +238,7 @@ public class AutoProvisionController {
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
 
         if (showBody)
-            System.out.println(deviceName);
+            System.out.println("device name " + deviceName);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -264,7 +268,7 @@ public class AutoProvisionController {
                 +
                 "}";
         if (showBody)
-            System.out.println(requestBody);
+            System.out.println("request body " + requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -278,7 +282,7 @@ public class AutoProvisionController {
         if (response.getStatusCode() == HttpStatus.CREATED) {
             System.out.println("Request successful.");
             if (showBody)
-                System.out.println(response.getBody());
+                System.out.println("response body " + response.getBody());
 
             String responseBody = response.getBody();
             ObjectMapper objectMapper = new ObjectMapper();
@@ -288,8 +292,8 @@ public class AutoProvisionController {
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             if (showBody)
-                System.out.println(response.getBody());
-            
+                System.out.println("response body " + response.getBody());
+
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -367,7 +371,7 @@ public class AutoProvisionController {
 
         String jsonRequestBody = jsonBody.toString();
         if (showBody)
-            System.out.println(jsonRequestBody);
+            System.out.println("request body " + jsonRequestBody);
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
         RestTemplate restTemplate = new RestTemplate();
         String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
@@ -428,16 +432,29 @@ public class AutoProvisionController {
         if (optionalPackage.isPresent()) {
             PackageTypeEntity packageT = optionalPackage.get();
             if (showBody)
-                System.out.println(packageT.toString());
+                System.out.println("package details " + packageT.toString());
             upstream = packageT.getUpstream();
             downstream = packageT.getDownstream();
             packageName = packageT.getPackageType();
+        } else {
+            Map<String, String> response = new LinkedHashMap<>(); // Use String as the value type
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
+            response.put("message", "Package does not exist");
 
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
         if (showBody)
-            System.out.println(deviceName);
+            System.out.println("device name" + deviceName);
 
         // ACS Processes
         Optional<CidrIpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
@@ -476,7 +493,7 @@ public class AutoProvisionController {
                     +
                     "}";
             if (showBody)
-                System.out.println(requestBody);
+                System.out.println("request body " + requestBody);
 
             HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -490,7 +507,7 @@ public class AutoProvisionController {
             if (response.getStatusCode() == HttpStatus.CREATED) {
                 System.out.println("Request successful.");
                 if (showBody)
-                    System.out.println(response.getBody());
+                    System.out.println("response body " + response.getBody());
 
                 String responseBody = response.getBody();
                 ObjectMapper objectMapper = new ObjectMapper();
@@ -500,12 +517,13 @@ public class AutoProvisionController {
             } else {
                 System.out.println("Request failed. Response: " + response.getStatusCode());
                 if (showBody)
-                    System.out.println(response.getBody());
+                    System.out.println("Request failed. Response body: " + response.getBody());
 
-                    logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                        accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                        String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
 
                 return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
             }
@@ -552,10 +570,11 @@ public class AutoProvisionController {
                 }
                 // END HERE
 
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                    String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                        accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                        String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
 
                 return lastJobStatus;
 
@@ -567,13 +586,15 @@ public class AutoProvisionController {
                 // return ResponseEntity.status(HttpStatus.OK).body(response);
 
             } else {
+                System.out.println("lastjobstatus not ok " + lastJobStatus.getBody());
                 AcsController.deleteWanInstance(serialNumber);
                 AcsController.rollbackSsid(serialNumber);
 
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                    String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                        accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                        String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
 
                 return lastJobStatus;
             }
@@ -582,7 +603,8 @@ public class AutoProvisionController {
             AcsController.deleteWanInstance(serialNumber);
             AcsController.rollbackSsid(serialNumber);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -610,15 +632,15 @@ public class AutoProvisionController {
         // Prepare RequestBody Values
         String accountNo = params.get("accountNo");
         if (accountNo == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Subscriber accountNo is missing/empty");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            Map<String, String> response = new HashMap<>();
-            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "Subscriber accountNo is missing/empty");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
@@ -634,28 +656,28 @@ public class AutoProvisionController {
 
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            response.put("message", "Subscriber not found with account number: " + accountNo);
+            response.put("message", "Subscriber does not exist. ");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } else {
             HiveClient client = clientOptional.get();
             System.out.println(">>> HiveService: Subscriber found in database with status " + client.getStatus());
             if (!client.getStatus().contains("_PENDING_MIGRATION")) { // if subscriber is not pending for migration
-                
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
-
                 Map<String, String> response = new HashMap<>();
                 response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-                response.put("message", "Cannot find any subscriber with account number: " + accountNo
+                response.put("message", "Subscriber does not exist " + accountNo
                         + " that is pending for migration");
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                        String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         }
 
         String apiUrl = playbookMigrationUrl + "launch/";
-        System.out.println(apiUrl);
+        System.out.println("migration url " + apiUrl);
 
         // Create headers with Content-Type set to application/json
         HttpHeaders headers = new HttpHeaders();
@@ -668,68 +690,109 @@ public class AutoProvisionController {
         jsonBody.append("{");
         jsonBody.append("\"job_template\":\"28\",");
         jsonBody.append("\"ask_variables_on_launch\":\"true\",");
-        jsonBody.append("\"extra_vars\":\"---\\n" + "account_number: \\\"" + accountNo + "\\\"\""); // NOTE: gi add nalang nako syag double quotes sa account number mismo kay naay tendencies na if ang account no kay numbers lng (e.g. 12345), ang ma send pud dayon na request sa playbook kay gina treat as integer ang account no even though naka define na as string pagkuha sa params. i think ire-check nalng siguro ni soon
+        jsonBody.append("\"extra_vars\":\"---\\n" + "account_number: \\\"" + accountNo + "\\\"\"");
+        // NOTE: gi add
+        // nalang nako syag
+        // double quotes sa
+        // account number
+        // mismo kay naay
+        // tendencies na if
+        // ang account no
+        // kay numbers lng
+        // (e.g. 12345), ang
+        // ma send pud dayon
+        // na request sa
+        // playbook kay gina
+        // treat as integer
+        // ang account no
+        // even though naka
+        // define na as
+        // string pagkuha sa
+        // params. i think
+        // ire-check nalng
+        // siguro ni soon
         jsonBody.append("}");
 
         String requestBody = jsonBody.toString();
         if (showBody)
-            System.out.println(requestBody);
+            System.out.println("request body " + requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> response = restTemplate.exchange(apiUrl,
-                HttpMethod.POST, requestEntity,
-                String.class);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(apiUrl,
+                    HttpMethod.POST, requestEntity,
+                    String.class);
 
-        System.out.println(">>> HiveConnect: finished Bucket to Hive Migration");
-        System.out.println("Response: " + response);
+            System.out.println(">>> HiveConnect: finished Bucket to Hive Migration");
+            System.out.println("Response: " + response);
 
-        String jobId;
-        if (response.getStatusCode() == HttpStatus.CREATED) {
-            System.out.println("Request successful.");
-            if (showBody)
-                System.out.println(response.getBody());
+            String jobId;
+            if (response.getStatusCode() == HttpStatus.CREATED) {
+                System.out.println("Request successful.");
+                if (showBody)
+                    System.out.println("response body " + response.getBody());
 
-            String responseBody = response.getBody();
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(responseBody);
-            jobId = jsonNode.get("id").asText();
+                String responseBody = response.getBody();
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonNode = objectMapper.readTree(responseBody);
+                jobId = jsonNode.get("id").asText();
 
-        } else {
-            System.out.println("Request failed. Response: " + response.getStatusCode());
-            if (showBody)
-                System.out.println(response.getBody());
+            } else {
+                System.out.println("Request failed. Response: " + response.getStatusCode());
+                if (showBody)
+                    System.out.println("response body " + response.getBody());
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                request.getHeader("Authorization"),
-                request.getHeader("User-Agent"));
+                        String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
 
-            return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+                return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
 
-        ResponseEntity lastJobStatus = jobStatus(accountNo, jobId, false);
+            ResponseEntity lastJobStatus = jobStatus(accountNo, jobId, false);
 
-        if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
+            if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
+                Map<String, String> responseBody = new HashMap<>();
+                responseBody.put("status", String.valueOf(HttpStatus.OK.value()));
+                responseBody.put("message", "Subscriber migrated successfully");
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                    String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                        String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+            } else {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                        String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return lastJobStatus;
+            }
+        } catch (Exception e) {
+            Map<String, String> response = new LinkedHashMap<>();
+            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            response.put("message", "An error occurred. " + e.getMessage());
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(),
+                    e.getStackTrace(),
+                    request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return lastJobStatus;
-        } else {
-
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                    String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
-
-            return lastJobStatus;
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(response);
         }
-        // return acsPushResponse;
     }
+
+    // return acsPushResponse;
 
     // APIs for HiveApp (end) ----------------------------------------------
 
@@ -757,7 +820,7 @@ public class AutoProvisionController {
                 .getIpAddress();
 
         if (showBody)
-            System.out.println(ipAddRepo
+            System.out.println("avaiable ip " + ipAddRepo
                     .getOneAvailableIpAddressUnderSite(site, "Private"));
 
         String packageType = params.get("packageType");
@@ -775,7 +838,7 @@ public class AutoProvisionController {
         if (optionalPackage.isPresent()) {
             PackageTypeEntity packageT = optionalPackage.get();
             if (showBody)
-                System.out.println(packageT.toString());
+                System.out.println("package details " + packageT.toString());
             upstream = packageT.getUpstream();
             downstream = packageT.getDownstream();
             packageName = packageT.getPackageType();
@@ -787,7 +850,7 @@ public class AutoProvisionController {
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
         if (showBody)
-            System.out.println(deviceName);
+            System.out.println("device name " + deviceName);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -817,7 +880,7 @@ public class AutoProvisionController {
                 +
                 "}";
         if (showBody)
-            System.out.println(requestBody);
+            System.out.println("request body " + requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -831,22 +894,22 @@ public class AutoProvisionController {
         if (response.getStatusCode() == HttpStatus.CREATED) {
             System.out.println("Request successful.");
             if (showBody)
-                System.out.println(response.getBody());
+                System.out.println("response body " + response.getBody());
 
             String responseBody = response.getBody();
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(responseBody);
             jobId = jsonNode.get("id").asText();
-
         } else {
             System.out.println("Request failed. Response: " + response.getStatusCode());
             if (showBody)
-                System.out.println(response.getBody());
+                System.out.println("Request failed. Response body: " + response.getBody());
 
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                request.getHeader("Authorization"),
-                request.getHeader("User-Agent"));
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
 
             return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -900,17 +963,19 @@ public class AutoProvisionController {
             // deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
             // }
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                     String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
             return lastJobStatus;
         } else {
-            AcsController.deleteWanInstance(serialNumber);
-            AcsController.rollbackSsid(serialNumber);
+            // AcsController.deleteWanInstance(serialNumber);
+            // AcsController.rollbackSsid(serialNumber);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                     String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -974,7 +1039,9 @@ public class AutoProvisionController {
         // String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
 
         Optional<oltEntity> siteOlt = oltRepo.findByOlt_ip(oltId);
-        // Return error response if there's no existing data in site_olt table to prevent returning Index out of Bound error for user-friendly frontend error messages
+        // Return error response if there's no existing data in site_olt table to
+        // prevent returning Index out of Bound error for user-friendly frontend error
+        // messages
         if (siteOlt.isEmpty()) {
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
@@ -985,13 +1052,14 @@ public class AutoProvisionController {
         String site = siteOlt.get().getOltNetworksite();
 
         // String ipAddress = ipAddRepo
-        //         .getOneAvailableIpAddressUnderSite(site, "Private")
-        //         .get(0)
-        //         .getIpAddress();
+        // .getOneAvailableIpAddressUnderSite(site, "Private")
+        // .get(0)
+        // .getIpAddress();
 
         List<CidrIpAddress> availableIpAddresses = ipAddRepo.getOneAvailableIpAddressUnderSite(site, "Private");
- 
-        // Return error response if there's no available IP address to prevent returning Index out of Bound error for user-friendly frontend error messages
+
+        // Return error response if there's no available IP address to prevent returning
+        // Index out of Bound error for user-friendly frontend error messages
         if (availableIpAddresses.isEmpty()) {
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
@@ -1013,7 +1081,7 @@ public class AutoProvisionController {
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
 
         if (showBody)
-            System.out.println(deviceName);
+            System.out.println("device name " + deviceName);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -1036,7 +1104,7 @@ public class AutoProvisionController {
                 +
                 "}";
         if (showBody)
-            System.out.println(requestBody);
+            System.out.println("request body " + requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -1050,7 +1118,8 @@ public class AutoProvisionController {
         jobId = jsonNode.get("id").asText();
 
         if (showBody)
-            System.out.println(responseBody); // TODO: retrieve all string because limited string is printed
+            System.out.println("response body " + responseBody); // TODO: retrieve all string because limited string is
+                                                                 // printed
         System.out.println("Checking Job Id " + jobId);
 
         ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
@@ -1068,16 +1137,22 @@ public class AutoProvisionController {
 
             checkingResponse = responseEntity.getBody();
 
-            if (checkingResponse == null || !checkingResponse.contains("PLAY RECAP")) {
+            if (checkingResponse.contains("ERROR!") && checkingResponse.contains("the playbook:")
+                    && checkingResponse.contains("could not be found")) { // added because of infinite loop if playbook
+                                                                          // cannot be found
+                break;
+            }
 
+            if (checkingResponse == null || !checkingResponse.contains("PLAY RECAP")) {
                 tries.append("|");
                 System.out.println(tries.toString());
                 continue;
             }
+
         }
 
         if (showBody)
-            System.out.println(checkingResponse);
+            System.out.println("checking response " + checkingResponse);
         StringBuilder errors = new StringBuilder();
         Boolean errorExisting = false;
 
@@ -1090,7 +1165,11 @@ public class AutoProvisionController {
         String subscriberExistsString = "Subscriber '" + deviceName + "' already exist in Netbox";
         String ipAddressExistsString = "IP Address '" + ipAddress + " ' already exist in Netbox";
 
-        if (checkingResponse.contains("PLAY RECAP")) {
+        if (checkingResponse.contains("ERROR!") && checkingResponse.contains("the playbook:")
+                && checkingResponse.contains("could not be found")) {
+            errors.append("Cannot locate the playbook.");
+            errorExisting = true;
+        } else if (checkingResponse.contains("PLAY RECAP")) {
             if (checkingResponse.contains(onuCheckString) || checkingResponse.contains(onuCheckStringAlt))
                 System.out.println("Onu OK");
             else {
@@ -1113,25 +1192,24 @@ public class AutoProvisionController {
             }
 
             if (!errorExisting) {
-
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                        accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                        String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
 
                 Map<String, String> response = new HashMap<>();
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
                 response.put("message", "All Clear. Proceed to Provisioning!");
                 response.put("body", checkingResponse);
                 return ResponseEntity.status(HttpStatus.OK).body(response);
-            }
+            } else {
 
-            else {
-
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                request.getHeader("Authorization"),
-                request.getHeader("User-Agent"));
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                        accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                        String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
 
                 Map<String, String> response = new HashMap<>();
                 response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
@@ -1141,17 +1219,17 @@ public class AutoProvisionController {
             }
         }
 
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                request.getHeader("Authorization"),
+                request.getHeader("User-Agent"));
 
         Map<String, String> response = new HashMap<>();
         response.put("status", String.valueOf(HttpStatus.OK.value()));
         response.put("message", "No Result");
         response.put("body", checkingResponse);
         return ResponseEntity.status(HttpStatus.OK).body(response);
-
     }
 
     // Troubleshooting
@@ -1168,8 +1246,8 @@ public class AutoProvisionController {
 
         // Handle job failure
         if (lastJobStatus.contains("fail")) {
-
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+            System.out.println("lastJobStatus " + lastJobStatus);
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo + "/" + jobId,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -1182,10 +1260,10 @@ public class AutoProvisionController {
             return generateCredentials(accountNo, jobId, user, action, request);
         }
 
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo + "/" + jobId,
+                String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                request.getHeader("Authorization"),
+                request.getHeader("User-Agent"));
 
         // Default response for successful job completion without credential generation
         Map<String, String> response = new HashMap<>();
@@ -1205,6 +1283,7 @@ public class AutoProvisionController {
 
         // Handle job failure
         if (lastJobStatus.contains("fail")) {
+            System.out.println("lastJobStatus " + lastJobStatus);
             return handleJobFailure(jobId);
         }
 
@@ -1258,7 +1337,7 @@ public class AutoProvisionController {
         }
 
         if (showBody)
-            System.out.println(responseBody);
+            System.out.println("response body " + responseBody);
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode;
@@ -1296,10 +1375,12 @@ public class AutoProvisionController {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
                 String.class);
+        System.out.println("handle job failure response " + responseEntity);
+
         String stderr = responseEntity.getBody().toString();
 
         if (showBody)
-            System.out.println(stderr);
+            System.out.println("Failure " + stderr);
         StringBuilder error = new StringBuilder();
 
         try {
@@ -1324,7 +1405,7 @@ public class AutoProvisionController {
             if (stderr.contains("FAILED!") && stderr.contains("mac-address-table"))
                 error.append("Error on MAC Address Filtering.");
 
-            System.out.println("Errors: " + stderr);
+            System.out.println("errors found " + error);
 
             Map<String, String> response = new HashMap<>();
             response.put("status", "500");
@@ -1343,8 +1424,9 @@ public class AutoProvisionController {
     }
 
     // Method to generate credentials
-    private ResponseEntity<Map<String, String>> generateCredentials(String accountNo, String jobId, @RequestParam(required = false) String user,
-    @RequestParam(required = false) String action, HttpServletRequest request) {
+    private ResponseEntity<Map<String, String>> generateCredentials(String accountNo, String jobId,
+            @RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
             String accessToken = ansibleAccessToken;
@@ -1380,7 +1462,7 @@ public class AutoProvisionController {
             String newSsid = accountNo.replace(" ", "_");
             String password = "" + newSsid + "1234";
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo + "/" + jobId,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -1393,17 +1475,17 @@ public class AutoProvisionController {
             response.put("ssid_pw", password);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "500");
+            response.put("message", "An error occurred while generating credentials.");
+            response.put("awx_job_id", jobId);
 
-            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), jobId,
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), accountNo + "/" + jobId,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            Map<String, String> response = new HashMap<>();
-            response.put("status", "500");
-            response.put("message", "An error occurred while generating credentials.");
-            response.put("awx_job_id", jobId);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -1664,7 +1746,7 @@ public class AutoProvisionController {
             System.out.println("OLT Interface Check: Guangda OLT Interface Match not found");
         }
 
-        System.out.println(responseBody);
+        System.out.println("response body " + responseBody);
         Pattern pattern = Pattern.compile("\"stdout\": \"(.*?)\"");
 
         // Create a matcher with the input string
@@ -1680,16 +1762,16 @@ public class AutoProvisionController {
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
-                    
+
             return vsolOltInterface;
         } else {
             System.out.println("OLT Interface Check: VSOL OLT Interface Match not found");
         }
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
-                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
+                String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                request.getHeader("Authorization"),
+                request.getHeader("User-Agent"));
 
         return "No OLT Interface found";
     }
@@ -1730,7 +1812,7 @@ public class AutoProvisionController {
             System.out.println("OLT Interface Check: Guangda OLT Interface Match not found");
         }
 
-        System.out.println(responseBody);
+        System.out.println("response body " + responseBody);
         Pattern pattern = Pattern.compile("\"stdout\": \"(.*?)\"");
 
         // Create a matcher with the input string
@@ -1774,7 +1856,7 @@ public class AutoProvisionController {
                 String.class);
 
         String responseBody = responseEntity.getBody();
-        System.out.println(responseBody);
+        System.out.println("response body " + responseBody);
 
         String upstreamValue = "";
         String downstreamValue = "";
@@ -1803,9 +1885,9 @@ public class AutoProvisionController {
         bandwidth[1] = downstreamValue;
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
+                String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                request.getHeader("Authorization"),
+                request.getHeader("User-Agent"));
 
         return bandwidth;
     }
@@ -1828,7 +1910,7 @@ public class AutoProvisionController {
                 String.class);
 
         String responseBody = responseEntity.getBody();
-        System.out.println(responseBody);
+        System.out.println("response body " + responseBody);
 
         String upstreamValue = "";
         String downstreamValue = "";
@@ -1869,10 +1951,10 @@ public class AutoProvisionController {
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
             HttpServletRequest request) {
 
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
-                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+                String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
+                request.getHeader("Authorization"),
+                request.getHeader("User-Agent"));
 
         Map<String, String> response = new HashMap<>();
         response.put("awx_job_id", jobId);
@@ -1921,10 +2003,10 @@ public class AutoProvisionController {
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
             HttpServletRequest request) {
 
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
+                String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                request.getHeader("Authorization"),
+                request.getHeader("User-Agent"));
 
         return getOltDetails(jobId);
     }
@@ -1989,7 +2071,6 @@ public class AutoProvisionController {
                     ssidName, packageType, bandwidth[0], bandwidth[1]);
 
             clientRepo.delete(client);
-            
 
             // Optional<ClientDetail> optionalClientDetail =
             // clientDetailRepo.findByClientId(client.getId());
@@ -2000,12 +2081,13 @@ public class AutoProvisionController {
             // }
 
         }
-        
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
-                    
+
+        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                request.getHeader("Authorization"),
+                request.getHeader("User-Agent"));
+
         return "Check database";
     }
 

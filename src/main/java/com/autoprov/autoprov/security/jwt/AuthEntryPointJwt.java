@@ -31,7 +31,7 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
       throws IOException, ServletException {
 
     logService.logApiError(request.getParameter("user"), request.getParameter("action"), request.getMethod(), request.getRequestURI(), null,
-    String.valueOf(HttpStatus.UNAUTHORIZED.value()), authException.getMessage(), authException.getStackTrace(),
+    String.valueOf(HttpStatus.UNAUTHORIZED.value()), request.getHeader("Authorization") +"/"+ authException.getMessage(), authException.getStackTrace(),
     request.getRemoteAddr(),
     request.getHeader("Authorization"),
     request.getHeader("User-Agent"));

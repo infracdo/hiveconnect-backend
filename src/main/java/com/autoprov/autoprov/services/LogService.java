@@ -10,7 +10,8 @@ import com.autoprov.autoprov.security.jwt.JwtUtils;
 @Service
 public class LogService {
     private static final Logger logger = LoggerFactory.getLogger(LogService.class);
-    private static final Logger apiLogger = LoggerFactory.getLogger("apiLogger"); // For audit logs (API_LOG)
+    private static final Logger apiAuditLogger = LoggerFactory.getLogger("apiAuditLogger"); // For audit logs (API_LOG)
+    private static final Logger apiAccessLogger = LoggerFactory.getLogger("apiAccessLogger"); // For audit logs (API_LOG)
     private static final Logger apiErrorLogger = LoggerFactory.getLogger("apiErrorLogger"); // For error logs
                                                                                             // (ERROR_LOG)
     private static final Logger frontendLogger = LoggerFactory.getLogger("frontendLogger"); // For frontend logs
@@ -20,6 +21,28 @@ public class LogService {
 
     public void logInfo(String message) {
         logger.info(message);
+    }
+
+    public void logApiAudit(String user, String action, String method, String endpoint, String payload, String status,
+            String ip, String client, String agent) {
+        if (user == null || user.trim().equals("")) {
+            user = "unknown";
+        }
+        if (action == null || action.trim().equals("")) {
+            action = "accessed api endpoint"; //TODO; CHANGE TO 'ADDED XXX OR CHANGED AAA TO BBB'
+        }
+        if (payload == null || payload.trim().equals("")) {
+            payload = "none";
+        }
+
+        if (client != null && client.contains("Bearer ")) {
+            client = jwtUtils.getUserNameFromJwtToken(client.substring(7));
+        } else {
+            client = "none";
+        }
+        apiAuditLogger.info(String.format(
+                "User: %s | Action: %s | Method: %s | Endpoint: %s | Payload: %s | Status: %s | IP: %s | Client: %s | Agent: %s",
+                user, action, method, endpoint, payload, status, ip, client, agent));
     }
 
     public void logApiAccess(String user, String action, String method, String endpoint, String payload, String status,
@@ -39,10 +62,9 @@ public class LogService {
         } else {
             client = "none";
         }
-        apiLogger.info(String.format(
+        apiAccessLogger.info(String.format(
                 "User: %s | Action: %s | Method: %s | Endpoint: %s | Payload: %s | Status: %s | IP: %s | Client: %s | Agent: %s",
                 user, action, method, endpoint, payload, status, ip, client, agent));
-        System.out.println("created access log");
     }
 
     public void logApiError(String user, String action, String method, String endpoint, String payload, String status,
@@ -63,9 +85,8 @@ public class LogService {
         }
         apiErrorLogger.error(String.format(
                 "User: %s | Action: %s | Method: %s | Endpoint: %s | Payload: %s | Status: %s | Message: %s | StackTrace: %s | IP: %s | Client: %s | Agent: %s",
-                user, action, method, endpoint, payload, status, message, stacktrace[stacktrace.length - 1], ip, client,
+                user, action, method, endpoint, payload, status, message, stacktrace[0], ip, client,
                 agent));
-        System.out.println("created error log");
     }
 
     // Method for frontend logs

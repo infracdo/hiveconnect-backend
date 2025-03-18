@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.autoprov.autoprov.controllers.SubscriberAlreadyExistsException;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
 
@@ -23,7 +24,7 @@ public class subscriberService {
         Optional<subscriberEntity> existingSubscriber = SubscriberRepo.findBySubscriberAccountNumber
         (subscriber.getSubscriberAccountNumber());
         if (existingSubscriber.isPresent()) {
-            throw new Exception("Subscriber with this ACCOUNT number already exists.");
+            throw new SubscriberAlreadyExistsException("Subscriber with this account number already exists");
         }
         return SubscriberRepo.save(subscriber);
     }
