@@ -80,7 +80,7 @@ public class oltController {
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ErrorResponse(HttpStatus.NOT_FOUND.value(), "OLT name not found: " + oltName));
+                    new ErrorResponse(HttpStatus.NOT_FOUND.value(), "OLT not found"));
         }
     }
 
@@ -105,7 +105,7 @@ public class oltController {
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ErrorResponse(HttpStatus.NOT_FOUND.value(), "OLT IP not found: " + oltIp));
+                    new ErrorResponse(HttpStatus.NOT_FOUND.value(), "OLT not found"));
         }
     }
     

@@ -201,7 +201,7 @@ public class subscriberController {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-                            "Error saving the account: " + e.getMessage()));
+                            "An error occurred. " + e.getMessage()));
         }
     }
 
@@ -697,7 +697,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(createErrorResponse(HttpStatus.NOT_FOUND,
-                                "Subscriber not found with ID: " + id));
+                                "Subscriber does not exist"));
             }
         } catch (Exception e) {
 
@@ -711,7 +711,7 @@ public class subscriberController {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-                            "Error retrieving subscriber: " + e.getMessage()));
+                            "An error occurred. " + e.getMessage()));
         }
 
     }
@@ -743,7 +743,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(createErrorResponse(HttpStatus.NOT_FOUND,
-                                "Subscriber not found with ID: " + id));
+                                "Client not found"));
             }
         } catch (Exception e) {
 
@@ -757,7 +757,7 @@ public class subscriberController {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-                            "Error retrieving subscriber: " + e.getMessage()));
+                            "An error occurred. " + e.getMessage()));
         }
     }
 
@@ -931,7 +931,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(createErrorResponse(HttpStatus.NOT_FOUND,
-                                "No clients/subscribers found"));
+                                "No subscriber found"));
             }
         } catch (Exception e) {
 
@@ -944,7 +944,7 @@ public class subscriberController {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-                            "Error retrieving clients/subscribers: " + e.getMessage()));
+                            "An error occurred. " + e.getMessage()));
         }
     }
 
@@ -984,8 +984,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(createErrorResponse(HttpStatus.NOT_FOUND,
-                                "Subscriber not found with account number: "
-                                        + accountNumber));
+                                "Client not found"));
             }
         } catch (Exception e) {
 
@@ -999,7 +998,7 @@ public class subscriberController {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-                            "Error retrieving Subscriber: " + e.getMessage()));
+                            "An error occurred. " + e.getMessage()));
         }
     }
 
@@ -1042,7 +1041,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(createErrorResponse(HttpStatus.NOT_FOUND,
-                                "No subscribers found"));
+                                "No subscriber found"));
             }
         } catch (Exception e) {
 
@@ -1055,7 +1054,7 @@ public class subscriberController {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-                            "Error retrieving subscribers: " + e.getMessage()));
+                            "An error occurred. " + e.getMessage()));
         }
     }
 
@@ -1084,7 +1083,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(createErrorResponse(HttpStatus.NOT_FOUND,
-                                "No clients found with status Active or Activated."));
+                                "No subscriber with Active or Activated status found"));
             }
         } catch (Exception e) {
 
@@ -1097,7 +1096,7 @@ public class subscriberController {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-                            "Error retrieving clients: " + e.getMessage()));
+                            "An error occurred. " + e.getMessage()));
         }
     }
 

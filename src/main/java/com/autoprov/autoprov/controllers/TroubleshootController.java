@@ -28,7 +28,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public class TroubleshootController {
 
     @Value("${prometheusApiUrl}")
-    private static String prometheusApiUrl;
+    private String prometheusApiUrl;
 
     @Autowired
     private LogService logService;
@@ -86,7 +86,6 @@ public class TroubleshootController {
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
-
         }
 
         return responseBody;

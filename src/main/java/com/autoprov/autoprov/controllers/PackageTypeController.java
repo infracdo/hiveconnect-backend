@@ -80,17 +80,17 @@ public ResponseEntity<?> createPackage(@Valid @RequestBody PackageTypeEntity pac
                     request.getHeader("User-Agent"));
 
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                             .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving package. package already exists"));
+                             .body(createErrorResponse(HttpStatus.CONFLICT, "Package already exists"));
     } catch (Exception e) {
 
         logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType() +"/"+ packageTypeEntity.getUpstream() +"/"+ packageTypeEntity.getDownstream(),
-                    String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
                     
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                             .body(createErrorResponse(HttpStatus.CONFLICT, "Error saving the package: " + e.getMessage()));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                             .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred. " + e.getMessage()));
     }
 }
 
@@ -114,7 +114,7 @@ private Map<String, Object> createSuccessResponse() {
     Map<String, Object> response = new HashMap<>();
     response.put("timestamp", LocalDateTime.now().format(DATE_TIME_FORMATTER));
     response.put("status", HttpStatus.CREATED.value());
-    response.put("message", "New PAckage created successfully");
+    response.put("message", "Package created successfully");
     return response;
 }
 

@@ -245,11 +245,6 @@ public class AcsController {
             jsonBody.append("\"job_template\":\"24\",");
             jsonBody.append("\"ask_variables_on_launch\":\"true\",");
             jsonBody.append("\"extra_vars\":\"---\\n" + "account_no: \\\"" + subscriberAccountNumber + "\\\"\"");
-            // NOTE: gi add nalang nako syag double quotes sa account number mismo kay naay
-            // tendencies na if ang account no kay numbers lng (e.g. 12345), ang ma send pud
-            // dayon na request sa playbook kay gina treat as integer ang account no even
-            // though naka define na as string pagkuha sa params. i think ire-check nalng
-            // siguro ni soon
             jsonBody.append("}");
 
             String jsonRequestBody = jsonBody.toString();
@@ -547,11 +542,6 @@ public class AcsController {
             jsonBody.append("\"job_template\":\"23\",");
             jsonBody.append("\"ask_variables_on_launch\":\"true\",");
             jsonBody.append("\"extra_vars\":\"---\\n" + "account_number: \\\"" + subscriberAccountNumber + "\\\"\"");
-            // NOTE: gi add nalang nako syag double quotes sa account number mismo kay naay
-            // tendencies na if ang account no kay numbers lng (e.g. 12345), ang ma send pud
-            // dayon na request sa playbook kay gina treat as integer ang account no even
-            // though naka define na as string pagkuha sa params. i think ire-check nalng
-            // siguro ni soon
             jsonBody.append("}");
 
             String jsonRequestBody = jsonBody.toString();
