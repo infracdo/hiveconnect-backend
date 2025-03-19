@@ -34,6 +34,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.ipamDomain.CidrIpAddress;
+import com.autoprov.autoprov.entity.ipamDomain.VlanInfo;
 import com.autoprov.autoprov.entity.oltDomain.oltEntity;
 import com.autoprov.autoprov.entity.subscriberDomain.PackageTypeEntity;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
@@ -41,6 +42,7 @@ import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.acsRepositories.DevicesRepository;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.repositories.ipamRepositories.CidrIpAddressRepository;
+import com.autoprov.autoprov.repositories.ipamRepositories.VlanInfoRepository;
 import com.autoprov.autoprov.repositories.oltRepositories.oltRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.PackageRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
@@ -91,6 +93,9 @@ public class AutoProvisionController {
 
     @Autowired
     private subscriberRepository clientRepo;
+
+    @Autowired
+    private VlanInfoRepository vlanInfoRepo;
 
     @Autowired
     private oltRepository oltRepo;
@@ -396,7 +401,7 @@ public class AutoProvisionController {
         String networkType = "";
         Map<String, String> response = new LinkedHashMap<>();
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        
+
         System.out.println(">>> HiveService: Provision executed from HiveApp");
 
         // Prepare RequestBody Values
@@ -416,7 +421,7 @@ public class AutoProvisionController {
             response.put("message", "Account number is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
-            accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -430,7 +435,7 @@ public class AutoProvisionController {
             response.put("message", "Client name is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
-            accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -444,7 +449,7 @@ public class AutoProvisionController {
             response.put("message", "Serial number is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
-            accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -458,7 +463,7 @@ public class AutoProvisionController {
             response.put("message", "MAC address is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
-            accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -472,7 +477,7 @@ public class AutoProvisionController {
             response.put("message", "Location is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
-            accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -486,7 +491,7 @@ public class AutoProvisionController {
             response.put("message", "OLT ip is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
-            accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -500,7 +505,7 @@ public class AutoProvisionController {
             response.put("message", "OLT id is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
-            accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -514,7 +519,7 @@ public class AutoProvisionController {
             response.put("message", "Package type is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
-            accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -607,7 +612,7 @@ public class AutoProvisionController {
                     "\\nlocation: " + location +
                     "\\nvlan: " + vlanId +
                     "\\npackage: " + packageType + "\""
-                    + 
+                    +
                     "}";
             if (showBody)
                 System.out.println("request body " + requestBody);
@@ -651,6 +656,11 @@ public class AutoProvisionController {
                 // COMMENT FROM HERE
                 // finalize and mark everything to be activated
                 ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
+                vlanInfoRepo.save(VlanInfo.builder()
+                .accountNo(accountNo)
+                .vlanId(vlanId)
+                .location(location)
+                .build());
                 AcsController.setInformIntervalPostProv(serialNumber);
                 AcsController.onuOnboarded(serialNumber);
 
