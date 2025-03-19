@@ -199,7 +199,7 @@ public class AutoProvisionController {
 
             Map<String, String> response = new HashMap<>();
             response.put("Status", "500");
-            response.put("Error", acsPushResponse);
+            response.put("An error occurred. ", acsPushResponse);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
         // return acsPushResponse;
@@ -384,7 +384,7 @@ public class AutoProvisionController {
     // API for INET (end) ----------------------------------------------
 
     // APIs for HiveApp ----------------------------------------------
-    @Async("AsyncExecutor")
+    @Async("AsyncExecutor") // [USED FOR AUTOPROVISIONING]
     @PostMapping("/executeAutoConfig")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     @PreAuthorize("hasRole('USER')")
@@ -401,6 +401,7 @@ public class AutoProvisionController {
         String clientName = params.get("clientName");
         String serialNumber = params.get("serialNumber");
         String macAddress = params.get("macAddress");
+        String location = params.get("location");
         // String site = params.get("site"); // To determine IPAM site
         String oltIp = params.get("olt");
         Long oltId = Long.parseLong(params.get("oltId"));
@@ -480,17 +481,19 @@ public class AutoProvisionController {
                     "\"job_template\": \"22\",\n" +
                     "\"ask_variables_on_launch\": \"true\",\n" +
                     "\"extra_vars\": \"---" +
-                    "\\ndevice_name: " + deviceName +
+                    "\\ndevice_name: " + deviceName + // not needed
                     "\\nserial_number: " + serialNumber +
                     "\\nmac_address: " + macAddress +
-                    "\\nolt_ip: " + oltIp +
+                    "\\nolt_ip: " + oltIp + // not needed
                     "\\naccount_number: " + accountNo + // TODO: add actual account number
-                    "\\nstatus: Activated " +
+                    "\\nstatus: Activated " + // not needed
                     "\\nonu_private_ip: " + ipAddress +
                     "\\ndownstream: " + downstream +
                     "\\nupstream: " + upstream +
+                    "\\nlocation: " + location +
+                    "\\nvlan: " + vlanId +
                     "\\npackage: " + packageType + "\""
-                    +
+                    + 
                     "}";
             if (showBody)
                 System.out.println("request body " + requestBody);
@@ -691,26 +694,6 @@ public class AutoProvisionController {
         jsonBody.append("\"job_template\":\"28\",");
         jsonBody.append("\"ask_variables_on_launch\":\"true\",");
         jsonBody.append("\"extra_vars\":\"---\\n" + "account_number: \\\"" + accountNo + "\\\"\"");
-        // NOTE: gi add
-        // nalang nako syag
-        // double quotes sa
-        // account number
-        // mismo kay naay
-        // tendencies na if
-        // ang account no
-        // kay numbers lng
-        // (e.g. 12345), ang
-        // ma send pud dayon
-        // na request sa
-        // playbook kay gina
-        // treat as integer
-        // ang account no
-        // even though naka
-        // define na as
-        // string pagkuha sa
-        // params. i think
-        // ire-check nalng
-        // siguro ni soon
         jsonBody.append("}");
 
         String requestBody = jsonBody.toString();
@@ -798,7 +781,7 @@ public class AutoProvisionController {
 
     // AutoProvisioning
 
-    @Async("AsyncExecutor")
+    @Async("AsyncExecutor") // [USED FOR AUTOPROVISIONING]
     @PostMapping("/executeMonitoring")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     @PreAuthorize("hasRole('USER')")
@@ -820,7 +803,7 @@ public class AutoProvisionController {
                 .getIpAddress();
 
         if (showBody)
-            System.out.println("avaiable ip " + ipAddRepo
+            System.out.println("available ip " + ipAddRepo
                     .getOneAvailableIpAddressUnderSite(site, "Private"));
 
         String packageType = params.get("packageType");
@@ -842,7 +825,6 @@ public class AutoProvisionController {
             upstream = packageT.getUpstream();
             downstream = packageT.getDownstream();
             packageName = packageT.getPackageType();
-
         }
 
         String ansibleApiUrl = playbookMonitoringApiUrl + "launch/";
@@ -1016,7 +998,7 @@ public class AutoProvisionController {
         // [[[[[[[------ALL GREEN TEST------]]]]]]] ------------------------------
     }
 
-    @Async("AsyncExecutor")
+    @Async("AsyncExecutor") // [USED FOR AUTOPROVISIONING]
     @PostMapping("/preprovisionCheck")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     @PreAuthorize("hasRole('USER')")
@@ -1233,7 +1215,7 @@ public class AutoProvisionController {
     }
 
     // Troubleshooting
-    @Async("AsyncExecutor")
+    @Async("AsyncExecutor") // [USED FOR AUTOPROVISIONING]
     @GetMapping("/lastJobStatus")
     public ResponseEntity<Map<String, String>> lastJobStatus(String accountNo, String jobId,
             boolean generateCredentials,
@@ -1950,16 +1932,15 @@ public class AutoProvisionController {
     public ResponseEntity<Map<String, String>> simulateError(String jobId,
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
             HttpServletRequest request) {
+        Map<String, String> response = new HashMap<>();
+        response.put("awx_job_id", jobId);
+        response.put("status", "500");
+        response.put("message", "Error on Mac Address Filtering!");
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), jobId,
                 String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
                 request.getHeader("Authorization"),
                 request.getHeader("User-Agent"));
-
-        Map<String, String> response = new HashMap<>();
-        response.put("awx_job_id", jobId);
-        response.put("status", "500");
-        response.put("message", "Error on Mac Address Filtering!");
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }

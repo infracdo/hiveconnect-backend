@@ -67,13 +67,13 @@ public class DhcpController {
         } catch (Exception e) {
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getCidrBlock(),
-                    String.valueOf(HttpStatus.BAD_REQUEST.value()), e.getMessage(), e.getStackTrace(),
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            ApiResponse response = new ApiResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            ApiResponse response = new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),"An error occurred. " +  e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
