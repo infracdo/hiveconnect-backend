@@ -34,6 +34,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.ipamDomain.CidrIpAddress;
+import com.autoprov.autoprov.entity.ipamDomain.VlanInfo;
 import com.autoprov.autoprov.entity.oltDomain.oltEntity;
 import com.autoprov.autoprov.entity.subscriberDomain.PackageTypeEntity;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
@@ -41,10 +42,12 @@ import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.acsRepositories.DevicesRepository;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.repositories.ipamRepositories.CidrIpAddressRepository;
+import com.autoprov.autoprov.repositories.ipamRepositories.VlanInfoRepository;
 import com.autoprov.autoprov.repositories.oltRepositories.oltRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.PackageRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
 import com.autoprov.autoprov.security.jwt.JwtUtils;
+import com.autoprov.autoprov.services.AbsService;
 import com.autoprov.autoprov.services.HiveClientService;
 import com.autoprov.autoprov.services.LogService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -93,6 +96,9 @@ public class AutoProvisionController {
     private subscriberRepository clientRepo;
 
     @Autowired
+    private VlanInfoRepository vlanInfoRepo;
+
+    @Autowired
     private oltRepository oltRepo;
     // @Autowired
     // private ClientDetailRepository clientDetailRepo;
@@ -114,6 +120,9 @@ public class AutoProvisionController {
 
     @Autowired
     private LogService logService;
+
+    @Autowired
+    private AbsService absService;
 
     // General Exposed Endpoints ----------------------------
     // @Async("AsyncExecutor")
@@ -394,6 +403,9 @@ public class AutoProvisionController {
             throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         String networkType = "";
+        Map<String, String> response = new LinkedHashMap<>();
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
         System.out.println(">>> HiveService: Provision executed from HiveApp");
 
         // Prepare RequestBody Values
@@ -405,11 +417,124 @@ public class AutoProvisionController {
         // String site = params.get("site"); // To determine IPAM site
         String oltIp = params.get("olt");
         Long oltId = Long.parseLong(params.get("oltId"));
+        String packageType = params.get("packageType");
+
+        if (accountNo == null || accountNo.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Account number is missing/invalid");
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        if (clientName == null || clientName.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Client name is missing/invalid");
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        if (serialNumber == null || serialNumber.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Serial number is missing/invalid");
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        if (macAddress == null || macAddress.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "MAC address is missing/invalid");
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        if (location == null || location.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Location is missing/invalid");
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        if (oltIp == null || oltIp.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "OLT ip is missing/invalid");
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        if (oltId == null || oltId <= 0) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "OLT id is missing/invalid");
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        if (packageType == null || packageType.isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Package type is missing/invalid");
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
         String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
         // String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
         // String wanMode = params.get("wanMode"); // Bridged or Routed
 
-        String packageType = params.get("packageType");
         // String upstream = params.get("upstream");
         // String downstream = params.get("downstream");
         String upstream = packageRepo.findBypackageId(packageType).get().getUpstream();
@@ -438,8 +563,6 @@ public class AutoProvisionController {
             downstream = packageT.getDownstream();
             packageName = packageT.getPackageType();
         } else {
-            Map<String, String> response = new LinkedHashMap<>(); // Use String as the value type
-            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
             response.put("message", "Package does not exist");
@@ -493,7 +616,7 @@ public class AutoProvisionController {
                     "\\nlocation: " + location +
                     "\\nvlan: " + vlanId +
                     "\\npackage: " + packageType + "\""
-                    + 
+                    +
                     "}";
             if (showBody)
                 System.out.println("request body " + requestBody);
@@ -501,26 +624,26 @@ public class AutoProvisionController {
             HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
             RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<String> response = restTemplate.exchange(ansibleApiUrl,
+            ResponseEntity<String> playbookResponse = restTemplate.exchange(ansibleApiUrl,
                     HttpMethod.POST, requestEntity,
                     String.class);
 
             System.out.println(">>> HiveConnect: Ansible executed");
             String jobId;
-            if (response.getStatusCode() == HttpStatus.CREATED) {
+            if (playbookResponse.getStatusCode() == HttpStatus.CREATED) {
                 System.out.println("Request successful.");
                 if (showBody)
-                    System.out.println("response body " + response.getBody());
+                    System.out.println("response body " + playbookResponse.getBody());
 
-                String responseBody = response.getBody();
+                String responseBody = playbookResponse.getBody();
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode jsonNode = objectMapper.readTree(responseBody);
                 jobId = jsonNode.get("id").asText();
 
             } else {
-                System.out.println("Request failed. Response: " + response.getStatusCode());
+                System.out.println("Request failed. Response: " + playbookResponse.getStatusCode());
                 if (showBody)
-                    System.out.println("Request failed. Response body: " + response.getBody());
+                    System.out.println("Request failed. Response body: " + playbookResponse.getBody());
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
@@ -537,6 +660,11 @@ public class AutoProvisionController {
                 // COMMENT FROM HERE
                 // finalize and mark everything to be activated
                 ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
+                vlanInfoRepo.save(VlanInfo.builder()
+                        .accountNo(accountNo)
+                        .vlanId(vlanId)
+                        .location(location)
+                        .build());
                 AcsController.setInformIntervalPostProv(serialNumber);
                 AcsController.onuOnboarded(serialNumber);
 
@@ -573,13 +701,25 @@ public class AutoProvisionController {
                 }
                 // END HERE
 
+                ResponseEntity<?> absResponse = absService.statusCallBack("ACTIVE",
+                        accountNo);
+
+                response.put("timestamp", timestamp);
+                response.put("status", String.valueOf(HttpStatus.OK.value()));
+
+                if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
+                    response.put("message", "Provisioned successfully");
+                } else {
+                    response.put("message", "Provisioned successfully but a problem was encountered while updating the subscriber's status in ABS. " + absResponse.getBody());
+                }
+
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                         String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return lastJobStatus;
+                return ResponseEntity.status(HttpStatus.OK).body(response);
 
                 // OLD CODE
                 // Map<String, String> response = new HashMap<>();
@@ -612,7 +752,7 @@ public class AutoProvisionController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            Map<String, String> response = new HashMap<>();
+            response.put("timestamp", timestamp);
             response.put("status", "500");
             response.put("message", acsResponse);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);

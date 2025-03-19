@@ -6,9 +6,15 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
+import com.autoprov.autoprov.dto.AbsTokenResponse;
 import com.autoprov.autoprov.security.services.UserDetailsImpl;
 
 import io.jsonwebtoken.ExpiredJwtException;
