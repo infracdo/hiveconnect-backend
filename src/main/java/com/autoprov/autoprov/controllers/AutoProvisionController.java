@@ -381,43 +381,6 @@ public class AutoProvisionController {
 
         return jsonResponse;
     }
-
-    public String executeHiveAutoProv(String accountNumber, String clientName, String serialNumber,
-            String defaultGateway,
-            String ipAddress,
-            String vlanId, String location) {
-        // Define the API URL
-        String apiUrl = acsApiUrl + "executeAutoConfig";
-
-        // Create headers with Content-Type set to application/json
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        // Create a JSON request body
-        StringBuilder jsonBody = new StringBuilder();
-
-        jsonBody.append("{");
-        jsonBody.append("\"accountNumber\":\"" + accountNumber + "\",");
-        jsonBody.append("\"clientName\":\"" + clientName + "\",");
-        jsonBody.append("\"serialNumber\":\"" + serialNumber + "\",");
-        jsonBody.append("\"defaultGateway\":\"" + defaultGateway + "\",");
-        jsonBody.append("\"ipAddress\":\"" + ipAddress + "\",");
-        jsonBody.append("\"location\":\"" + location + "\",");
-        jsonBody.append("\"vlanId\":\"" + vlanId + "\"");
-        jsonBody.append("}");
-
-        String jsonRequestBody = jsonBody.toString();
-        if (showBody)
-            System.out.println("request body " + jsonRequestBody);
-        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        String jsonResponse = restTemplate.postForObject(apiUrl, requestEntity, String.class);
-
-        System.out.println(">>> HiveConnect: ACS Push executed");
-        System.out.println("Response: " + jsonResponse);
-
-        return jsonResponse;
-    }
     // API for INET (end) ----------------------------------------------
 
     // APIs for HiveApp ----------------------------------------------
@@ -498,8 +461,8 @@ public class AutoProvisionController {
         Optional<CidrIpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
         String vlanId = ipAddressData.get().getVlanId();
 
-        String acsResponse = executeHiveAutoProv(accountNo, clientName, serialNumber, defaultGateway,
-                ipAddress, vlanId, location);
+        String acsResponse = executeInetAutoProv(accountNo, clientName, serialNumber, defaultGateway,
+                ipAddress, vlanId);
 
         if (acsResponse.toLowerCase().contains("successful")) {
             // SET BANDWIDTH LIMIT HERE
@@ -527,8 +490,10 @@ public class AutoProvisionController {
                     "\\nonu_private_ip: " + ipAddress +
                     "\\ndownstream: " + downstream +
                     "\\nupstream: " + upstream +
+                    "\\nlocation: " + location +
+                    "\\nvlan: " + vlanId +
                     "\\npackage: " + packageType + "\""
-                    + // needs VLAN 
+                    + 
                     "}";
             if (showBody)
                 System.out.println("request body " + requestBody);
