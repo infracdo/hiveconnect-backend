@@ -47,6 +47,7 @@ import com.autoprov.autoprov.repositories.oltRepositories.oltRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.PackageRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
 import com.autoprov.autoprov.security.jwt.JwtUtils;
+import com.autoprov.autoprov.services.AbsService;
 import com.autoprov.autoprov.services.HiveClientService;
 import com.autoprov.autoprov.services.LogService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -119,6 +120,9 @@ public class AutoProvisionController {
 
     @Autowired
     private LogService logService;
+
+    @Autowired
+    private AbsService absService;
 
     // General Exposed Endpoints ----------------------------
     // @Async("AsyncExecutor")
@@ -657,10 +661,10 @@ public class AutoProvisionController {
                 // finalize and mark everything to be activated
                 ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
                 vlanInfoRepo.save(VlanInfo.builder()
-                .accountNo(accountNo)
-                .vlanId(vlanId)
-                .location(location)
-                .build());
+                        .accountNo(accountNo)
+                        .vlanId(vlanId)
+                        .location(location)
+                        .build());
                 AcsController.setInformIntervalPostProv(serialNumber);
                 AcsController.onuOnboarded(serialNumber);
 
@@ -697,13 +701,25 @@ public class AutoProvisionController {
                 }
                 // END HERE
 
+                ResponseEntity<?> absResponse = absService.statusCallBack("ACTIVE",
+                        accountNo);
+
+                response.put("timestamp", timestamp);
+                response.put("status", String.valueOf(HttpStatus.OK.value()));
+
+                if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
+                    response.put("message", "Provisioned successfully");
+                } else {
+                    response.put("message", "Provisioned successfully but a problem was encountered while updating the subscriber's status in ABS. " + absResponse.getBody());
+                }
+
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
                         String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return lastJobStatus;
+                return ResponseEntity.status(HttpStatus.OK).body(response);
 
                 // OLD CODE
                 // Map<String, String> response = new HashMap<>();

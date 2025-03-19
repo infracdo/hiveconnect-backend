@@ -39,6 +39,7 @@ import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
 import com.autoprov.autoprov.security.jwt.JwtUtils;
+import com.autoprov.autoprov.services.AbsService;
 import com.autoprov.autoprov.services.LogService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -81,6 +82,9 @@ public class AcsController {
 
     @Autowired
     private LogService logService;
+
+    @Autowired
+    private AbsService absService;
 
     private static String acsApiUrl;
 
@@ -287,9 +291,19 @@ public class AcsController {
                 subscriber.setStatus("ONHOLD");
                 hiveClientRepo.save(subscriber);
 
+                ResponseEntity<?> absResponse = absService.statusCallBack("ONHOLD",
+                        subscriberAccountNumber);
+
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "Subscriber status is now on hold");
+
+                if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
+                    response.put("message", "Subscriber is now on hold");
+                } else {
+                    response.put("message",
+                            "Subscriber is now on hold but a problem was encountered while updating the subscriber's status in ABS. "
+                                    + absResponse.getBody());
+                }
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -585,9 +599,19 @@ public class AcsController {
                 client.setStatus("ACTIVE");
                 hiveClientRepo.save(client);
 
+                ResponseEntity<?> absResponse = absService.statusCallBack("ACTIVE",
+                        subscriberAccountNumber);
+
                 response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-                response.put("message", "Subscriber status is now active");
+                response.put("status", String.valueOf(HttpStatus.OK.value()));
+
+                if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
+                    response.put("message", "Subscriber is now active");
+                } else {
+                    response.put("message",
+                            "Subscriber is now active but a problem was encountered while updating the subscriber's status in ABS. "
+                                    + absResponse.getBody());
+                }
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -1479,9 +1503,17 @@ public class AcsController {
             if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
                 hiveClientRepo.delete(client);
 
+                ResponseEntity<?> absResponse = absService.statusCallBack("DEACTIVATED",
+                        subscriberAccountNumber);
+
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "HiveConnect: Account terminated successfully");
+
+                if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
+                    response.put("message", "Subscriber account has been successfully terminated");
+                } else {
+                    response.put("message", "Subscriber is now deactivated but a problem was encountered while updating the subscriber's status in ABS. " + absResponse.getBody());
+                }
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -1489,7 +1521,7 @@ public class AcsController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return lastJobStatus;
+                return ResponseEntity.status(HttpStatus.OK).body(response);
             } else {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),

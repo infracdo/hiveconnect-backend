@@ -39,6 +39,8 @@ import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
 import com.autoprov.autoprov.security.jwt.JwtUtils;
+import com.autoprov.autoprov.services.AbsService;
+import com.autoprov.autoprov.services.DhcpService;
 import com.autoprov.autoprov.services.HiveClientService;
 import com.autoprov.autoprov.services.LogService;
 import com.autoprov.autoprov.services.subscriberService;
@@ -66,6 +68,9 @@ public class subscriberController {
 
     @Value("${absTokenPassword}")
     private String absTokenPassword;
+
+    @Autowired
+    private AbsService absService;
 
     @Autowired
     private final subscriberService SubscriberService;
@@ -470,53 +475,8 @@ public class subscriberController {
             String newStatus = client.getStatus().replace("_PENDING_MIGRATION", "");
             client.setStatus(newStatus);
 
-            String absStatus;
-            if ("Active".equalsIgnoreCase(newStatus)) {
-                absStatus = "Activate";
-            } else if ("Onhold".equalsIgnoreCase(newStatus)) {
-                absStatus = "on-hold";
-            } else {
-
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
-                        subscriberAccountNumber,
-                        String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
-                        request.getHeader("Authorization"),
-                        request.getHeader("User-Agent"));
-
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "Invalid status for migration"));
-            }
-
-            String absUrl = absApiUrl + subscriberAccountNumber;
-
-            RestTemplate restTemplate = new RestTemplate();
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("ABS-API-KEY", absApiKey);
-            headers.set("Authorization", fetchAbsToken());
-
-            Map<String, String> requestBody = new HashMap<>();
-            requestBody.put("status", absStatus);
-
-            HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
-
-            System.out.println("request entity " + entity);
-            ResponseEntity<String> absResponse = restTemplate.exchange(absUrl,
-                    HttpMethod.POST, entity,
-                    String.class);
-
-            // Save the updated client entity
-            hiveClientRepository.save(client);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(absResponse.getBody());
-            String absMessage = jsonNode.path("message").asText();
-
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(absResponse.getStatusCode().value()));
-            response.put("message", absMessage);
+            ResponseEntity<?> absResponse = absService.statusCallBack(newStatus,
+                    subscriberAccountNumber);
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberAccountNumber,
@@ -524,7 +484,11 @@ public class subscriberController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(absResponse.getStatusCode()).body(response);
+            if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
+                hiveClientRepository.save(client);
+            } 
+
+            return ResponseEntity.status(absResponse.getStatusCode()).body(absResponse.getBody());
         } catch (HttpStatusCodeException e) {
 
             response.put("timestamp", timestamp);
@@ -1098,36 +1062,4 @@ public class subscriberController {
                             "An error occurred. " + e.getMessage()));
         }
     }
-
-    public String fetchAbsToken() {
-        String apiUrl = absTokenUrl;
-
-        // Create headers with Content-Type set to application/json
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("ABS-API-KEY", absApiKey);
-
-        // Create a JSON request body
-        StringBuilder jsonBody = new StringBuilder();
-
-        jsonBody.append("{");
-        jsonBody.append("\"username\":\"" + absTokenUsername + "\",");
-        jsonBody.append("\"password\":\"" + absTokenPassword + "\"");
-        jsonBody.append("}");
-
-        String jsonRequestBody = jsonBody.toString();
-        HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
-        RestTemplate restTemplate = new RestTemplate();
-
-        try {
-            AbsTokenResponse token = restTemplate
-                    .exchange(apiUrl, HttpMethod.POST, requestEntity, AbsTokenResponse.class)
-                    .getBody();
-
-            return "Bearer " + token.getAccess_token();
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
 }
