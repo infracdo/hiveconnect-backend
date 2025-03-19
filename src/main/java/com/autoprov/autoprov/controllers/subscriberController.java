@@ -1008,8 +1008,7 @@ public class subscriberController {
     public ResponseEntity<?> getAllSubscriberNetworkInfo(@RequestParam(required = false) String user,
             @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
-            List<HiveClient> hiveClients = hiveclientService.getAllSubscriberNetworkInfo(); // Fetch all
-                                                                                            // subscribers
+            List<HiveClient> hiveClients = hiveclientService.getAllSubscriberNetworkInfo();
             if (hiveClients != null && !hiveClients.isEmpty()) {
                 List<Map<String, Object>> responseList = hiveClients.stream().map(hiveClient -> {
                     Map<String, Object> response = new HashMap<>();
