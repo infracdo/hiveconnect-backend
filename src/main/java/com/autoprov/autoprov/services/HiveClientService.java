@@ -87,6 +87,10 @@ public class HiveClientService {
         return hiveClientRepo.findAll();
     }
 
+    public HiveClient getClientByAccountNumber(String subscriberAccountNumber) {
+        return hiveClientRepo.findBySubscriberAccountNumber(subscriberAccountNumber).orElse(null);
+    }
+
     public HiveClient getHiveClientByAccountNumber(String subscriberAccountNumber) {
         return hiveClientRepo.findBySubscriberAccountNumber(subscriberAccountNumber)
                 .orElseThrow(() -> new IllegalArgumentException(

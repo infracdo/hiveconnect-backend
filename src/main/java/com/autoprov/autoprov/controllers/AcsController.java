@@ -146,7 +146,7 @@ public class AcsController {
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-                response.put("message", "Subscriber account number is missing/invalid");
+                response.put("message", "Account number is missing/invalid");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -164,7 +164,7 @@ public class AcsController {
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-                response.put("message", "Subscriber does not exist ");
+                response.put("message", "Subscriber does not exist");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -291,19 +291,19 @@ public class AcsController {
                 subscriber.setStatus("ONHOLD");
                 hiveClientRepo.save(subscriber);
 
-                ResponseEntity<?> absResponse = absService.statusCallBack("ONHOLD",
-                        subscriberAccountNumber);
+                // ResponseEntity<?> absResponse = absService.statusCallBack("ONHOLD", subscriberAccountNumber);
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
+                response.put("message", "Subscriber status is now active");
 
-                if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
-                    response.put("message", "Subscriber is now on hold");
-                } else {
-                    response.put("message",
-                            "Subscriber is now on hold but a problem was encountered while updating the subscriber's status in ABS. "
-                                    + absResponse.getBody());
-                }
+                // if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
+                //     response.put("message", "Subscriber is now on hold");
+                // } else {
+                //     response.put("message",
+                //             "Subscriber is now on hold but a problem was encountered while updating the subscriber's status in ABS. "
+                //                     + absResponse.getBody());
+                // }
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -463,7 +463,7 @@ public class AcsController {
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-                response.put("message", "Subscriber account number is missing/invalid");
+                response.put("message", "Account number is missing/invalid");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -599,19 +599,19 @@ public class AcsController {
                 client.setStatus("ACTIVE");
                 hiveClientRepo.save(client);
 
-                ResponseEntity<?> absResponse = absService.statusCallBack("ACTIVE",
-                        subscriberAccountNumber);
+                // ResponseEntity<?> absResponse = absService.statusCallBack("ACTIVE", subscriberAccountNumber);
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
+                response.put("message", "Subscriber status is now active");
 
-                if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
-                    response.put("message", "Subscriber is now active");
-                } else {
-                    response.put("message",
-                            "Subscriber is now active but a problem was encountered while updating the subscriber's status in ABS. "
-                                    + absResponse.getBody());
-                }
+                // if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
+                //     response.put("message", "Subscriber status is now active");
+                // } else {
+                //     response.put("message",
+                //             "Subscriber is now active but a problem was encountered while updating the subscriber's status in ABS. "
+                //                     + absResponse.getBody());
+                // }
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -959,6 +959,7 @@ public class AcsController {
             HttpServletRequest request) {
         Map<String, String> response = new LinkedHashMap<>();
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
         String packageType = params.get("packageType");
 
@@ -966,7 +967,7 @@ public class AcsController {
         if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "Subscriber account number is missing/invalid");
+            response.put("message", "Account number is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberAccountNumber + "/" + packageType,
@@ -1008,7 +1009,7 @@ public class AcsController {
         if (!clientOptional.isPresent()) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            response.put("message", "Provisioned subscriber does not exist");
+            response.put("message", "Subscriber does not exist");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberAccountNumber + "/" + packageType,
@@ -1090,7 +1091,7 @@ public class AcsController {
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "Subscriber package updated successfully");
+                response.put("message", "Subscriber's package has been updated successfully");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber + "/" + packageType,
@@ -1503,17 +1504,17 @@ public class AcsController {
             if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
                 hiveClientRepo.delete(client);
 
-                ResponseEntity<?> absResponse = absService.statusCallBack("DEACTIVATED",
-                        subscriberAccountNumber);
+                // ResponseEntity<?> absResponse = absService.statusCallBack("DEACTIVATED", subscriberAccountNumber);
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
+                response.put("message", "Subscriber status is now active");
 
-                if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
-                    response.put("message", "Subscriber account has been successfully terminated");
-                } else {
-                    response.put("message", "Subscriber is now deactivated but a problem was encountered while updating the subscriber's status in ABS. " + absResponse.getBody());
-                }
+                // if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
+                //     response.put("message", "Subscriber account has been successfully terminated");
+                // } else {
+                //     response.put("message", "Subscriber is now deactivated but a problem was encountered while updating the subscriber's status in ABS. " + absResponse.getBody());
+                // }
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,

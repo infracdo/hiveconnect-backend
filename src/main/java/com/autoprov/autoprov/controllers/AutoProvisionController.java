@@ -777,7 +777,7 @@ public class AutoProvisionController {
         if (accountNo == null) {
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "Subscriber accountNo is missing/empty");
+            response.put("message", "Account number is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
@@ -799,7 +799,7 @@ public class AutoProvisionController {
 
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            response.put("message", "Subscriber does not exist. ");
+            response.put("message", "Subscriber does not exist");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } else {
             HiveClient client = clientOptional.get();
@@ -880,7 +880,7 @@ public class AutoProvisionController {
             if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
                 Map<String, String> responseBody = new HashMap<>();
                 responseBody.put("status", String.valueOf(HttpStatus.OK.value()));
-                responseBody.put("message", "Subscriber migrated successfully");
+                responseBody.put("message", "Subscriber has been migrated successfully");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                         String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
@@ -1381,17 +1381,18 @@ public class AutoProvisionController {
         if (generateCredentials) {
             return generateCredentials(accountNo, jobId, user, action, request);
         }
+        
+        // Default response for successful job completion without credential generation
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "200");
+        response.put("message", "Job completed successfully.");
+        response.put("awx_job_id", jobId);
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo + "/" + jobId,
                 String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                 request.getHeader("Authorization"),
                 request.getHeader("User-Agent"));
 
-        // Default response for successful job completion without credential generation
-        Map<String, String> response = new HashMap<>();
-        response.put("status", "200");
-        response.put("message", "Job completed successfully.");
-        response.put("awx_job_id", jobId);
         return ResponseEntity.status(HttpStatus.OK).body(response);
 
     }
