@@ -564,21 +564,20 @@ public class AutoProvisionController {
         // String downstream = "10000";
 
         // site = "CDO_3";
-        String ipAddress = ipAddRepo
+        CidrIpAddress ipAddressData = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
-                .get(0)
-                .getIpAddress();
+                .get(0);
 
-        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0,
-                (ipAddress.lastIndexOf("."))));
+        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddressData.getIpAddress().substring(0,
+                (ipAddressData.getIpAddress().lastIndexOf("."))));
 
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
         if (showBody)
             System.out.println("device name" + deviceName);
 
         // ACS Processes
-        Optional<CidrIpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
-        String vlanId = ipAddressData.get().getVlanId();
+        String ipAddress = ipAddressData.getIpAddress();
+        String vlanId = ipAddressData.getVlanId();
 
         String acsResponse = executeInetAutoProv(accountNo, clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
@@ -606,7 +605,7 @@ public class AutoProvisionController {
                     "\\nolt_ip: " + oltIp + // not needed
                     "\\naccount_number: " + accountNo + // TODO: add actual account number
                     "\\nstatus: Activated " + // not needed
-                    "\\nonu_private_ip: " + ipAddress +
+                    "\\nonu_private_ip: " + ipAddressData +
                     "\\ndownstream: " + downstream +
                     "\\nupstream: " + upstream +
                     "\\nlocation: " + location +
