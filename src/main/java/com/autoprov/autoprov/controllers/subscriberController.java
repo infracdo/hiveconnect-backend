@@ -117,7 +117,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "Subscriber account number is missing/invalid"));
+                                "Account number is missing/invalid"));
             }
 
             // Check if the subscriber name is empty or too long
@@ -136,7 +136,43 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "Subscriber name is missing/invalid"));
+                                "Name is missing/invalid"));
+            }
+
+            if (subscriberEntity.getProvision() == null
+                    || subscriberEntity.getProvision().trim().isEmpty()) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                        subscriberEntity.getSubscriberAccountNumber() + "/"
+                                + subscriberEntity.getSubscriberName() + "/"
+                                + subscriberEntity.getPackageType() + "/"
+                                + subscriberEntity.getProvision() + "/"
+                                + subscriberEntity.getSubsStatus(),
+                        String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST,
+                                "Provision is missing/invalid"));
+            }
+
+            if (subscriberEntity.getPackageType() == null
+                    || subscriberEntity.getPackageType().trim().isEmpty()) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                        subscriberEntity.getSubscriberAccountNumber() + "/"
+                                + subscriberEntity.getSubscriberName() + "/"
+                                + subscriberEntity.getPackageType() + "/"
+                                + subscriberEntity.getProvision() + "/"
+                                + subscriberEntity.getSubsStatus(),
+                        String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse(HttpStatus.BAD_REQUEST,
+                                "Package type is missing/invalid"));
             }
 
             Optional<HiveClient> clientOptional = hiveClientRepository
@@ -155,7 +191,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body(createErrorResponse(HttpStatus.CONFLICT,
-                                "Subscriber with this account number already exists"));
+                                "Subscriber already exists"));
             }
 
             // Set status to NEW
@@ -235,7 +271,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "Subscriber account number is missing/invalid"));
+                                "Account number is missing/invalid"));
             }
 
             Optional<subscriberEntity> clientOptional = subscriberRepository
@@ -311,7 +347,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "ONU device name is missing/invalid"));
+                                "ONU name is missing/invalid"));
             }
 
             if (hiveClient.getPackageType() == null || hiveClient.getPackageType().trim().isEmpty()
@@ -433,7 +469,7 @@ public class subscriberController {
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                            "Subscriber account number is missing/invalid"));
+                            "Account number is missing/invalid"));
         }
 
         // Fetch client from repository todo: change to hiveclient
@@ -486,7 +522,7 @@ public class subscriberController {
 
             if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
                 hiveClientRepository.save(client);
-            } 
+            }
 
             return ResponseEntity.status(absResponse.getStatusCode()).body(absResponse.getBody());
         } catch (HttpStatusCodeException e) {
@@ -536,7 +572,7 @@ public class subscriberController {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("timestamp", LocalDateTime.now().format(DATE_TIME_FORMATTER));
         response.put("status", HttpStatus.CREATED.value());
-        response.put("message", "Subscriber created successfully");
+        response.put("message", "Subscriber has been created successfully");
         return response;
     }
 
@@ -766,6 +802,8 @@ public class subscriberController {
             @RequestParam(required = false) String subscriberAccountNumber,
             @RequestParam(required = false) String user,
             @RequestParam(required = false) String action, HttpServletRequest request) {
+        Map<String, Object> response = new LinkedHashMap<>();
+
         // if (!request.getHeader("Authorization").equals(
         // "Bearer
         // eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0YWNjb3VudCIsImlhdCI6MTcyODk4MTA0MH0.6SGymGmjXsK1FgG7tqnirZEYc6r9ZyAvnJP1iEbtdsY"))
@@ -782,6 +820,10 @@ public class subscriberController {
         // System.out.println("Authorized");
         // }
         if (subscriberAccountNumber == null || subscriberAccountNumber.trim().isEmpty()) {
+            response.put("timestamp",
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            response.put("message", "Account number is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberAccountNumber,
@@ -789,19 +831,26 @@ public class subscriberController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            Map<String, Object> errorResponse = new LinkedHashMap<>();
-            errorResponse.put("timestamp",
-                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            errorResponse.put("status", HttpStatus.BAD_REQUEST.value());
-            errorResponse.put("message", "Subscriber account number is missing/invalid");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
         try {
             // Fetch subscriber details from the service
-            HiveClient subscriber = hiveclientService.getHiveClientByAccountNumber(subscriberAccountNumber);
+            HiveClient subscriber = hiveclientService.getClientByAccountNumber(subscriberAccountNumber);
 
             if (subscriber != null) {
+                Map<String, Object> data = new LinkedHashMap<>();
+                data.put("subscriberAccountNumber", subscriber.getSubscriberAccountNumber());
+                data.put("packageType", subscriber.getPackageType());
+                data.put("fullName", subscriber.getClientName());
+                data.put("status", subscriber.getStatus());
+
+                response.put("timestamp",
+                        LocalDateTime.now().format(
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                response.put("status", HttpStatus.OK.value());
+                response.put("message", "Subscriber account info");
+                response.put("data", data);
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -809,37 +858,49 @@ public class subscriberController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                Map<String, Object> response = new LinkedHashMap<>();
-                response.put("timestamp",
-                        LocalDateTime.now().format(
-                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                response.put("status", HttpStatus.OK.value());
-                response.put("message", "Subscriber account info");
-
-                Map<String, Object> data = new LinkedHashMap<>();
-                data.put("subscriberAccountNumber", subscriber.getSubscriberAccountNumber());
-                data.put("packageType", subscriber.getPackageType());
-                data.put("fullName", subscriber.getClientName());
-                data.put("status", subscriber.getStatus());
-
-                response.put("data", data);
-
                 return ResponseEntity.ok(response);
             } else {
+                subscriberEntity new_subscriber = SubscriberService
+                        .getSubscriberAccountInfo(subscriberAccountNumber);
 
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
-                        subscriberAccountNumber,
-                        String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                        request.getHeader("Authorization"),
-                        request.getHeader("User-Agent"));
+                if (new_subscriber != null) {
+                    Map<String, Object> data = new LinkedHashMap<>();
+                    data.put("subscriberAccountNumber", new_subscriber.getSubscriberAccountNumber());
+                    data.put("packageType", new_subscriber.getPackageType());
+                    data.put("fullName", new_subscriber.getSubscriberName());
+                    data.put("status", new_subscriber.getSubsStatus());
 
-                Map<String, Object> errorResponse = new LinkedHashMap<>();
-                errorResponse.put("timestamp",
-                        LocalDateTime.now().format(
-                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                errorResponse.put("status", HttpStatus.NOT_FOUND.value());
-                errorResponse.put("message", "Subscriber does not exist");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+                    response.put("timestamp",
+                            LocalDateTime.now().format(
+                                    DateTimeFormatter.ofPattern(
+                                            "yyyy-MM-dd HH:mm:ss")));
+                    response.put("status", HttpStatus.OK.value());
+                    response.put("message", "Subscriber account info");
+                    response.put("data", data);
+
+                    logService.logApiAccess(user, action, request.getMethod(),
+                            request.getRequestURI(),
+                            subscriberAccountNumber,
+                            String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                            request.getHeader("Authorization"),
+                            request.getHeader("User-Agent"));
+
+                    return ResponseEntity.ok(response);
+                } else {
+                    response.put("timestamp", LocalDateTime.now().format( DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                    response.put("status", HttpStatus.NOT_FOUND.value());
+                    response.put("message", "Subscriber does not exist");
+
+                    logService.logApiAccess(user, action, request.getMethod(),
+                            request.getRequestURI(),
+                            subscriberAccountNumber,
+                            String.valueOf(HttpStatus.NOT_FOUND.value()),
+                            request.getRemoteAddr(),
+                            request.getHeader("Authorization"),
+                            request.getHeader("User-Agent"));
+
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                }
             }
         } catch (Exception e) {
 
@@ -851,12 +912,10 @@ public class subscriberController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            Map<String, Object> errorResponse = new LinkedHashMap<>();
-            errorResponse.put("timestamp",
-                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-            errorResponse.put("message", "Error retrieving Subscriber: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            response.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+            response.put("message", "An error occurred. " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
