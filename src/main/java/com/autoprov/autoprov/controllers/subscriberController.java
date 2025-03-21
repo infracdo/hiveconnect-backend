@@ -271,7 +271,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "Subscriber account number is missing/invalid"));
+                                "Account number is missing/invalid"));
             }
 
             Optional<subscriberEntity> clientOptional = subscriberRepository
@@ -347,7 +347,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                                "ONU device name is missing/invalid"));
+                                "ONU name is missing/invalid"));
             }
 
             if (hiveClient.getPackageType() == null || hiveClient.getPackageType().trim().isEmpty()
@@ -469,7 +469,7 @@ public class subscriberController {
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(createErrorResponse(HttpStatus.BAD_REQUEST,
-                            "Subscriber account number is missing/invalid"));
+                            "Account number is missing/invalid"));
         }
 
         // Fetch client from repository todo: change to hiveclient

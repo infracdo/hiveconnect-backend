@@ -667,6 +667,10 @@ public class AutoProvisionController {
                         .build());
                 AcsController.setInformIntervalPostProv(serialNumber);
                 AcsController.onuOnboarded(serialNumber);
+                
+                TimeUnit.SECONDS.sleep(20);
+                AcsController.rebootONU(serialNumber);
+                TimeUnit.SECONDS.sleep(20);
 
                 String ssidName = accountNo.replace(" ", "_");
 
