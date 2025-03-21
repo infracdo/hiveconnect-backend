@@ -530,38 +530,13 @@ public class AutoProvisionController {
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-
-        String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
-        // String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
-        // String wanMode = params.get("wanMode"); // Bridged or Routed
-
-        // String upstream = params.get("upstream");
-        // String downstream = params.get("downstream");
-        String upstream = packageRepo.findBypackageId(packageType).get().getUpstream();
-        String downstream = packageRepo.findBypackageId(packageType).get().getDownstream();
-        // String packageType = "PLAN999";
-        // String upstream = "1000";
-        // String downstream = "10000";
-
-        // site = "CDO_3";
-        String ipAddress = ipAddRepo
-                .getOneAvailableIpAddressUnderSite(site, "Private")
-                .get(0)
-                .getIpAddress();
-
-        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0,
-                (ipAddress.lastIndexOf("."))));
-
-        String packageName = "";
-
+        
         Optional<PackageTypeEntity> optionalPackage = packageRepo.findBypackageId(packageType);
         if (optionalPackage.isPresent()) {
             PackageTypeEntity packageT = optionalPackage.get();
-            if (showBody)
+            if (showBody) {
                 System.out.println("package details " + packageT.toString());
-            upstream = packageT.getUpstream();
-            downstream = packageT.getDownstream();
-            packageName = packageT.getPackageType();
+            }
         } else {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
@@ -576,13 +551,33 @@ public class AutoProvisionController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
+        String site = oltRepo.findByOlt_ip(oltId).get().getOltNetworksite();
+        // String site = oltRepo.findByOlt_ip(oltIp).get().getOltNetworksite();
+        // String wanMode = params.get("wanMode"); // Bridged or Routed
+
+        // String upstream = params.get("upstream");
+        // String downstream = params.get("downstream");
+        String upstream = packageRepo.findBypackageId(packageType).get().getUpstream();
+        String downstream = packageRepo.findBypackageId(packageType).get().getDownstream();
+        // String packageType = "PLAN999";
+        // String upstream = "1000";
+        // String downstream = "10000";
+
+        // site = "CDO_3";
+        CidrIpAddress ipAddressData = ipAddRepo
+                .getOneAvailableIpAddressUnderSite(site, "Private")
+                .get(0);
+
+        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddressData.getIpAddress().substring(0,
+                (ipAddressData.getIpAddress().lastIndexOf("."))));
+
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
         if (showBody)
             System.out.println("device name" + deviceName);
 
         // ACS Processes
-        Optional<CidrIpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
-        String vlanId = ipAddressData.get().getVlanId();
+        String ipAddress = ipAddressData.getIpAddress();
+        String vlanId = ipAddressData.getVlanId();
 
         String acsResponse = executeInetAutoProv(accountNo, clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
@@ -610,7 +605,7 @@ public class AutoProvisionController {
                     "\\nolt_ip: " + oltIp + // not needed
                     "\\naccount_number: " + accountNo + // TODO: add actual account number
                     "\\nstatus: Activated " + // not needed
-                    "\\nonu_private_ip: " + ipAddress +
+                    "\\nonu_private_ip: " + ipAddressData +
                     "\\ndownstream: " + downstream +
                     "\\nupstream: " + upstream +
                     "\\nlocation: " + location +
@@ -660,14 +655,17 @@ public class AutoProvisionController {
                 // COMMENT FROM HERE
                 // finalize and mark everything to be activated
                 ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
-                vlanInfoRepo.save(VlanInfo.builder()
-                        .accountNo(accountNo)
-                        .vlanId(vlanId)
-                        .location(location)
-                        .build());
+
+                VlanInfo newInfo = VlanInfo.builder().accountNo(accountNo)
+                .vlanId(vlanId)
+                .location(location)
+                .build();
+                
+                vlanInfoRepo.save(newInfo);
+                
                 AcsController.setInformIntervalPostProv(serialNumber);
                 AcsController.onuOnboarded(serialNumber);
-                
+
                 TimeUnit.SECONDS.sleep(20);
                 AcsController.rebootONU(serialNumber);
                 TimeUnit.SECONDS.sleep(20);
@@ -714,7 +712,9 @@ public class AutoProvisionController {
                 if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
                     response.put("message", "Provisioned successfully");
                 } else {
-                    response.put("message", "Provisioned successfully but a problem was encountered while updating the subscriber's status in ABS. " + absResponse.getBody());
+                    response.put("message",
+                            "Provisioned successfully but a problem was encountered while updating the subscriber's status in ABS. "
+                                    + absResponse.getBody());
                 }
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
@@ -1171,7 +1171,7 @@ public class AutoProvisionController {
         if (siteOlt.isEmpty()) {
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            response.put("message", "No existing site olt data found.");
+            response.put("message", "Olt does not exist");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
@@ -1189,7 +1189,7 @@ public class AutoProvisionController {
         if (availableIpAddresses.isEmpty()) {
             Map<String, String> response = new HashMap<>();
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            response.put("message", "No available IP address with type 'Private' found.");
+            response.put("message", "No private IP addresses left under the selected OLT");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
@@ -1385,7 +1385,7 @@ public class AutoProvisionController {
         if (generateCredentials) {
             return generateCredentials(accountNo, jobId, user, action, request);
         }
-        
+
         // Default response for successful job completion without credential generation
         Map<String, String> response = new HashMap<>();
         response.put("status", "200");
