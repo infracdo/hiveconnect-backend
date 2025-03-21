@@ -8,14 +8,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.autoprov.autoprov.entity.ipamDomain.VlanInfo;
-import com.autoprov.autoprov.repositories.ipamRepositories.VlanInfoRepository;
+import com.autoprov.autoprov.entity.hiveDomain.VlanInfo;
+import com.autoprov.autoprov.repositories.hiveRepositories.VlanInfoRepository;
 
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/test")
 public class TestController {
+
+  @Autowired
+  private VlanInfoRepository vlanInfoRepo;
 
   // @GetMapping("/all")
   // public String allAccess() {
@@ -26,6 +29,12 @@ public class TestController {
   // // @PreAuthorize("hasAnyRole('HIVECONNECT_ADMIN', 'HIVECONNECT_NETWORK_SUPPORT',
   // // 'HIVECONNECT_TECH_SUPPORT')")
   // public String userAccess() {
+  //   VlanInfo newInfo = VlanInfo.builder().accountNo("reseller1")
+  //               .vlanId("2012")
+  //               .location("CDO")
+  //               .build();
+                
+  //               vlanInfoRepo.save(newInfo);
   //   return "User Content. ....congrats you can access this content.";
   // }
 

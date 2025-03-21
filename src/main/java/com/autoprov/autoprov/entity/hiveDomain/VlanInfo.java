@@ -1,4 +1,4 @@
-package com.autoprov.autoprov.entity.ipamDomain;
+package com.autoprov.autoprov.entity.hiveDomain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

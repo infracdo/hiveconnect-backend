@@ -1,4 +1,4 @@
-package com.autoprov.autoprov.repositories.ipamRepositories;
+package com.autoprov.autoprov.repositories.hiveRepositories;
 
 import java.util.List;
 import java.util.Optional;
@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import com.autoprov.autoprov.entity.ipamDomain.VlanInfo;
+import com.autoprov.autoprov.entity.hiveDomain.VlanInfo;
 
 public interface VlanInfoRepository extends JpaRepository<VlanInfo, Long> {
     boolean existsByAccountNo(String accountNo);
