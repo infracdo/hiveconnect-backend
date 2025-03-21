@@ -34,9 +34,11 @@ import org.springframework.web.client.RestTemplate;
 
 import com.autoprov.autoprov.entity.acsDomain.Device;
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
+import com.autoprov.autoprov.entity.ipamDomain.VlanInfo;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
+import com.autoprov.autoprov.repositories.ipamRepositories.VlanInfoRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
 import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.services.AbsService;
@@ -79,6 +81,9 @@ public class AcsController {
 
     @Autowired
     private subscriberRepository subscriberRepo;
+    
+    @Autowired
+    private VlanInfoRepository vlanInfoRepo;
 
     @Autowired
     private LogService logService;
@@ -296,7 +301,7 @@ public class AcsController {
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "Subscriber status is now active");
+                response.put("message", "Subscriber status is now on hold");
 
                 // if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
                 //     response.put("message", "Subscriber is now on hold");
@@ -1505,13 +1510,16 @@ public class AcsController {
 
             if (lastJobStatus.getStatusCode().equals(HttpStatus.OK)) {
                 AcsController.rebootONU(client.getOnuSerialNumber());
+                Optional<VlanInfo> vlanInfo = vlanInfoRepo.findByAccountNo(client.getSubscriberAccountNumber());
+                VlanInfo info = vlanInfo.get();
                 hiveClientRepo.delete(client);
+                vlanInfoRepo.delete(info);
 
                 // ResponseEntity<?> absResponse = absService.statusCallBack("DEACTIVATED", subscriberAccountNumber);
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "Subscriber status is now active");
+                response.put("message", "Subscriber is now terminated");
 
                 // if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
                 //     response.put("message", "Subscriber account has been successfully terminated");
