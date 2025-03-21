@@ -564,25 +564,27 @@ public class AutoProvisionController {
         // String downstream = "10000";
 
         // site = "CDO_3";
-        CidrIpAddress ipAddressData = ipAddRepo
+        String ipAddress = ipAddRepo
                 .getOneAvailableIpAddressUnderSite(site, "Private")
-                .get(0);
+                .get(0).getIpAddress();
 
-        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddressData.getIpAddress().substring(0,
-                (ipAddressData.getIpAddress().lastIndexOf("."))));
+        String defaultGateway = ipAddRepo.getGatewayOfIpAddress(ipAddress.substring(0,
+                (ipAddress.lastIndexOf("."))));
 
+        Optional<CidrIpAddress> ipAddressData = ipAddRepo.findByipAddress(ipAddress);
+        String vlanId = ipAddressData.get().getVlanId();
+        
         String deviceName = "" + clientName.replace(" ", "_") + "_bw1";
         if (showBody)
             System.out.println("device name" + deviceName);
 
         // ACS Processes
-        String ipAddress = ipAddressData.getIpAddress();
-        String vlanId = ipAddressData.getVlanId();
-
         String acsResponse = executeInetAutoProv(accountNo, clientName, serialNumber, defaultGateway,
                 ipAddress, vlanId);
 
         if (acsResponse.toLowerCase().contains("successful")) {
+            AcsController.getWan2MacAddress(serialNumber);
+            TimeUnit.SECONDS.sleep(20);
             // SET BANDWIDTH LIMIT HERE
             String ansibleApiUrl = playbookBandwidthLimitationApiUrl + "launch/";
             String accessToken = ansibleAccessToken;
@@ -590,10 +592,6 @@ public class AutoProvisionController {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + accessToken);
             headers.setContentType(MediaType.APPLICATION_JSON);
-
-            TimeUnit.SECONDS.sleep(20);
-            AcsController.getWan2MacAddress(serialNumber);
-            TimeUnit.SECONDS.sleep(20);
 
             String requestBody = "{\n" +
                     "\"job_template\": \"22\",\n" +
@@ -605,7 +603,7 @@ public class AutoProvisionController {
                     "\\nolt_ip: " + oltIp + // not needed
                     "\\naccount_number: " + accountNo + // TODO: add actual account number
                     "\\nstatus: Activated " + // not needed
-                    "\\nonu_private_ip: " + ipAddressData +
+                    "\\nonu_private_ip: " + ipAddress +
                     "\\ndownstream: " + downstream +
                     "\\nupstream: " + upstream +
                     "\\nlocation: " + location +
