@@ -33,16 +33,16 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
+import com.autoprov.autoprov.entity.hiveDomain.VlanInfo;
 import com.autoprov.autoprov.entity.ipamDomain.CidrIpAddress;
-import com.autoprov.autoprov.entity.ipamDomain.VlanInfo;
 import com.autoprov.autoprov.entity.oltDomain.oltEntity;
 import com.autoprov.autoprov.entity.subscriberDomain.PackageTypeEntity;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.acsRepositories.DevicesRepository;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
+import com.autoprov.autoprov.repositories.hiveRepositories.VlanInfoRepository;
 import com.autoprov.autoprov.repositories.ipamRepositories.CidrIpAddressRepository;
-import com.autoprov.autoprov.repositories.ipamRepositories.VlanInfoRepository;
 import com.autoprov.autoprov.repositories.oltRepositories.oltRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.PackageRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;

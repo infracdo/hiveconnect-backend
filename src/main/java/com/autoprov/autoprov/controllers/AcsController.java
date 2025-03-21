@@ -34,11 +34,11 @@ import org.springframework.web.client.RestTemplate;
 
 import com.autoprov.autoprov.entity.acsDomain.Device;
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
-import com.autoprov.autoprov.entity.ipamDomain.VlanInfo;
+import com.autoprov.autoprov.entity.hiveDomain.VlanInfo;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
-import com.autoprov.autoprov.repositories.ipamRepositories.VlanInfoRepository;
+import com.autoprov.autoprov.repositories.hiveRepositories.VlanInfoRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
 import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.services.AbsService;
