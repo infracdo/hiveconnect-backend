@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
@@ -676,20 +677,20 @@ public class AutoProvisionController {
                 Optional<subscriberEntity> optionalClient = clientRepo.findBySubscriberAccountNumber(accountNo);
                 if (optionalClient.isPresent()) {
                     subscriberEntity client = optionalClient.get();
-                    // client.setOnuDeviceName(deviceName);
-                    // client.setOnuMacAddress(macAddress);
-                    // client.setSubsStatus("ACTIVE");
-                    // client.setIpAssigned(ipAddress);
-                    // client.setBucketId("100");
-                    // client.setOltReportedUpstream(upstream);
-                    // client.setOltReportedDownstream(downstream);
-                    // client.setOnuSerialNumber(serialNumber);
-                    // client.setOltIp(oltIp);
-                    // client.setPackageType(packageType);
-                    // client.setSsidName(ssidName);
-                    // client.setSite(site);
-                    // client.setProvision("HiveConnect");
-                    // clientRepo.save(client);
+                    client.setOnuDeviceName(deviceName);
+                    client.setOnuMacAddress(macAddress);
+                    client.setSubsStatus("ACTIVE");
+                    client.setIpAssigned(ipAddress);
+                    client.setBucketId("100");
+                    client.setOltReportedUpstream(upstream);
+                    client.setOltReportedDownstream(downstream);
+                    client.setOnuSerialNumber(serialNumber);
+                    client.setOltIp(oltIp);
+                    client.setPackageType(packageType);
+                    client.setSsidName(ssidName);
+                    client.setSite(site);
+                    client.setProvision("HiveConnect");
+                    clientRepo.save(client);
 
                     HiveClientService.addHiveNewClient(accountNo, client.getSubscriberName(), serialNumber, deviceName,
                             macAddress, oltIp, oltInterface,
@@ -697,23 +698,23 @@ public class AutoProvisionController {
                             ssidName, packageType, bandwidth[0], bandwidth[1]);
 
                     deviceRepo.updateParentBySerialNumber("Hive Test", serialNumber);
-                    clientRepo.delete(client);
+                    // clientRepo.delete(client);
                 }
                 // END HERE
 
-                ResponseEntity<?> absResponse = absService.statusCallBack("ACTIVE",
-                        accountNo);
+                // ResponseEntity<?> absResponse = absService.statusCallBack("ACTIVE",accountNo);
 
                 response.put("timestamp", timestamp);
                 response.put("status", String.valueOf(HttpStatus.OK.value()));
+                response.put("message", "Provisioned successfully");
 
-                if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
-                    response.put("message", "Provisioned successfully");
-                } else {
-                    response.put("message",
-                            "Provisioned successfully but a problem was encountered while updating the subscriber's status in ABS. "
-                                    + absResponse.getBody());
-                }
+                // if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
+                //     response.put("message", "Provisioned successfully");
+                // } else {
+                //     response.put("message",
+                //             "Provisioned successfully but a problem was encountered while updating the subscriber's status in ABS. "
+                //                     + absResponse.getBody());
+                // }
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
@@ -760,6 +761,108 @@ public class AutoProvisionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
         // return acsPushResponse;
+    }
+
+    // EXPOSE THIS API [USED FOR AUTOPROVISIONING]
+    @Async("asyncExecutor")
+    @PostMapping("/updateProvisionedSubscriberStatus")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> updateAutoProvisionedStatus(@RequestBody Map<String, String> params,
+            @RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
+        Map<String, String> response = new LinkedHashMap<>();
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String subscriberAccountNumber = params.get("subscriberAccountNumber");
+
+        // Check if the subscriber account number is empty or null
+        if (subscriberAccountNumber == null
+                || subscriberAccountNumber.trim().isEmpty()) {
+            response.put("timestamp", timestamp);
+            response.put("status", "400");
+            response.put("message", "Account number is missing/invalid");
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(response);
+        }
+
+        // Check if the subscriber exists in new subscribers
+        Optional<subscriberEntity> subscriberOptional = clientRepo.findBySubscriberAccountNumber(subscriberAccountNumber);
+
+        // Check if the subscriber exists in the hive clients
+        Optional<HiveClient> clientOptional = hiveClientRepository.findBySubscriberAccountNumber(subscriberAccountNumber);
+    
+        if (!(subscriberOptional.isPresent() && clientOptional.isPresent())) {
+            response.put("timestamp", timestamp);
+            response.put("status", "400");
+            response.put("message", "Subscriber has not been recently provisioned");
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    subscriberAccountNumber,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } 
+
+        try {
+            // Get the client entity
+            subscriberEntity client = subscriberOptional.get();
+
+            // Update the client entity with new status
+            String absStatus = client.getSubsStatus();
+
+            ResponseEntity<?> absResponse = absService.statusCallBack(absStatus,
+                    subscriberAccountNumber);
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    subscriberAccountNumber,
+                    String.valueOf(absResponse.getStatusCode().value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
+                    clientRepo.delete(client);
+            }
+
+            return ResponseEntity.status(absResponse.getStatusCode()).body(absResponse.getBody());
+        } catch (HttpStatusCodeException e) {
+
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(e.getStatusCode().value()));
+            response.put("message", e.getResponseBodyAsString());
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
+                    subscriberAccountNumber,
+                    String.valueOf(e.getStatusCode().value()), e.getResponseBodyAsString(),
+                    e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(e.getStatusCode()).body(response);
+        } catch (Exception e) {
+            // Handle any unexpected exceptions
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            response.put("message", "An error occurred. " + e.getMessage());
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
+                    subscriberAccountNumber,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(),
+                    e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     // EXPOSE THIS API [USED FOR MIGRATION]
