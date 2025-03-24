@@ -1068,13 +1068,20 @@ public class AutoProvisionController {
         }
 
         HiveClient client = optionalClient.get();
-
-        if (client.getMonitoringStatus().equals("monitored")) {
+        if (client.getMonitoringStatus().equals("setting up monitoring")) {
+            response.put("timestamp", timestamp);
+            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            response.put("message", "Monitoring setup is in progress");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } else if (client.getMonitoringStatus().equals("monitored")) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
             response.put("message", "Subscriber is already being monitored");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+        
+        client.setMonitoringStatus("setting up monitoring");
+        hiveClientRepository.save(client);
 
         String clientName = client.getClientName(); // can get from db entry
         String serialNumber = client.getOnuSerialNumber(); // can get from db entry
