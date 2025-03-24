@@ -20,9 +20,13 @@ public interface oltRepository extends JpaRepository<oltEntity, Long> {
     @Query(value = "SELECT * from site_olt where olt_name=?1", nativeQuery = true)
     Optional<oltEntity> findByOlt_Name(String olt_Name);
 
-    //@Query(value = "SELECT * from site_olt where olt_ipaddress=?1", nativeQuery = true)
+    //@Query(value = "SELECT * from site_olt where olt_id=?1", nativeQuery = true)
     @Query(value = "SELECT * FROM site_olt WHERE olt_id = ?1", nativeQuery = true)
-    Optional<oltEntity> findByOlt_ip(Long olt_id);
+    Optional<oltEntity> findByOlt_id(Long olt_id);
+
+    //@Query(value = "SELECT * from site_olt where olt_ipaddress=?1", nativeQuery = true)
+    @Query(value = "SELECT * FROM site_olt WHERE olt_ipaddress = ?1", nativeQuery = true)
+    Optional<oltEntity> findByOlt_ip(String olt_ipaddress);
 
     @Query(value = "SELECT * from site_olt", nativeQuery = true)
     List<oltEntity> getAllOlts();
