@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -67,6 +68,10 @@ public class HiveClient {
 
     @Column(name = "ssid_name")
     private String ssidName;
+
+    @Column(name = "monitoring_status")
+    @Builder.Default
+    private String monitoringStatus = "unmonitored";
 
     // Getters and Setters
     public Long getId() {
@@ -195,6 +200,14 @@ public class HiveClient {
 
     public void setSsidName(String ssidName) {
         this.ssidName = ssidName;
+    }
+
+    public String getMonitoringStatus() {
+        return monitoringStatus;
+    }
+
+    public void setMonitoringStatus(String monitoringStatus) {
+        this.monitoringStatus = monitoringStatus;
     }
 
     public HiveClient() {

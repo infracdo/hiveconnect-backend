@@ -43,6 +43,7 @@ public class HiveClientService {
                 .packageType(packageType)
                 .oltReportedUpstream(upstream)
                 .oltReportedDownstream(downstream)
+                .monitoringStatus("unmonitored")
                 .build();
         hiveClientRepo.save(newHiveClient);
 
@@ -71,12 +72,13 @@ public class HiveClientService {
                 .packageType(packageType)
                 .oltReportedUpstream(upstream)
                 .oltReportedDownstream(downstream)
+                .monitoringStatus("unmonitored")
                 .build();
 
         Optional<HiveClient> existingSubscriber = hiveClientRepo
                 .findBySubscriberAccountNumber(newHiveClient.getSubscriberAccountNumber());
         if (existingSubscriber.isPresent()) {
-            throw new Exception("Subscriber with this ACCOUNT number already exists.");
+            throw new Exception("Subscriber already exists.");
         }
         hiveClientRepo.save(newHiveClient);
 
