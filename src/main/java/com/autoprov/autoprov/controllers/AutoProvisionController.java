@@ -711,10 +711,6 @@ public class AutoProvisionController {
                 // ResponseEntity<?> absResponse =
                 // absService.statusCallBack("ACTIVE",accountNo);
 
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "Provisioned successfully");
-
                 // if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
                 // response.put("message", "Provisioned successfully");
                 // } else {
