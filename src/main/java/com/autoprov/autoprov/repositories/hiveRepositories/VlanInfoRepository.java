@@ -31,6 +31,10 @@ public interface VlanInfoRepository extends JpaRepository<VlanInfo, Long> {
     void updateVlanId(String accountNo, String vlanId);
 
     @Modifying
-    @Query("UPDATE VlanInfo c SET c.vlanId = ?2 WHERE c.accountNo = ?1")
+    @Query("UPDATE VlanInfo c SET c.location = ?2 WHERE c.accountNo = ?1")
     void updateLocation(String accountNo, String location);
+
+    @Modifying
+    @Query("update VlanInfo c SET c.vlanId = ?1, c.location = ?2 where c.accountNo = ?3")
+    void updateClientById(String vlanId, String location, String accountNo);
 }

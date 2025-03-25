@@ -663,12 +663,17 @@ public class AutoProvisionController {
                 // finalize and mark everything to be activated
                 ipAddRepo.associateIpAddressToAccountNumber(accountNo, ipAddress);
 
-                VlanInfo newInfo = VlanInfo.builder().accountNo(accountNo)
+                Optional<VlanInfo> info = vlanInfoRepo.findByAccountNo(accountNo);
+                if (info.isPresent()) {
+                    vlanInfoRepo.updateInfo(vlanId, location, accountNo);
+                } else {
+                    VlanInfo newInfo = VlanInfo.builder().accountNo(accountNo)
                         .vlanId(vlanId)
                         .location(location)
                         .build();
 
-                vlanInfoRepo.save(newInfo);
+                    vlanInfoRepo.save(newInfo);
+                }
 
                 AcsController.setInformIntervalPostProv(serialNumber);
                 AcsController.onuOnboarded(serialNumber);
@@ -725,7 +730,7 @@ public class AutoProvisionController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.OK).body(response);
+                return lastJobStatus;
 
                 // OLD CODE
                 // Map<String, String> response = new HashMap<>();
@@ -1541,10 +1546,10 @@ public class AutoProvisionController {
 
         // Monitor the job status
         String lastJobStatus = monitorJobStatus(jobId);
+        System.out.println("lastJobStatus " + lastJobStatus);
 
         // Handle job failure
         if (lastJobStatus.contains("fail")) {
-            System.out.println("lastJobStatus " + lastJobStatus);
             return handleJobFailure(jobId);
         }
 
