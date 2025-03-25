@@ -19,7 +19,7 @@ public interface HiveClientRepository extends CrudRepository<HiveClient, Long> {
     @Query(value = "SELECT * from hive_clients where status IN ('ACTIVE', 'ONHOLD')", nativeQuery = true)
     List<HiveClient> findActiveHold();
     
-    @Query(value = "SELECT * from hive_clients where status LIKE '%_PENDING_MIGRATION'", nativeQuery = true)
+    @Query(value = "SELECT * from hive_clients where status LIKE '%\\_PENDING_MIGRATION'", nativeQuery = true)
     List<HiveClient> findMigrating();
 
    Optional<HiveClient> findBySubscriberAccountNumber(String subscriberAccountNumber);
