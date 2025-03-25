@@ -1136,7 +1136,7 @@ public class AutoProvisionController {
                 "\\nvlan_690_ip: " + devicesRepo.getOnuInfoBySerialNumber(serialNumber).get(0).getPublicIp() +
                 "\\nvlan_2010_mac: " + devicesRepo.getOnuInfoBySerialNumber(serialNumber).get(0).getSecondWanMac() +
                 "\\nonu_private_ip: " + ipAddress +
-                "\\npackage_type: " + packageName +
+                "\\npackage_type: " + packageType +
                 "\\ndownstream: " + downstream +
                 "\\nupstream: " + upstream + "\""
                 +
