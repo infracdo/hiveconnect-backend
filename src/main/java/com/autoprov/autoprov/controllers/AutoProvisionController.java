@@ -1068,19 +1068,37 @@ public class AutoProvisionController {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
             response.put("message", "Subscriber does not exist");
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
         HiveClient client = optionalClient.get();
-        if (client.getMonitoringStatus().equals("setting up monitoring")) {
+        if (client.getMonitoringStatus().equals("setting up")) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
             response.put("message", "Monitoring setup is in progress");
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } else if (client.getMonitoringStatus().equals("monitored")) {
             response.put("timestamp", timestamp);
             response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
             response.put("message", "Subscriber is already being monitored");
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
+                    String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
         

@@ -975,7 +975,7 @@ public class subscriberController {
         }
     }
 
-    // RETURN SUBSCRIBER COUNT OF SPECIFIC STATUS
+    // RETURN SUBSCRIBER COUNT OF SPECIFIC STATUS AND LOCATION
     @Async("asyncExecutor")
     @GetMapping("/getStatusCount")
     public ResponseEntity<?> getSubscriberStatusCount(@RequestParam(required = false) String status, @RequestParam(required = false) String location, @RequestParam(required = false) String user,
