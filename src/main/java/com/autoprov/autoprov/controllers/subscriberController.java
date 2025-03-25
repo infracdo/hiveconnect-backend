@@ -37,6 +37,7 @@ import com.autoprov.autoprov.dto.AbsTokenResponse;
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
+import com.autoprov.autoprov.repositories.hiveRepositories.VlanInfoRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
 import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.services.AbsService;
@@ -77,6 +78,9 @@ public class subscriberController {
 
     @Autowired
     private final HiveClientService hiveclientService;
+
+    @Autowired
+    private VlanInfoRepository vlanInfoRepository;
 
     @Autowired
     private HiveClientRepository hiveClientRepository;
@@ -919,7 +923,7 @@ public class subscriberController {
         }
     }
 
-    // GET ALL SUBSCRIBER INFO WITH THIS PARAMETERS
+    // RETURN ACCOUNT INFO OF ALL SUBSCRIBERS 
     @Async("asyncExecutor")
     @GetMapping("/getAllsubscribersAccountInfo")
     public ResponseEntity<?> getAllHiveClgetAllSubscriberInfo(@RequestParam(required = false) String user,
@@ -954,7 +958,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(createErrorResponse(HttpStatus.NOT_FOUND,
-                                "No subscriber found"));
+                                "No subscribers found"));
             }
         } catch (Exception e) {
 
@@ -968,6 +972,57 @@ public class subscriberController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
                             "An error occurred. " + e.getMessage()));
+        }
+    }
+
+    // RETURN SUBSCRIBER COUNT OF SPECIFIC STATUS
+    @Async("asyncExecutor")
+    @GetMapping("/getStatusCount")
+    public ResponseEntity<?> getSubscriberStatusCount(@RequestParam(required = false) String status, @RequestParam(required = false) String location, @RequestParam(required = false) String user,
+        @RequestParam(required = false) String action, HttpServletRequest request) {
+        if (status == null || status.trim().isEmpty()) {
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+            status, String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
+            request.getHeader("Authorization"), request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(createErrorResponse(HttpStatus.BAD_REQUEST, "Status is missing/invalid"));
+        }
+
+        try {
+            if (location == null || location.trim().isEmpty()) {
+                Long clientCount = hiveclientService.getStatusCount(status); // Fetch all clients
+            
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                        status,
+                        String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return ResponseEntity.ok(clientCount);
+            } 
+
+            List<String> subscribers = vlanInfoRepository.getSubscriberAccountNoByLocation(location);
+            Integer count = 0;
+            for (String accountNo : subscribers) {
+                // Use the findBySubscriberAccountNumber method to check if the subscriber exists
+                Optional<HiveClient> hiveClientOptional = hiveClientRepository.findClientByAccountNoStatus(accountNo, status);
+    
+                if (hiveClientOptional.isPresent()) {
+                    count++;
+                }
+            }
+            return ResponseEntity.ok(count);
+        } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
+            String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(),
+            e.getStackTrace(),
+            request.getRemoteAddr(),
+            request.getHeader("Authorization"),
+            request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred. " + e.getMessage()));
         }
     }
 

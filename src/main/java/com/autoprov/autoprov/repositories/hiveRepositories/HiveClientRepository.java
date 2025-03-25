@@ -13,8 +13,14 @@ import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import jakarta.transaction.Transactional;
 
 public interface HiveClientRepository extends CrudRepository<HiveClient, Long> {
-    @Query(value = "SELECT * from hive_clients where status = \'ACTIVE'", nativeQuery = true)
+    @Query(value = "SELECT * from hive_clients", nativeQuery = true)
     List<HiveClient> findAll();
+
+    @Query(value = "SELECT * from hive_clients where status = \'ACTIVE'", nativeQuery = true)
+    List<HiveClient> findAllActive();
+
+    @Query(value = "SELECT * from hive_clients where status = \'ONHOLD'", nativeQuery = true)
+    List<HiveClient> findAllOnhold();
 
     @Query(value = "SELECT * from hive_clients where status IN ('ACTIVE', 'ONHOLD')", nativeQuery = true)
     List<HiveClient> findActiveHold();
@@ -34,8 +40,17 @@ public interface HiveClientRepository extends CrudRepository<HiveClient, Long> {
     @Query("update HiveClient u set u.ipAssigned = ?1 where u.onuSerialNumber = ?2")
     void updateClientByOnuSerialNum(String ipAssigned, String onuSerialNumber);
 
+    @Query(value = "SELECT * from hive_clients where account_no = ?1 AND status LIKE ?2", nativeQuery = true)
+    Optional<HiveClient> findClientByAccountNoStatus(String account_no, String status);
+
     @Query(value = "SELECT * from hive_clients where onu_serial_number LIKE ?1%", nativeQuery = true)
     Optional<HiveClient> findClientBySerialNumber(String onuSerialNumber);
+
+    @Query(value = "SELECT * from hive_clients where onu_serial_number LIKE ?1%", nativeQuery = true)
+    Optional<HiveClient> findClientByStatus(String onuSerialNumber);
+
+    @Query(value = "SELECT COUNT(*) from hive_clients where status LIKE ?1", nativeQuery = true)
+    Long countClientsByStatus(String status);
 
     // @Query(value = "SELECT * from hive_clients where status = \'NEW\'", nativeQuery = true)
     // List<HiveClient> getNewClients();

@@ -17,6 +17,9 @@ public interface VlanInfoRepository extends JpaRepository<VlanInfo, Long> {
     @Query(value = "SELECT * from vlan_info", nativeQuery = true)
     List<VlanInfo> findAll();
 
+    @Query(value = "SELECT account_no from vlan_info where location = ?1", nativeQuery = true)
+    List<String> getSubscriberAccountNoByLocation(String location);
+
     @Query(value = "SELECT * from vlan_info where account_no = ?1", nativeQuery = true)
     Optional<VlanInfo> findByAccountNo(String accountNo);
 
@@ -36,5 +39,5 @@ public interface VlanInfoRepository extends JpaRepository<VlanInfo, Long> {
 
     @Modifying
     @Query("update VlanInfo c SET c.vlanId = ?1, c.location = ?2 where c.accountNo = ?3")
-    void updateClientById(String vlanId, String location, String accountNo);
+    void updateInfo(String vlanId, String location, String accountNo);
 }

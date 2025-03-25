@@ -89,6 +89,10 @@ public class HiveClientService {
         return hiveClientRepo.findAll();
     }
 
+    public Long getStatusCount(String status) {
+        return hiveClientRepo.countClientsByStatus(status);
+    }
+
     public HiveClient getClientByAccountNumber(String subscriberAccountNumber) {
         return hiveClientRepo.findBySubscriberAccountNumber(subscriberAccountNumber).orElse(null);
     }
