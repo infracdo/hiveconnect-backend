@@ -1080,7 +1080,7 @@ public class AutoProvisionController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
         
-        client.setMonitoringStatus("setting up monitoring");
+        client.setMonitoringStatus("setting up");
         hiveClientRepository.save(client);
 
         String clientName = client.getClientName(); // can get from db entry
@@ -1162,6 +1162,9 @@ public class AutoProvisionController {
             System.out.println("Request failed. Response: " + playbookResponse.getStatusCode());
             if (showBody)
                 System.out.println("Request failed. Response body: " + playbookResponse.getBody());
+
+            client.setMonitoringStatus("unmonitored");
+            hiveClientRepository.save(client);
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                     accountNo + "/" + serialNumber + "/" + oltIp + "/" + packageType,
@@ -1697,8 +1700,7 @@ public class AutoProvisionController {
             HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
             RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity,
-                    String.class);
+            ResponseEntity<String> responseEntity = restTemplate.exchange(ansibleApiUrl, HttpMethod.GET, requestEntity, String.class);
 
             String responseBody = responseEntity.getBody();
 
