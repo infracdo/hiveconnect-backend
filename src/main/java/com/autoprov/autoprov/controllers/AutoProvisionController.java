@@ -665,7 +665,10 @@ public class AutoProvisionController {
 
                 Optional<VlanInfo> info = vlanInfoRepo.findByAccountNo(accountNo);
                 if (info.isPresent()) {
-                    vlanInfoRepo.updateInfo(vlanId, location, accountNo);
+                    VlanInfo newInfo = info.get();
+                    newInfo.setVlanId(vlanId);
+                    newInfo.setLocation(location);
+                    vlanInfoRepo.save(newInfo);
                 } else {
                     VlanInfo newInfo = VlanInfo.builder().accountNo(accountNo)
                         .vlanId(vlanId)
