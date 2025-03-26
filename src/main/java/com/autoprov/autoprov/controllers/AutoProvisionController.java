@@ -783,8 +783,7 @@ public class AutoProvisionController {
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
 
         // Check if the subscriber account number is empty or null
-        if (subscriberAccountNumber == null
-                || subscriberAccountNumber.trim().isEmpty()) {
+        if (subscriberAccountNumber == null || subscriberAccountNumber.trim().isEmpty()) {
             response.put("timestamp", timestamp);
             response.put("status", "400");
             response.put("message", "Account number is missing/invalid");

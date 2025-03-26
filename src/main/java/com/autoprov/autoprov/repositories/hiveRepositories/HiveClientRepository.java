@@ -40,7 +40,7 @@ public interface HiveClientRepository extends CrudRepository<HiveClient, Long> {
     @Query("update HiveClient u set u.ipAssigned = ?1 where u.onuSerialNumber = ?2")
     void updateClientByOnuSerialNum(String ipAssigned, String onuSerialNumber);
 
-    @Query(value = "SELECT * from hive_clients where account_no = ?1 AND status LIKE ?2", nativeQuery = true)
+    @Query(value = "SELECT * from hive_clients where account_no = ?1 AND status = ?2", nativeQuery = true)
     Optional<HiveClient> findClientByAccountNoStatus(String account_no, String status);
 
     @Query(value = "SELECT * from hive_clients where onu_serial_number LIKE ?1%", nativeQuery = true)
