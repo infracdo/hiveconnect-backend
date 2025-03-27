@@ -2038,7 +2038,8 @@ public class AutoProvisionController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return vsolOltInterface;
+                return new ResponseEntity<>(vsolOltInterface, HttpStatus.OK);
+
             } else {
                 System.out.println("OLT Interface Check: VSOL OLT Interface Match not found");
             }
@@ -2048,7 +2049,8 @@ public class AutoProvisionController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return "No OLT Interface found";
+            return new ResponseEntity<>("No OLT Interface found", HttpStatus.OK);
+
         } catch (Exception e) {
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
                     jobId,
