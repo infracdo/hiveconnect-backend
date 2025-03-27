@@ -7,13 +7,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,26 +26,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-
-import com.autoprov.autoprov.dto.AbsTokenResponse;
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.repositories.hiveRepositories.VlanInfoRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
-import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.services.AbsService;
-import com.autoprov.autoprov.services.DhcpService;
 import com.autoprov.autoprov.services.HiveClientService;
 import com.autoprov.autoprov.services.LogService;
 import com.autoprov.autoprov.services.subscriberService;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
@@ -199,7 +186,7 @@ public class subscriberController {
             // Set status to NEW
             subscriberEntity.setSubsStatus("NEW");
 
-            subscriberEntity savedSubscriber = SubscriberService.saveSubscriber(subscriberEntity);
+            SubscriberService.saveSubscriber(subscriberEntity);
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberEntity.getSubscriberAccountNumber() + "/"

@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,13 +34,9 @@ import org.springframework.web.client.RestTemplate;
 import com.autoprov.autoprov.entity.acsDomain.Device;
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
 import com.autoprov.autoprov.entity.hiveDomain.VlanInfo;
-import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.acsRepositories.DeviceRepository;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 import com.autoprov.autoprov.repositories.hiveRepositories.VlanInfoRepository;
-import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
-import com.autoprov.autoprov.security.jwt.JwtUtils;
-import com.autoprov.autoprov.services.AbsService;
 import com.autoprov.autoprov.services.LogService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -78,18 +73,12 @@ public class AcsController {
 
     @Autowired
     private HiveClientRepository hiveClientRepo;
-
-    @Autowired
-    private subscriberRepository subscriberRepo;
     
     @Autowired
     private VlanInfoRepository vlanInfoRepo;
 
     @Autowired
     private LogService logService;
-
-    @Autowired
-    private AbsService absService;
 
     private static String acsApiUrl;
 
@@ -141,11 +130,7 @@ public class AcsController {
     public ResponseEntity<?> disconnectClient(@RequestBody Map<String, String> params,
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
             HttpServletRequest request) throws JsonMappingException, JsonProcessingException, InterruptedException {
-
-        Map<String, String> response = new LinkedHashMap<>(); // Use String as the value type
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
-
         try {
             // Check if the subscriber account number is empty or null
             if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
@@ -579,7 +564,9 @@ public class AcsController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Playbook error. " + playbookResponse.getBody()));
             }
 
             ResponseEntity lastJobStatus = jobStatus(subscriberAccountNumber, jobId, false);

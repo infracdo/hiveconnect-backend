@@ -1,41 +1,31 @@
 package com.autoprov.autoprov.controllers;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.autoprov.autoprov.dto.ApiResponse;
 import com.autoprov.autoprov.entity.subscriberDomain.models.ERole;
 import com.autoprov.autoprov.entity.subscriberDomain.models.Role;
 import com.autoprov.autoprov.entity.subscriberDomain.models.User;
 import com.autoprov.autoprov.payload.request.LoginRequest;
 import com.autoprov.autoprov.payload.request.SignupRequest;
 import com.autoprov.autoprov.payload.response.JwtResponse;
-import com.autoprov.autoprov.payload.response.MessageResponse;
 import com.autoprov.autoprov.repositories.subscriberRepositories.RoleRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.UserRepository;
 import com.autoprov.autoprov.security.jwt.JwtUtils;
@@ -43,7 +33,6 @@ import com.autoprov.autoprov.security.services.UserDetailsImpl;
 import com.autoprov.autoprov.services.LogService;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 @CrossOrigin(origins = "*")

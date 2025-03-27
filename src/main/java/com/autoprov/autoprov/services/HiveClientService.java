@@ -3,14 +3,12 @@ package com.autoprov.autoprov.services;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.autoprov.autoprov.entity.hiveDomain.HiveClient;
-import com.autoprov.autoprov.entity.subscriberDomain.subscriberEntity;
 import com.autoprov.autoprov.repositories.hiveRepositories.HiveClientRepository;
 
 @Service

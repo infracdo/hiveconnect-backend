@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autoprov.autoprov.entity.oltDomain.oltEntity;
-import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.services.LogService;
 import com.autoprov.autoprov.services.oltService;
 

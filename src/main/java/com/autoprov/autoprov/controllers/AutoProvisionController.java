@@ -47,7 +47,6 @@ import com.autoprov.autoprov.repositories.ipamRepositories.CidrIpAddressReposito
 import com.autoprov.autoprov.repositories.oltRepositories.oltRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.PackageRepository;
 import com.autoprov.autoprov.repositories.subscriberRepositories.subscriberRepository;
-import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.services.AbsService;
 import com.autoprov.autoprov.services.HiveClientService;
 import com.autoprov.autoprov.services.LogService;
@@ -1104,8 +1103,6 @@ public class AutoProvisionController {
         // String upstream = "1000";
         // String downstream = "10000";
 
-        String packageName = "";
-
         String ansibleApiUrl = playbookMonitoringApiUrl + "launch/";
         String accessToken = ansibleAccessToken;
 
@@ -1981,7 +1978,6 @@ public class AutoProvisionController {
         try {
             String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
             String accessToken = ansibleAccessToken;
-            String error = "";
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + accessToken);
@@ -2069,7 +2065,6 @@ public class AutoProvisionController {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
         String accessToken = ansibleAccessToken;
-        String error = "";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -2195,7 +2190,6 @@ public class AutoProvisionController {
 
         String ansibleApiUrl = "" + playbookGetJobUrl + jobId + "/stdout";
         String accessToken = ansibleAccessToken;
-        String error = "";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
@@ -2225,7 +2219,6 @@ public class AutoProvisionController {
         // System.out.println("Upstream: " + upstreamValue);
         // System.out.println("Downstream: " + downstreamValue);
         // }
-        ObjectMapper objectMapper = new ObjectMapper();
 
         upstreamValue = parseValue(responseBody, "Upstream");
         downstreamValue = parseValue(responseBody, "Downstream");

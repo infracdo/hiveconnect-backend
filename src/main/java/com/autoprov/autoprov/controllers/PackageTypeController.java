@@ -1,16 +1,12 @@
 package com.autoprov.autoprov.controllers;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties.Http;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -25,12 +21,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
 import com.autoprov.autoprov.entity.subscriberDomain.PackageTypeEntity;
 import com.autoprov.autoprov.repositories.subscriberRepositories.PackageRepository;
-import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.services.LogService;
 import com.autoprov.autoprov.services.PackageTypeService;
 
@@ -63,7 +55,7 @@ public class PackageTypeController {
             @RequestParam(required = false) String user,
             @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
-            PackageTypeEntity savedPackage = packageTypeService.savePackage(packageTypeEntity);
+            packageTypeService.savePackage(packageTypeEntity);
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                     packageTypeEntity.getPackageType() + "/" + packageTypeEntity.getUpstream() + "/"

@@ -2,8 +2,6 @@ package com.autoprov.autoprov.controllers;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +15,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.autoprov.autoprov.dto.ApiResponse;
 import com.autoprov.autoprov.dto.CidrBlockDTO;
-import com.autoprov.autoprov.entity.acsDomain.Device;
-import com.autoprov.autoprov.entity.ipamDomain.CidrBlock;
 import com.autoprov.autoprov.entity.ipamDomain.CidrIpAddress;
 import com.autoprov.autoprov.repositories.ipamRepositories.CidrBlockRepository;
 import com.autoprov.autoprov.repositories.ipamRepositories.CidrIpAddressRepository;
-import com.autoprov.autoprov.security.jwt.JwtUtils;
 import com.autoprov.autoprov.services.DhcpService;
 //import com.autoprov.autoprov.services.NetworkService;
 import com.autoprov.autoprov.services.LogService;
