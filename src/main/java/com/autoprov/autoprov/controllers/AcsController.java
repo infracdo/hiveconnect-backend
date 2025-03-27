@@ -107,7 +107,6 @@ public class AcsController {
         try {
             List<Device> Device = new ArrayList<>();
             DeviceRepo.findByGroup("unassigned").forEach(Device::add);
-            System.out.println("backend hive api accessed");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
@@ -123,7 +122,9 @@ public class AcsController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
         }
     }
 
@@ -137,7 +138,7 @@ public class AcsController {
     @Async("AsyncExecutor")
     @PostMapping("/onholdSubscriber")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> disconnectClient(@RequestBody Map<String, String> params,
+    public ResponseEntity<?> disconnectClient(@RequestBody Map<String, String> params,
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
             HttpServletRequest request) throws JsonMappingException, JsonProcessingException, InterruptedException {
 
@@ -149,17 +150,15 @@ public class AcsController {
             // Check if the subscriber account number is empty or null
             if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
 
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-                response.put("message", "Account number is missing/invalid");
-
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
                         String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(logService.createResponse(HttpStatus.BAD_REQUEST,
+                            "Account number is missing/invalid"));
             }
 
             // Fetch the client from the repository based on the account number
@@ -167,17 +166,15 @@ public class AcsController {
                     .findBySubscriberAccountNumber(subscriberAccountNumber);
             if (!optionalClient.isPresent()) {
 
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-                response.put("message", "Subscriber does not exist");
-
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
                         String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(logService.createResponse(HttpStatus.NOT_FOUND,
+                            "Subscriber does not exist"));
             }
 
             HiveClient client = optionalClient.get();
@@ -195,17 +192,15 @@ public class AcsController {
                     (!client.getStatus().equalsIgnoreCase("ACTIVE")
                             && !client.getStatus().equalsIgnoreCase("Activated"))) {
 
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-                response.put("message", "Subscriber is not active");
-
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
                         String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(logService.createResponse(HttpStatus.CONFLICT,
+                            "Subscriber is not active"));
             }
 
             // Get the serial number from the client
@@ -287,7 +282,9 @@ public class AcsController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Playbook error. " + playbookResponse.getBody()));
             }
 
             ResponseEntity lastJobStatus = jobStatus(subscriberAccountNumber, jobId, false);
@@ -298,11 +295,6 @@ public class AcsController {
                 hiveClientRepo.save(client);
 
                 // ResponseEntity<?> absResponse = absService.statusCallBack("ONHOLD", subscriberAccountNumber);
-
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "Subscriber status is now on hold");
-
                 // if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
                 //     response.put("message", "Subscriber is now on hold");
                 // } else {
@@ -317,7 +309,9 @@ public class AcsController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.OK).body(response);
+                return ResponseEntity.status(HttpStatus.OK)
+                    .body(logService.createResponse(HttpStatus.OK,
+                            "Subscriber status is now on hold"));
             } else {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
@@ -329,9 +323,6 @@ public class AcsController {
                 return lastJobStatus;
             }
         } catch (Exception e) {
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", "An error occurred. " + e.getMessage());
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
@@ -339,7 +330,9 @@ public class AcsController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
         }
 
         // Handle the response and update the client status
@@ -455,21 +448,13 @@ public class AcsController {
     @Async("AsyncExecutor")
     @PostMapping("/activateSubscriber")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> reconnectClient(@RequestBody Map<String, String> params,
+    public ResponseEntity<?> reconnectClient(@RequestBody Map<String, String> params,
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
             HttpServletRequest request) throws JsonMappingException, JsonProcessingException, InterruptedException {
-
-        Map<String, String> response = new LinkedHashMap<>();
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
-
         try {
             // Check if the subscriber account number is empty or null
             if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
-
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-                response.put("message", "Account number is missing/invalid");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -477,7 +462,9 @@ public class AcsController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(logService.createResponse(HttpStatus.BAD_REQUEST,
+                            "Account number is missing/invalid"));
             }
 
             // Fetch client from repository
@@ -485,17 +472,15 @@ public class AcsController {
                     .findBySubscriberAccountNumber(subscriberAccountNumber);
             if (!clientOptional.isPresent()) {
 
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-                response.put("message", "Subscriber does not exist");
-
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
                         String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(logService.createResponse(HttpStatus.NOT_FOUND,
+                            "Subscriber does not exist"));
             }
 
             HiveClient client = clientOptional.get();
@@ -503,17 +488,15 @@ public class AcsController {
             // Check if the subscriber is deactivated
             if (client.getStatus() == null || !client.getStatus().equalsIgnoreCase("ONHOLD")) {
 
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-                response.put("message", "Subscriber is not on hold");
-
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
                         String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(logService.createResponse(HttpStatus.CONFLICT,
+                            "Subscriber is not on hold"));
             }
 
             // Get the serial number from the client
@@ -608,10 +591,6 @@ public class AcsController {
 
                 // ResponseEntity<?> absResponse = absService.statusCallBack("ACTIVE", subscriberAccountNumber);
 
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "Subscriber status is now active");
-
                 // if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
                 //     response.put("message", "Subscriber status is now active");
                 // } else {
@@ -626,7 +605,9 @@ public class AcsController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.OK).body(response);
+                return ResponseEntity.status(HttpStatus.OK)
+                    .body(logService.createResponse(HttpStatus.OK,
+                            "Subscriber status is now active"));
             } else {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
@@ -638,9 +619,6 @@ public class AcsController {
                 return lastJobStatus;
             }
         } catch (Exception e) {
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", "An error occurred. " + e.getMessage());
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
@@ -648,7 +626,9 @@ public class AcsController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
         }
 
         // Handle response
@@ -1345,19 +1325,12 @@ public class AcsController {
     @Async("AsyncExecutor")
     @PostMapping("/terminateSubscriber")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> permanentDisconnectClient(@RequestBody Map<String, String> params,
+    public ResponseEntity<?> permanentDisconnectClient(@RequestBody Map<String, String> params,
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
             HttpServletRequest request) {
-        Map<String, String> response = new LinkedHashMap<>();
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
-
         try {
             if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
-
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-                response.put("message", "Subscriber account number is missing/invalid");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -1365,16 +1338,14 @@ public class AcsController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(logService.createResponse(HttpStatus.BAD_REQUEST,
+                            "Account number is missing/invalid"));
             }
 
             Optional<HiveClient> clientOptional = hiveClientRepo
                     .findBySubscriberAccountNumber(subscriberAccountNumber);
             if (!clientOptional.isPresent()) {
-
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-                response.put("message", "Subscriber does not exist");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -1382,16 +1353,14 @@ public class AcsController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(logService.createResponse(HttpStatus.NOT_FOUND,
+                            "Subscriber does not exist"));
             }
 
             HiveClient client = clientOptional.get();
 
             if (client.getStatus() == null || !client.getStatus().equalsIgnoreCase("ONHOLD")) {
-
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.CONFLICT.value()));
-                response.put("message", "Subscriber is not on hold");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -1399,7 +1368,9 @@ public class AcsController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(logService.createResponse(HttpStatus.CONFLICT,
+                            "Subscriber is not on hold"));
             }
 
             // String serialNumber = client.getOnuSerialNumber();
@@ -1493,17 +1464,15 @@ public class AcsController {
                 System.out.println("Request failed. Response: " + playbookResponse.getStatusCode() + " - "
                         + playbookResponse.getBody());
 
-                response.put("timestamp", timestamp);
-                response.put("message", "Playbook error. " + playbookResponse.getBody());
-
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
                         String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(response);
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                                "Playbook error. " + playbookResponse.getBody()));
             }
 
             ResponseEntity lastJobStatus = jobStatus(subscriberAccountNumber, jobId, false);
@@ -1516,11 +1485,6 @@ public class AcsController {
                 vlanInfoRepo.delete(info);
 
                 // ResponseEntity<?> absResponse = absService.statusCallBack("DEACTIVATED", subscriberAccountNumber);
-
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "Subscriber is now terminated");
-
                 // if (absResponse.getStatusCode().equals(HttpStatus.OK)) {
                 //     response.put("message", "Subscriber account has been successfully terminated");
                 // } else {
@@ -1533,7 +1497,9 @@ public class AcsController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.OK).body(response);
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(logService.createResponse(HttpStatus.OK, 
+                               "Subscriber is now terminated"));
             } else {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
@@ -1545,9 +1511,6 @@ public class AcsController {
                 return lastJobStatus;
             }
         } catch (Exception e) {
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", "An error occurred. " + e.getMessage());
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), subscriberAccountNumber,
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
@@ -1555,7 +1518,9 @@ public class AcsController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
         }
     }
 

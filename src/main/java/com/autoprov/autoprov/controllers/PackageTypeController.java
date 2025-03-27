@@ -45,102 +45,103 @@ public class PackageTypeController {
     @Autowired
     private PackageRepository packageRepo;
 
-
-     @Autowired
+    @Autowired
     private PackageTypeService packageTypeService;
 
     @Autowired
     private LogService logService;
-    
-// POST END POINT add or create new subscriber endpoint
-public PackageTypeController(PackageTypeService packageTypeService ){
-    this.packageTypeService = packageTypeService;
-    
-}
 
-@Async("asyncExecutor")
-@PostMapping("/createPackage")
-public ResponseEntity<?> createPackage(@Valid @RequestBody PackageTypeEntity packageTypeEntity, @RequestParam(required = false) String user,
+    // POST END POINT add or create new subscriber endpoint
+    public PackageTypeController(PackageTypeService packageTypeService) {
+        this.packageTypeService = packageTypeService;
+
+    }
+
+    @Async("asyncExecutor")
+    @PostMapping("/createPackage")
+    public ResponseEntity<?> createPackage(@Valid @RequestBody PackageTypeEntity packageTypeEntity,
+            @RequestParam(required = false) String user,
             @RequestParam(required = false) String action, HttpServletRequest request) {
-    try {
-        PackageTypeEntity savedPackage = packageTypeService.savePackage(packageTypeEntity);
+        try {
+            PackageTypeEntity savedPackage = packageTypeService.savePackage(packageTypeEntity);
 
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType() +"/"+ packageTypeEntity.getUpstream() +"/"+ packageTypeEntity.getDownstream(),
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    packageTypeEntity.getPackageType() + "/" + packageTypeEntity.getUpstream() + "/"
+                            + packageTypeEntity.getDownstream(),
                     String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse());
-    } catch (SubscriberAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(logService.createResponse(HttpStatus.CREATED, "Package created successfully"));
 
-        logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType() +"/"+ packageTypeEntity.getUpstream() +"/"+ packageTypeEntity.getDownstream(),
+        } catch (SubscriberAlreadyExistsException e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
+                    packageTypeEntity.getPackageType() + "/" + packageTypeEntity.getUpstream() + "/"
+                            + packageTypeEntity.getDownstream(),
                     String.valueOf(HttpStatus.CONFLICT.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                             .body(createErrorResponse(HttpStatus.CONFLICT, "Package already exists"));
-    } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(logService.createResponse(HttpStatus.CONFLICT, "Package already exists"));
+        } catch (Exception e) {
 
-        logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), packageTypeEntity.getPackageType() +"/"+ packageTypeEntity.getUpstream() +"/"+ packageTypeEntity.getDownstream(),
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
+                    packageTypeEntity.getPackageType() + "/" + packageTypeEntity.getUpstream() + "/"
+                            + packageTypeEntity.getDownstream(),
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
-                    
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                             .body(createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred. " + e.getMessage()));
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
+        }
     }
-}
 
-@ExceptionHandler(MethodArgumentNotValidException.class)
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
-    Map<String, String> errors = new HashMap<>();
-    ex.getBindingResult().getAllErrors().forEach((error) -> {
-        String fieldName = ((FieldError) error).getField();
-        String errorMessage = error.getDefaultMessage();
-        errors.put(fieldName, errorMessage);
-    });
-    
-    return errors;
-}
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
 
-private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return errors;
+    }
 
-private Map<String, Object> createSuccessResponse() {
-    HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-    Map<String, Object> response = new HashMap<>();
-    response.put("timestamp", LocalDateTime.now().format(DATE_TIME_FORMATTER));
-    response.put("status", HttpStatus.CREATED.value());
-    response.put("message", "Package created successfully");
-    return response;
-}
-
-private Map<String, Object> createErrorResponse(HttpStatus status, String message) {
-    HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-    Map<String, Object> errorResponse = new HashMap<>();
-    errorResponse.put("timestamp", LocalDateTime.now().format(DATE_TIME_FORMATTER));
-    errorResponse.put("status", status.value());
-    errorResponse.put("message", message);
-    return errorResponse;
-}
-
-
-//GET ENDPOINT
     @Async("asyncExecutor")
     @GetMapping("/checkPackageDetails/{packageType}")
-    public ResponseEntity<Optional<PackageTypeEntity>> findByPackageTypeId(
+    public ResponseEntity<?> findByPackageTypeId(
             @PathVariable("packageType") String package_type, @RequestParam(required = false) String user,
             @RequestParam(required = false) String action, HttpServletRequest request) {
-
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), package_type,
+        try {
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), package_type,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-        return new ResponseEntity<>(packageRepo.findBypackageId(package_type), HttpStatus.OK);
+            return ResponseEntity.ok(packageRepo.findBypackageId(package_type));
+        } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), package_type,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(),
+                    e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
+        }
+
     }
 
     @Async("asyncExecutor")
@@ -164,9 +165,9 @@ private Map<String, Object> createErrorResponse(HttpStatus status, String messag
         }
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), packageType,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
+                String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                request.getHeader("Authorization"),
+                request.getHeader("User-Agent"));
 
         return new ResponseEntity<>("Upstream: " + upstream + " Downstream: " + downstream, HttpStatus.OK);
     }

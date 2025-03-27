@@ -1,8 +1,14 @@
 package com.autoprov.autoprov.services;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.autoprov.autoprov.security.jwt.JwtUtils;
@@ -117,6 +123,17 @@ public class LogService {
 
     public void logWarn(String message) {
         logger.warn(message);
+    }
+
+    
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    public Map<String, Object> createResponse(HttpStatus status, String message) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("timestamp", LocalDateTime.now().format(DATE_TIME_FORMATTER));
+        response.put("status", status.value());
+        response.put("message", message);
+        return response;
     }
 
 }

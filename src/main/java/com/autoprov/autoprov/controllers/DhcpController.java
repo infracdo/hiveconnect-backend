@@ -52,240 +52,296 @@ public class DhcpController {
 
     @Async("asyncExecutor")
     @PostMapping("/addnetwork")
-    public ResponseEntity<ApiResponse> createNetwork(@RequestBody CidrBlockDTO cidrBlockDTO, @RequestParam(required = false) String user,
+    public ResponseEntity<?> createNetwork(@RequestBody CidrBlockDTO cidrBlockDTO,
+            @RequestParam(required = false) String user,
             @RequestParam(required = false) String action, HttpServletRequest request) {
         try {
             dhcpService.createNetwork(cidrBlockDTO);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getCidrBlock(),
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    cidrBlockDTO.getCidrBlock(),
                     String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            ApiResponse response = new ApiResponse(HttpStatus.CREATED.value(), "Network created successfully");
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(logService.createResponse(HttpStatus.CREATED,
+                            "Network created successfully"));
         } catch (Exception e) {
 
-            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), cidrBlockDTO.getCidrBlock(),
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
+                    cidrBlockDTO.getCidrBlock(),
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            ApiResponse response = new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),"An error occurred. " +  e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
         }
     }
 
     @Async("AsyncExecutor")
     @GetMapping("/getallnetworks")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<CidrBlock>> getallnetworks(@RequestParam(required = false) String user,
-    @RequestParam(required = false) String action, HttpServletRequest request) {
-        System.out.println("backend hive api accessed");
-        
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+    public ResponseEntity<?> getallnetworks(@RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
+        try {
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+                String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                request.getHeader("Authorization"),
+                request.getHeader("User-Agent"));
+
+        return new ResponseEntity<>(CidrRepo.getAllNetworks(), HttpStatus.OK);
+        } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
+                    null,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-        return new ResponseEntity<>(CidrRepo.getAllNetworks(), HttpStatus.OK);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
+        }
     }
 
     @Async("asyncExecutor")
     @GetMapping("/cidripaddresses")
-    public ResponseEntity<List<CidrIpAddress>> getAllCidrIpAddresses(@RequestParam(required = false) String user,
-    @RequestParam(required = false) String action, HttpServletRequest request) {
-        List<CidrIpAddress> cidrIpAddresses = dhcpService.getAllCidrIpAddresses();
+    public ResponseEntity<?> getAllCidrIpAddresses(@RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
+        try {
+            List<CidrIpAddress> cidrIpAddresses = dhcpService.getAllCidrIpAddresses();
 
         logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                request.getHeader("Authorization"),
+                request.getHeader("User-Agent"));
+
+        return new ResponseEntity<>(cidrIpAddresses, HttpStatus.OK);
+        } catch (Exception e) {
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
+                    null,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-        return new ResponseEntity<>(cidrIpAddresses, HttpStatus.OK);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
+        }
     }
 
-    
     @Async("asyncExecutor")
     @GetMapping("/getIpAddressesOfCidrBlock/{cidrBlock}")
     // @PreAuthorize("hasAuthority('HIVECONNECT_NETWORK_ADDRESSES_READ')")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<CidrIpAddress>> getIpAddressesOfCidrBlockPath(
+    public ResponseEntity<?> getIpAddressesOfCidrBlockPath(
             @PathVariable("cidrBlock") String cidrBlock, @RequestParam(required = false) String user,
             @RequestParam(required = false) String action, HttpServletRequest request) {
-        List<CidrIpAddress> CidrBlockIps = new ArrayList<>();
-        String cidrBlockPath = cidrBlock;
-        cidrBlock = cidrBlock.substring(0, (cidrBlock.lastIndexOf(".")));
-        System.out.println("cidrblock " + cidrBlock);
-        ipAddRepo.findAllUnderCidrBlock(cidrBlock).forEach(CidrBlockIps::add);
+        try {
+            List<CidrIpAddress> CidrBlockIps = new ArrayList<>();
+            String cidrBlockPath = cidrBlock;
+            cidrBlock = cidrBlock.substring(0, (cidrBlock.lastIndexOf(".")));
+            System.out.println("cidrblock " + cidrBlock);
+            ipAddRepo.findAllUnderCidrBlock(cidrBlock).forEach(CidrBlockIps::add);
 
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlockPath,
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), cidrBlockPath,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-        return new ResponseEntity<>(CidrBlockIps, HttpStatus.OK); 
-    }
+            return new ResponseEntity<>(CidrBlockIps, HttpStatus.OK);
+        } catch (Exception e) {
 
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
+                    cidrBlock,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
+        }
+    }
 
     // @GetMapping("/getSitewitholt")
     // public List<NetworkDataResponse> getAllNetworkData() {
-    //     return networkService.getAllNetworkData();
+    // return networkService.getAllNetworkData();
     // }
-   
+
 }
 
 // @CrossOrigin(origins = "*")
 // @RestController
 // public class IpManagementController {
 
-//     @Autowired
-//     private IpAddressRepository ipAddRepo;
+// @Autowired
+// private IpAddressRepository ipAddRepo;
 
-//     @Autowired
-//     private CidrBlockRepository networkdAddRepo;
+// @Autowired
+// private CidrBlockRepository networkdAddRepo;
 
-//     // @Async("asyncExecutor")
-//     // @PostMapping("/populateSubnetIPs")
-//     // public CompletableFuture<String> populateSubnetIPs(@RequestBody Map<String,
-//     // String> params) {
-//     // String response =
-//     // IpListService.populateIpByNetworkAddress(params.get("NetworkAddress"),
-//     // params.get("InternetGatewayHost"), params.get("OltIpHost"),
-//     // Integer.parseInt(params.get("VlanID")));
+// // @Async("asyncExecutor")
+// // @PostMapping("/populateSubnetIPs")
+// // public CompletableFuture<String> populateSubnetIPs(@RequestBody
+// Map<String,
+// // String> params) {
+// // String response =
+// // IpListService.populateIpByNetworkAddress(params.get("NetworkAddress"),
+// // params.get("InternetGatewayHost"), params.get("OltIpHost"),
+// // Integer.parseInt(params.get("VlanID")));
 
-//     // return CompletableFuture.completedFuture(response);
-//     // }
+// // return CompletableFuture.completedFuture(response);
+// // }
 
-//     @Async("asyncExecutor")
-//     @PostMapping("/addCidrBlock")
-//     public CompletableFuture<String> addCidrBlock(@RequestBody Map<String, String> params) throws UnknownHostException {
-//         String response = IpListService.addCidrBlock(params.get("CidrBlock"), params.get("AccountNumber"),
-//                 params.get("InternetGatewayHost"), params.get("OltIpHost"),
-//                 (params.get("VlanID")), params.get("Site"), params.get("Type"), params.get("Status"),
-//                 params.get("Notes"));
-//         return CompletableFuture.completedFuture(response);
-//     }
+// @Async("asyncExecutor")
+// @PostMapping("/addCidrBlock")
+// public CompletableFuture<String> addCidrBlock(@RequestBody Map<String,
+// String> params) throws UnknownHostException {
+// String response = IpListService.addCidrBlock(params.get("CidrBlock"),
+// params.get("AccountNumber"),
+// params.get("InternetGatewayHost"), params.get("OltIpHost"),
+// (params.get("VlanID")), params.get("Site"), params.get("Type"),
+// params.get("Status"),
+// params.get("Notes"));
+// return CompletableFuture.completedFuture(response);
+// }
 
-//     @Async("asyncExecutor")
-//     @GetMapping("/getCidrBlocks")
-//     public CompletableFuture<List<CidrBlock>> getNetworkAddresses() {
-//         List<CidrBlock> CidrBlock = new ArrayList<>();
-//         networkdAddRepo.findAll().forEach(CidrBlock::add);
+// @Async("asyncExecutor")
+// @GetMapping("/getCidrBlocks")
+// public CompletableFuture<List<CidrBlock>> getNetworkAddresses() {
+// List<CidrBlock> CidrBlock = new ArrayList<>();
+// networkdAddRepo.findAll().forEach(CidrBlock::add);
 
-//         return CompletableFuture.completedFuture(CidrBlock);
-//     }
+// return CompletableFuture.completedFuture(CidrBlock);
+// }
 
-//     @Async("asyncExecutor")
-//     @GetMapping("/getAvailableIpAddress")
-//     public CompletableFuture<List<IpAddress>> getAvailableIpAddress() {
-//         List<IpAddress> IpAddress = new ArrayList<>();
-//         ipAddRepo.findAllAvailableIp().forEach(IpAddress::add);
-//         return CompletableFuture.completedFuture(IpAddress);
-//     }
+// @Async("asyncExecutor")
+// @GetMapping("/getAvailableIpAddress")
+// public CompletableFuture<List<IpAddress>> getAvailableIpAddress() {
+// List<IpAddress> IpAddress = new ArrayList<>();
+// ipAddRepo.findAllAvailableIp().forEach(IpAddress::add);
+// return CompletableFuture.completedFuture(IpAddress);
+// }
 
-//     // @Async("asyncExecutor")
-//     // @GetMapping("/getOneAvailableIpAddress")
-//     // public CompletableFuture<List<IpAddress>> getOneAvailableIpAddress() {
-//     // return
-//     // CompletableFuture.completedFuture(ipAddRepo.getOneAvailableIpAddress());
-//     // }
+// // @Async("asyncExecutor")
+// // @GetMapping("/getOneAvailableIpAddress")
+// // public CompletableFuture<List<IpAddress>> getOneAvailableIpAddress() {
+// // return
+// // CompletableFuture.completedFuture(ipAddRepo.getOneAvailableIpAddress());
+// // }
 
-//     @Async("asyncExecutor")
-//     @GetMapping("/getOneAvailableIpAddress")
-//     public CompletableFuture<String> getOneAvailableIpAddress() {
-//         // TODO: Dynamic Site, get actual IP Address according to Site
-//         String site = "CDO_1";
-//         String ipAddress = ipAddRepo
-//                 .getOneAvailableIpAddressUnderSite(site, "Private")
-//                 .get(0)
-//                 .getIpAddress();
-//         return CompletableFuture.completedFuture(ipAddress);
-//     }
+// @Async("asyncExecutor")
+// @GetMapping("/getOneAvailableIpAddress")
+// public CompletableFuture<String> getOneAvailableIpAddress() {
+// // TODO: Dynamic Site, get actual IP Address according to Site
+// String site = "CDO_1";
+// String ipAddress = ipAddRepo
+// .getOneAvailableIpAddressUnderSite(site, "Private")
+// .get(0)
+// .getIpAddress();
+// return CompletableFuture.completedFuture(ipAddress);
+// }
 
-//     @Async("asyncExecutor")
-//     @GetMapping("/getOneAvailableIpAddress/{cidrBlock}")
-//     public CompletableFuture<List<IpAddress>> getOneAvailableIpAddressUnderCidrBlock(
-//             @PathVariable("cidrBlock") String cidrBlock) {
-//         return CompletableFuture.completedFuture(
-//                 // TODO: add sanitation, input should be in IPv4 format
-//                 ipAddRepo.getOneAvailableIpAddressUnderCidrBlock(cidrBlock.substring(0, cidrBlock.lastIndexOf("."))));
-//     }
+// @Async("asyncExecutor")
+// @GetMapping("/getOneAvailableIpAddress/{cidrBlock}")
+// public CompletableFuture<List<IpAddress>>
+// getOneAvailableIpAddressUnderCidrBlock(
+// @PathVariable("cidrBlock") String cidrBlock) {
+// return CompletableFuture.completedFuture(
+// // TODO: add sanitation, input should be in IPv4 format
+// ipAddRepo.getOneAvailableIpAddressUnderCidrBlock(cidrBlock.substring(0,
+// cidrBlock.lastIndexOf("."))));
+// }
 
-//     // @Async("asyncExecutor")
-//     // @GetMapping("/getIpAddressesOfCidrBlock")
-//     // public CompletableFuture<List<IpAddress>>
-//     // getIpAddressesOfCidrBlock(@RequestBody Map<String, String> params) {
-//     // List<IpAddress> CidrBlock = new ArrayList<>();
-//     // String cidrBlock = params.get("CidrBlock");
-//     // cidrBlock = cidrBlock.substring(0, (CidrBlock.lastIndexOf(".")));
-//     // System.out.println(CidrBlock);
-//     // ipAddRepo.findAllUnderCidrBlock(cidrBlock).forEach(CidrBlock::add);
-//     // return CompletableFuture.completedFuture(CidrBlock);
-//     // }
+// // @Async("asyncExecutor")
+// // @GetMapping("/getIpAddressesOfCidrBlock")
+// // public CompletableFuture<List<IpAddress>>
+// // getIpAddressesOfCidrBlock(@RequestBody Map<String, String> params) {
+// // List<IpAddress> CidrBlock = new ArrayList<>();
+// // String cidrBlock = params.get("CidrBlock");
+// // cidrBlock = cidrBlock.substring(0, (CidrBlock.lastIndexOf(".")));
+// // System.out.println(CidrBlock);
+// // ipAddRepo.findAllUnderCidrBlock(cidrBlock).forEach(CidrBlock::add);
+// // return CompletableFuture.completedFuture(CidrBlock);
+// // }
 
- 
+// @Async("asyncExecutor")
+// @DeleteMapping("/deleteCidrBlock/{cidrBlock}")
+// public CompletableFuture<String> deleteCidrBlock(@PathVariable("cidrBlock")
+// String cidrBlock) {
+// ipAddRepo.deleteIpAddressUnderCidrBlock(cidrBlock.substring(0,
+// cidrBlock.lastIndexOf(".")));
+// ipAddRepo.deleteCidrBlock(cidrBlock.substring(0,
+// cidrBlock.lastIndexOf(".")));
 
-//     @Async("asyncExecutor")
-//     @DeleteMapping("/deleteCidrBlock/{cidrBlock}")
-//     public CompletableFuture<String> deleteCidrBlock(@PathVariable("cidrBlock") String cidrBlock) {
-//         ipAddRepo.deleteIpAddressUnderCidrBlock(cidrBlock.substring(0, cidrBlock.lastIndexOf(".")));
-//         ipAddRepo.deleteCidrBlock(cidrBlock.substring(0, cidrBlock.lastIndexOf(".")));
+// return CompletableFuture.completedFuture("IP Address and CIDR Block
+// deleted");
+// }
 
-//         return CompletableFuture.completedFuture("IP Address and CIDR Block deleted");
-//     }
+// @Async("asyncExecutor")
+// @PatchMapping("/updateNetworkAddress/{networkAddress}")
+// public CompletableFuture<ResponseEntity<CidrBlock>> updateNetworkAddress(
+// @PathVariable("networkAddress") String networkAddress,
+// @RequestBody Map<String, String> params) {
+// Optional<CidrBlock> optionalNetworkAddress =
+// networkdAddRepo.findByCidrBlock(networkAddress);
 
-//     @Async("asyncExecutor")
-//     @PatchMapping("/updateNetworkAddress/{networkAddress}")
-//     public CompletableFuture<ResponseEntity<CidrBlock>> updateNetworkAddress(
-//             @PathVariable("networkAddress") String networkAddress,
-//             @RequestBody Map<String, String> params) {
-//         Optional<CidrBlock> optionalNetworkAddress = networkdAddRepo.findByCidrBlock(networkAddress);
+// if (optionalNetworkAddress.isPresent()) {
+// // Modify the fields of the entity object
+// CidrBlock networkAdd = optionalNetworkAddress.get();
 
-//         if (optionalNetworkAddress.isPresent()) {
-//             // Modify the fields of the entity object
-//             CidrBlock networkAdd = optionalNetworkAddress.get();
+// networkAdd.setAccountNumber(params.get("AccountNumber"));
+// networkAdd.setNotes(params.get("Notes"));
+// networkAdd.setSite(params.get("Site"));
+// networkAdd.setType(params.get("Type"));
+// networkAdd.setVlanId(params.get("VlanID"));
 
-//             networkAdd.setAccountNumber(params.get("AccountNumber"));
-//             networkAdd.setNotes(params.get("Notes"));
-//             networkAdd.setSite(params.get("Site"));
-//             networkAdd.setType(params.get("Type"));
-//             networkAdd.setVlanId(params.get("VlanID"));
+// // Save the entity
+// return CompletableFuture
+// .completedFuture(new ResponseEntity<>(networkdAddRepo.save(networkAdd),
+// HttpStatus.OK));
 
-//             // Save the entity
-//             return CompletableFuture
-//                     .completedFuture(new ResponseEntity<>(networkdAddRepo.save(networkAdd), HttpStatus.OK));
+// }
 
-//         }
+// return CompletableFuture.completedFuture(new
+// ResponseEntity<>(HttpStatus.NOT_FOUND));
 
-//         return CompletableFuture.completedFuture(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+// }
 
-//     }
+// @Async("asyncExecutor")
+// @PatchMapping("/updateIpAddress/{ipAddress}")
+// public CompletableFuture<ResponseEntity<IpAddress>>
+// updateIpAddress(@PathVariable("ipAddress") String ipAddress,
+// @RequestBody Map<String, String> params) {
+// Optional<IpAddress> optionalIpAddress = ipAddRepo.findByipAddress(ipAddress);
 
-//     @Async("asyncExecutor")
-//     @PatchMapping("/updateIpAddress/{ipAddress}")
-//     public CompletableFuture<ResponseEntity<IpAddress>> updateIpAddress(@PathVariable("ipAddress") String ipAddress,
-//             @RequestBody Map<String, String> params) {
-//         Optional<IpAddress> optionalIpAddress = ipAddRepo.findByipAddress(ipAddress);
+// if (optionalIpAddress.isPresent()) {
+// // Modify the fields of the entity object
+// IpAddress ipAdd = optionalIpAddress.get();
+// if (ipAdd.getAssignable() == false)
+// return CompletableFuture.completedFuture(new
+// ResponseEntity<>(HttpStatus.FORBIDDEN));
+// ipAdd.setAccountNumber(params.get("AccountNumber"));
+// ipAdd.setNotes(params.get("Notes"));
+// ipAdd.setStatus(params.get("Status"));
 
-//         if (optionalIpAddress.isPresent()) {
-//             // Modify the fields of the entity object
-//             IpAddress ipAdd = optionalIpAddress.get();
-//             if (ipAdd.getAssignable() == false)
-//                 return CompletableFuture.completedFuture(new ResponseEntity<>(HttpStatus.FORBIDDEN));
-//             ipAdd.setAccountNumber(params.get("AccountNumber"));
-//             ipAdd.setNotes(params.get("Notes"));
-//             ipAdd.setStatus(params.get("Status"));
+// // Save the entity
+// return CompletableFuture
+// .completedFuture(new ResponseEntity<>(ipAddRepo.save(ipAdd), HttpStatus.OK));
 
-//             // Save the entity
-//             return CompletableFuture
-//                     .completedFuture(new ResponseEntity<>(ipAddRepo.save(ipAdd), HttpStatus.OK));
+// }
 
-//         }
+// return CompletableFuture.completedFuture(new
+// ResponseEntity<>(HttpStatus.NOT_FOUND));
 
-//         return CompletableFuture.completedFuture(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-
-//     }
+// }
 
 // }

@@ -108,9 +108,9 @@ public class AuthController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("Error: Username is already taken!"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(logService.createResponse(HttpStatus.BAD_REQUEST,
+                            "Username is already taken"));
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
@@ -121,9 +121,9 @@ public class AuthController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("Error: Email is already in use!"));
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(logService.createResponse(HttpStatus.BAD_REQUEST,
+                            "Email is already in use"));
         }
 
         // Create new user's account
@@ -136,26 +136,26 @@ public class AuthController {
 
         if (strRoles == null) {
             Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    .orElseThrow(() -> new RuntimeException("Role is not found"));
             roles.add(userRole);
         } else {
             strRoles.forEach(role -> {
                 switch (role.toLowerCase()) {
                     case "admin":
                         Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                .orElseThrow(() -> new RuntimeException("Role is not found"));
                         roles.add(adminRole);
 
                         break;
                     case "mod":
                         Role modRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                .orElseThrow(() -> new RuntimeException("Role is not found"));
                         roles.add(modRole);
 
                         break;
                     default:
                         Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                .orElseThrow(() -> new RuntimeException("Role is not found"));
                         roles.add(userRole);
                 }
             });
@@ -170,6 +170,8 @@ public class AuthController {
                 request.getHeader("Authorization"),
                 request.getHeader("User-Agent"));
 
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(logService.createResponse(HttpStatus.CREATED,
+                            "User registered successfully"));
     }
 }

@@ -24,7 +24,7 @@ public class subscriberService {
         Optional<subscriberEntity> existingSubscriber = SubscriberRepo.findBySubscriberAccountNumber
         (subscriber.getSubscriberAccountNumber());
         if (existingSubscriber.isPresent()) {
-            throw new SubscriberAlreadyExistsException("Subscriber with this account number already exists");
+            throw new SubscriberAlreadyExistsException("Subscriber already exists");
         }
         return SubscriberRepo.save(subscriber);
     }

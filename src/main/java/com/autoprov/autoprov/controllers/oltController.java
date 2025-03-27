@@ -32,7 +32,7 @@ public class oltController {
 
     @Autowired
     private LogService logService;
-    
+
     @Async("asyncExecutor")
     @PostMapping("/addnewolt")
     public ResponseEntity<?> createOlt(@RequestBody oltEntity oltEntity, @RequestParam(required = false) String user,
@@ -40,7 +40,8 @@ public class oltController {
         try {
             oltEntity createdOlt = oltService.createOlt(oltEntity);
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltEntity.getOltName() +"/"+ oltEntity.getOltIp(),
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                    oltEntity.getOltName() + "/" + oltEntity.getOltIp(),
                     String.valueOf(HttpStatus.CREATED.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
@@ -48,81 +49,126 @@ public class oltController {
             return ResponseEntity.status(HttpStatus.CREATED).body(createdOlt);
         } catch (Exception e) {
 
-            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), oltEntity.getOltName() +"/"+ oltEntity.getOltIp(),
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
+                    oltEntity.getOltName() + "/" + oltEntity.getOltIp(),
                     String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(), e.getStackTrace(),
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
         }
     }
 
     @Async("asyncExecutor")
     @GetMapping("/getOltByName/{oltName}")
     public ResponseEntity<?> getOltByName(@PathVariable String oltName, @RequestParam(required = false) String user,
-    @RequestParam(required = false) String action, HttpServletRequest request) {
-        Optional<oltEntity> oltEntity = oltService.getOltByName(oltName);
-        if (oltEntity.isPresent()) {
+            @RequestParam(required = false) String action, HttpServletRequest request) {
+        try {
+            Optional<oltEntity> oltEntity = oltService.getOltByName(oltName);
+            if (oltEntity.isPresent()) {
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltName,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltName,
+                        String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return ResponseEntity.status(HttpStatus.OK).body(oltEntity.get());
+            } else {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltName,
+                        String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                        new ErrorResponse(HttpStatus.NOT_FOUND.value(), "OLT not found"));
+            }
+        } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), oltName,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(),
+                    e.getStackTrace(),
+                    request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.OK).body(oltEntity.get());
-        } else {
-
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltName,
-                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
-
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ErrorResponse(HttpStatus.NOT_FOUND.value(), "OLT not found"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
         }
     }
 
     @Async("asyncExecutor")
     @GetMapping("/getOltByIp/{oltIp}")
     public ResponseEntity<?> getOltByIp(@PathVariable String oltIp, @RequestParam(required = false) String user,
-    @RequestParam(required = false) String action, HttpServletRequest request) {
-        Optional<oltEntity> oltEntity = oltService.getOltByIp(oltIp);
-        if (oltEntity.isPresent()) {
+            @RequestParam(required = false) String action, HttpServletRequest request) {
+        try {
+            Optional<oltEntity> oltEntity = oltService.getOltByIp(oltIp);
+            if (oltEntity.isPresent()) {
 
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltIp,
-                    String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltIp,
+                        String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return ResponseEntity.status(HttpStatus.OK).body(oltEntity.get());
+            } else {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltIp,
+                        String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                        new ErrorResponse(HttpStatus.NOT_FOUND.value(), "OLT not found"));
+            }
+        } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), oltIp,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(),
+                    e.getStackTrace(),
+                    request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.OK).body(oltEntity.get());
-        } else {
-
-            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), oltIp,
-                    String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
-                    request.getHeader("Authorization"),
-                    request.getHeader("User-Agent"));
-
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ErrorResponse(HttpStatus.NOT_FOUND.value(), "OLT not found"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
         }
     }
-    
+
     @Async("asyncExecutor")
     @GetMapping("/getallolt")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_READ')")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<oltEntity>> getAllOlts(@RequestParam(required = false) String user,
-    @RequestParam(required = false) String action, HttpServletRequest request) {
-        List<oltEntity> olts = oltService.getAllOlts();
-        
-        logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
+    public ResponseEntity<?> getAllOlts(@RequestParam(required = false) String user,
+            @RequestParam(required = false) String action, HttpServletRequest request) {
+        try {
+            List<oltEntity> olts = oltService.getAllOlts();
+
+            logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), null,
                     String.valueOf(HttpStatus.OK.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-        return ResponseEntity.status(HttpStatus.OK).body(olts);
+            return ResponseEntity.status(HttpStatus.OK).body(olts);
+        } catch (Exception e) {
+
+            logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), null,
+                    String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage(),
+                    e.getStackTrace(),
+                    request.getRemoteAddr(),
+                    request.getHeader("Authorization"),
+                    request.getHeader("User-Agent"));
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An error occurred. " + e.getMessage()));
+        }
+
     }
 
     // Error response class to standardize error messages
