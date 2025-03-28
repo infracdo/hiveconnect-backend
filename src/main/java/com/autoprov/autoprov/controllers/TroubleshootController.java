@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -20,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.val;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -33,10 +35,9 @@ public class TroubleshootController {
 
     @Async("asyncExecutor")
     @GetMapping("/getStatus/{device}")
-    public String getOnuStatus(@PathVariable("device") String device, @RequestParam(required = false) String user,
+    public ResponseEntity<?> getOnuStatus(@PathVariable("device") String device, @RequestParam(required = false) String user,
             @RequestParam(required = false) String action, HttpServletRequest request) {
-
-        String device_name = "{job=\"ip_address\",site_tenant=\"DCTECH\",device_name=\""
+        String device_name = "?query=lo_status{job=\"ip_address\",site_tenant=\"DATACONNECT\",device_name=\""
                 + device + "\"}";
         String prometheusUrl = prometheusApiUrl + device_name;
 
@@ -76,7 +77,7 @@ public class TroubleshootController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return value;
+            return ResponseEntity.ok(value);
         } catch (Exception e) {
             e.printStackTrace();
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(), device,
@@ -84,8 +85,9 @@ public class TroubleshootController {
                     request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
-        }
 
-        return responseBody;
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred. " + e.getMessage()));
+        }
     }
 }

@@ -142,7 +142,6 @@ public class AutoProvisionController {
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
             HttpServletRequest request)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
-
         String networkType = "";
         System.out.println(">>> HiveService: Provision executed");
 
@@ -212,7 +211,6 @@ public class AutoProvisionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
         // return acsPushResponse;
-
     }
 
     public ResponseEntity<Map<String, String>> executeInetMonitoring(String accountNo, String serialNumber,
@@ -401,11 +399,6 @@ public class AutoProvisionController {
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
             HttpServletRequest request)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
-
-        String networkType = "";
-        Map<String, String> response = new LinkedHashMap<>();
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-
         System.out.println(">>> HiveService: Provision executed from HiveApp");
 
         // Prepare RequestBody Values
@@ -442,7 +435,7 @@ public class AutoProvisionController {
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(logService.createResponse(HttpStatus.BAD_REQUEST,
-                            "Client Name is missing/invalid"));
+                            "Client name is missing/invalid"));
         }
 
         if (serialNumber == null || serialNumber.isEmpty()) {
@@ -650,7 +643,7 @@ public class AutoProvisionController {
                         request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Playbook error. " +
                     playbookResponse.getBody()));
             }
 
@@ -775,8 +768,6 @@ public class AutoProvisionController {
     public ResponseEntity<?> updateAutoProvisionedStatus(@RequestBody Map<String, String> params,
             @RequestParam(required = false) String user,
             @RequestParam(required = false) String action, HttpServletRequest request) {
-        Map<String, String> response = new LinkedHashMap<>();
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
 
         if (subscriberAccountNumber == null || subscriberAccountNumber.trim().isEmpty()) {
@@ -831,10 +822,6 @@ public class AutoProvisionController {
 
             return ResponseEntity.status(absResponse.getStatusCode()).body(absResponse.getBody());
         } catch (HttpStatusCodeException e) {
-
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(e.getStatusCode().value()));
-            response.put("message", e.getResponseBodyAsString());
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberAccountNumber,
@@ -912,7 +899,7 @@ public class AutoProvisionController {
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(logService.createResponse(HttpStatus.BAD_REQUEST,
-                            "Subscriber is not pending for migration"));
+                            "Subscriber is not in migration"));
             }
         }
 
@@ -970,7 +957,7 @@ public class AutoProvisionController {
                         request.getHeader("User-Agent"));
 
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                    .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Playbook error. " + 
                     playbookResponse.getBody()));
             }
 
@@ -1021,65 +1008,59 @@ public class AutoProvisionController {
     @PostMapping("/executeMonitoring")
     // @PreAuthorize("hasAuthority('HIVECONNECT_PROVISIONING_ACTION')")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> executeHiveMonitoring(@RequestBody Map<String, String> params,
+    public ResponseEntity<?> executeHiveMonitoring(@RequestBody Map<String, String> params,
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
             HttpServletRequest request)
             throws JsonMappingException, JsonProcessingException, InterruptedException {
-        Map<String, String> response = new HashMap<>();
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-
         String accountNo = params.get("accountNo");
 
         if (accountNo == null) {
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "Account number is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(logService.createResponse(HttpStatus.BAD_REQUEST,
+                                "Account number is missing/invalid"));
         }
 
         Optional<HiveClient> optionalClient = hiveClientRepository.findBySubscriberAccountNumber(accountNo);
         if (!optionalClient.isPresent()) {
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            response.put("message", "Subscriber does not exist");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.NOT_FOUND.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(logService.createResponse(HttpStatus.NOT_FOUND,
+                                "Subscriber does not exist"));
         }
 
         HiveClient client = optionalClient.get();
         if (client.getMonitoringStatus().equals("setting up")) {
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "Monitoring setup is in progress");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(logService.createResponse(HttpStatus.BAD_REQUEST,
+                                "Monitoring setup is in progress"));
+
         } else if (client.getMonitoringStatus().equals("monitored")) {
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "Subscriber is already being monitored");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(), accountNo,
                     String.valueOf(HttpStatus.BAD_REQUEST.value()), request.getRemoteAddr(),
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(logService.createResponse(HttpStatus.BAD_REQUEST,
+                                "Subscriber is already being monitored"));
         }
 
         client.setMonitoringStatus("setting up");
@@ -1172,7 +1153,9 @@ public class AutoProvisionController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                                "Playbook error. " + playbookResponse.getBody()));
         }
 
         ResponseEntity lastJobStatus = jobStatus(accountNo, jobId, false);

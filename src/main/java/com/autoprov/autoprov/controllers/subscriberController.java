@@ -180,7 +180,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body(logService.createResponse(HttpStatus.CONFLICT,
-                                "Subscriber already exists"));
+                                "Account number already in use"));
             }
 
             // Set status to NEW
@@ -263,26 +263,6 @@ public class subscriberController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(logService.createResponse(HttpStatus.BAD_REQUEST,
                                 "Account number is missing/invalid"));
-            }
-
-            Optional<subscriberEntity> clientOptional = subscriberRepository
-                    .findBySubscriberAccountNumber(hiveClient.getSubscriberAccountNumber());
-            if (clientOptional.isPresent()) {
-
-                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
-                        hiveClient.getSubscriberAccountNumber() + "/"
-                                + hiveClient.getClientName() + "/"
-                                + hiveClient.getOnuDeviceName() + "/"
-                                + hiveClient.getPackageType() + "/"
-                                + hiveClient.getProvision() + "/"
-                                + hiveClient.getStatus(),
-                        String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
-                        request.getHeader("Authorization"),
-                        request.getHeader("User-Agent"));
-
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(logService.createResponse(HttpStatus.CONFLICT,
-                                "Subscriber already exists"));
             }
 
             if (hiveClient.getProvision() == null || hiveClient.getProvision().trim().isEmpty()
@@ -381,6 +361,26 @@ public class subscriberController {
                                 "Status is missing/invalid"));
             } else {
                 hiveClient.setStatus(hiveClient.getStatus().toUpperCase() + "_PENDING_MIGRATION");
+            }
+
+            Optional<subscriberEntity> clientOptional = subscriberRepository
+                    .findBySubscriberAccountNumber(hiveClient.getSubscriberAccountNumber());
+            if (clientOptional.isPresent()) {
+
+                logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
+                        hiveClient.getSubscriberAccountNumber() + "/"
+                                + hiveClient.getClientName() + "/"
+                                + hiveClient.getOnuDeviceName() + "/"
+                                + hiveClient.getPackageType() + "/"
+                                + hiveClient.getProvision() + "/"
+                                + hiveClient.getStatus(),
+                        String.valueOf(HttpStatus.CONFLICT.value()), request.getRemoteAddr(),
+                        request.getHeader("Authorization"),
+                        request.getHeader("User-Agent"));
+
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(logService.createResponse(HttpStatus.CONFLICT,
+                                "Account number already in use"));
             }
 
             HiveClientService.addHiveMigratedClient(hiveClient.getSubscriberAccountNumber(),
@@ -493,7 +493,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(logService.createResponse(HttpStatus.BAD_REQUEST,
-                                "Subscriber is not for migration"));
+                                "Subscriber is not in migration"));
             }
 
             String newStatus = client.getStatus().replace("_PENDING_MIGRATION", "");
@@ -715,7 +715,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(logService.createResponse(HttpStatus.NOT_FOUND,
-                                "Client not found"));
+                                "Subscriber does not exist"));
             }
         } catch (Exception e) {
 
@@ -805,7 +805,6 @@ public class subscriberController {
         }
 
         try {
-            // Fetch subscriber details from the service
             HiveClient subscriber = hiveclientService.getClientByAccountNumber(subscriberAccountNumber);
 
             if (subscriber != null) {
@@ -920,7 +919,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(logService.createResponse(HttpStatus.NOT_FOUND,
-                                "No subscribers found"));
+                                "Subscribers do not exist"));
             }
         } catch (Exception e) {
 
@@ -1029,7 +1028,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(logService.createResponse(HttpStatus.NOT_FOUND,
-                                "Client not found"));
+                                "Subscriber does not exist"));
             }
         } catch (Exception e) {
 
@@ -1085,7 +1084,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(logService.createResponse(HttpStatus.NOT_FOUND,
-                                "No subscriber found"));
+                                "Subscribers do not exist"));
             }
         } catch (Exception e) {
 
@@ -1127,7 +1126,7 @@ public class subscriberController {
 
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(logService.createResponse(HttpStatus.NOT_FOUND,
-                                "No subscriber with Active or Activated status found"));
+                                "Subscribers do not exist"));
             }
         } catch (Exception e) {
 

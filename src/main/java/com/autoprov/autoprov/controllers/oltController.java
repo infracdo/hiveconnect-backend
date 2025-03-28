@@ -82,8 +82,9 @@ public class oltController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                        new ErrorResponse(HttpStatus.NOT_FOUND.value(), "OLT not found"));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(logService.createResponse(HttpStatus.NOT_FOUND,
+                                "OLT does not exist"));
             }
         } catch (Exception e) {
 
@@ -121,8 +122,9 @@ public class oltController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                        new ErrorResponse(HttpStatus.NOT_FOUND.value(), "OLT not found"));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(logService.createResponse(HttpStatus.NOT_FOUND,
+                                "OLT does not exist"));
             }
         } catch (Exception e) {
 
@@ -168,32 +170,5 @@ public class oltController {
                             "An error occurred. " + e.getMessage()));
         }
 
-    }
-
-    // Error response class to standardize error messages
-    static class ErrorResponse {
-        private int status;
-        private String message;
-
-        public ErrorResponse(int status, String message) {
-            this.status = status;
-            this.message = message;
-        }
-
-        public int getStatus() {
-            return status;
-        }
-
-        public void setStatus(int status) {
-            this.status = status;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
-        }
     }
 }

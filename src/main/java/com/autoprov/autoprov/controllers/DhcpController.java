@@ -60,7 +60,7 @@ public class DhcpController {
 
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(logService.createResponse(HttpStatus.CREATED,
-                            "Network created successfully"));
+                            "Network has been created successfully"));
         } catch (Exception e) {
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),

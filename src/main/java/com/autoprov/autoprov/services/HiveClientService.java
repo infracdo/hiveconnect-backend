@@ -98,13 +98,13 @@ public class HiveClientService {
     public HiveClient getHiveClientByAccountNumber(String subscriberAccountNumber) {
         return hiveClientRepo.findBySubscriberAccountNumber(subscriberAccountNumber)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Subscriber not found with account number: " + subscriberAccountNumber));
+                        "Subscriber does not exist"));
     }
 
     public HiveClient getHiveClientNetworkInfo(String subscriberAccountNumber) {
         return hiveClientRepo.findBySubscriberAccountNumber(subscriberAccountNumber)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Subscriber not found with account number: " + subscriberAccountNumber));
+                        "Subscriber does not exist"));
     }
 
     @Async("asyncExecutor")

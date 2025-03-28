@@ -125,26 +125,26 @@ public class AuthController {
 
         if (strRoles == null) {
             Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                    .orElseThrow(() -> new RuntimeException("Role is not found"));
+                    .orElseThrow(() -> new RuntimeException("Role does not exist"));
             roles.add(userRole);
         } else {
             strRoles.forEach(role -> {
                 switch (role.toLowerCase()) {
                     case "admin":
                         Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                                .orElseThrow(() -> new RuntimeException("Role is not found"));
+                                .orElseThrow(() -> new RuntimeException("Role does not exist"));
                         roles.add(adminRole);
 
                         break;
                     case "mod":
                         Role modRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
-                                .orElseThrow(() -> new RuntimeException("Role is not found"));
+                                .orElseThrow(() -> new RuntimeException("Role does not exist"));
                         roles.add(modRole);
 
                         break;
                     default:
                         Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                                .orElseThrow(() -> new RuntimeException("Role is not found"));
+                                .orElseThrow(() -> new RuntimeException("Role does not exist"));
                         roles.add(userRole);
                 }
             });

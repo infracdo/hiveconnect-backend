@@ -65,7 +65,7 @@ public class PackageTypeController {
                     request.getHeader("User-Agent"));
 
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(logService.createResponse(HttpStatus.CREATED, "Package created successfully"));
+                    .body(logService.createResponse(HttpStatus.CREATED, "Package has been created successfully"));
 
         } catch (SubscriberAlreadyExistsException e) {
 
@@ -138,15 +138,14 @@ public class PackageTypeController {
 
     @Async("asyncExecutor")
     @GetMapping("/testGetPackageDetails/{packageType}")
-    public ResponseEntity<String> testFindByPackageTypeId(
+    public ResponseEntity<?> testFindByPackageTypeId(
             @PathVariable("packageType") String packageType, @RequestParam(required = false) String user,
             @RequestParam(required = false) String action, HttpServletRequest request) {
-
         String upstream = "";
         String downstream = "";
         String packageName = "";
-
-        Optional<PackageTypeEntity> optionalPackage = packageRepo.findBypackageId(packageType);
+        try {
+            Optional<PackageTypeEntity> optionalPackage = packageRepo.findBypackageId(packageType);
         if (optionalPackage.isPresent()) {
 
             PackageTypeEntity packageT = optionalPackage.get();
@@ -161,7 +160,11 @@ public class PackageTypeController {
                 request.getHeader("Authorization"),
                 request.getHeader("User-Agent"));
 
-        return new ResponseEntity<>("Upstream: " + upstream + " Downstream: " + downstream, HttpStatus.OK);
+        return ResponseEntity.ok("Upstream: " + upstream + " Downstream: " + downstream);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred. " + e.getMessage()));
+        }
     }
 
     public static String convertToKbps(String speed) {

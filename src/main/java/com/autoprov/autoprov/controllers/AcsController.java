@@ -296,7 +296,7 @@ public class AcsController {
 
                 return ResponseEntity.status(HttpStatus.OK)
                     .body(logService.createResponse(HttpStatus.OK,
-                            "Subscriber status is now on hold"));
+                            "Subscriber is now on hold"));
             } else {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
@@ -594,7 +594,7 @@ public class AcsController {
 
                 return ResponseEntity.status(HttpStatus.OK)
                     .body(logService.createResponse(HttpStatus.OK,
-                            "Subscriber status is now active"));
+                            "Subscriber is now active"));
             } else {
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
@@ -928,20 +928,15 @@ public class AcsController {
     @Async("AsyncExecutor")
     @PostMapping("/updateSubscriberPackage")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, String>> updateSubscriberPackage(@RequestBody Map<String, String> params,
+    public ResponseEntity<?> updateSubscriberPackage(@RequestBody Map<String, String> params,
             @RequestParam(required = false) String user, @RequestParam(required = false) String action,
             HttpServletRequest request) {
-        Map<String, String> response = new LinkedHashMap<>();
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
         String subscriberAccountNumber = params.get("subscriberAccountNumber");
         String packageType = params.get("packageType");
 
         // Check if the subscriber account number is empty or null
         if (subscriberAccountNumber == null || subscriberAccountNumber.isEmpty()) {
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "Account number is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberAccountNumber + "/" + packageType,
@@ -949,14 +944,13 @@ public class AcsController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(logService.createResponse(HttpStatus.BAD_REQUEST,
+                                "Account number is missing/invalid"));
         }
 
         // Check if the package type is empty or null
         if (packageType == null || packageType.isEmpty()) {
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.BAD_REQUEST.value()));
-            response.put("message", "Package type is missing/invalid");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberAccountNumber + "/" + packageType,
@@ -964,7 +958,9 @@ public class AcsController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(logService.createResponse(HttpStatus.BAD_REQUEST,
+                                "Package type is missing/invalid"));
         }
 
         // // Fetch package from repository
@@ -981,9 +977,6 @@ public class AcsController {
         Optional<HiveClient> clientOptional = hiveClientRepo
                 .findBySubscriberAccountNumber(subscriberAccountNumber);
         if (!clientOptional.isPresent()) {
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            response.put("message", "Subscriber does not exist");
 
             logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberAccountNumber + "/" + packageType,
@@ -991,7 +984,9 @@ public class AcsController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(logService.createResponse(HttpStatus.NOT_FOUND,
+                                "Subscriber does not exist"));
         }
 
         String apiUrl = playbookChangePackageApiUrl + "launch/";
@@ -1042,17 +1037,15 @@ public class AcsController {
                 System.out.println("Request failed. Response: " + playbookResponse.getStatusCode() + " - "
                         + playbookResponse.getBody());
 
-                response.put("timestamp", timestamp);
-                response.put("message", "Playbook error. " + playbookResponse.getBody());
-
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
                         String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(response);
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                                "Playbook error. " + playbookResponse.getBody()));
             }
 
             ResponseEntity<?> lastJobStatus = jobStatus(subscriberAccountNumber, jobId, false);
@@ -1063,21 +1056,16 @@ public class AcsController {
                 client.setPackageType(packageType);
                 hiveClientRepo.save(client);
 
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(HttpStatus.OK.value()));
-                response.put("message", "Subscriber's package has been updated successfully");
-
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber + "/" + packageType,
                         String.valueOf(lastJobStatus.getStatusCode().value()), request.getRemoteAddr(),
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(lastJobStatus.getStatusCode().value()).body(response);
+                return ResponseEntity.status(HttpStatus.valueOf(lastJobStatus.getStatusCode().value()))
+                        .body(logService.createResponse(HttpStatus.valueOf(lastJobStatus.getStatusCode().value()),
+                                "Subscribers package has been updated successfully"));
             } else {
-                response.put("timestamp", timestamp);
-                response.put("status", String.valueOf(lastJobStatus.getStatusCode().value()));
-                response.put("message", "Failed to update subscriber package");
 
                 logService.logApiAccess(user, action, request.getMethod(), request.getRequestURI(),
                         subscriberAccountNumber,
@@ -1085,13 +1073,12 @@ public class AcsController {
                         request.getHeader("Authorization"),
                         request.getHeader("User-Agent"));
 
-                return ResponseEntity.status(lastJobStatus.getStatusCode().value()).body(response);
+                return ResponseEntity.status(HttpStatus.valueOf(lastJobStatus.getStatusCode().value()))
+                        .body(logService.createResponse(HttpStatus.valueOf(lastJobStatus.getStatusCode().value()),
+                                "Failed to update subscriber package"));
             }
 
         } catch (Exception e) {
-            response.put("timestamp", timestamp);
-            response.put("status", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-            response.put("message", "An unexpected error occurred: " + e.getMessage());
 
             logService.logApiError(user, action, request.getMethod(), request.getRequestURI(),
                     subscriberAccountNumber + "/" + packageType,
@@ -1100,7 +1087,9 @@ public class AcsController {
                     request.getHeader("Authorization"),
                     request.getHeader("User-Agent"));
 
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(logService.createResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                                "An error occurred: " + e.getMessage()));
         }
     }
 
