@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.val;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -37,7 +36,7 @@ public class TroubleshootController {
     @GetMapping("/getStatus/{device}")
     public ResponseEntity<?> getOnuStatus(@PathVariable("device") String device, @RequestParam(required = false) String user,
             @RequestParam(required = false) String action, HttpServletRequest request) {
-        String device_name = "?query=lo_status{job=\"ip_address\",site_tenant=\"DATACONNECT\",device_name=\""
+        String device_name = "?query=lo_status{job=\'ip_address\',site_tenant=\'DATACONNECT\',device_name=\'"
                 + device + "\"}";
         String prometheusUrl = prometheusApiUrl + device_name;
 
